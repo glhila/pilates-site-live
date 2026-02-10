@@ -16,6 +16,20 @@ const SCHEDULE = [
   { day: "שישי", slots: [{ time: "08:00", name: "רפורמר" }, { time: "09:30", name: "שיקומי" }] },
 ];
 
+function buildScheduleTable() {
+  const byDay: Record<string, Record<string, string>> = {};
+  const timeSet = new Set<string>();
+  for (const row of SCHEDULE) {
+    byDay[row.day] = {};
+    for (const slot of row.slots) {
+      byDay[row.day][slot.time] = slot.name;
+      timeSet.add(slot.time);
+    }
+  }
+  const times = Array.from(timeSet).sort();
+  return { byDay, times };
+}
+
 const LESSONS = [
   { title: "פילאטיס רפורמר", desc: "השיעור הקלאסי על המכשיר הפופולרי ביותר. עבודה על כוח, גמישות ויציבה.", id: "reformer" },
   { title: "שיעורי קדילאק (Tower)", desc: "עבודה אינטנסיבית יותר עם קפיצים גבוהים לשיפור טווחי תנועה.", id: "cadillac" },
@@ -24,32 +38,46 @@ const LESSONS = [
 ];
 
 export default function ClassesPage() {
-  return(
+  const { byDay, times } = buildScheduleTable();
+
+  return (
     <main className="min-h-[calc(100vh-4rem)] bg-brand-bg">
-    <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
-      {/* Schedule section */}
-      <section className="mb-20">
-        <h1 className="hero-title mb-2 text-center">מערכת שעות</h1>
-        <p className="text-center text-brand-dark/70 mb-10">בחרי את היום המתאים והצטרפי אלינו</p>
-        <div className="rounded-2xl border border-brand-primary-muted/40 bg-brand-bg-soft/80 shadow-[0_10px_30px_rgba(0,0,0,0.05)] overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0">
-            {SCHEDULE.map((row) => (
-              <div
-                key={row.day}
-                className="p-5 border-b border-brand-primary-muted/20 last:border-b-0 md:border-b-0 md:even:border-r md:odd:border-r border-brand-primary-muted/20"
-              >
-                <h2 className="text-lg font-semibold text-brand-primary mb-4">{row.day}</h2>
-                <ul className="space-y-2">
-                    {row.slots.map((slot) => (
-                      <li key={`${row.day}-${slot.time}`} className="flex justify-between text-sm text-brand-dark/80">
-                        <span>{slot.time}</span>
-                        <span className="font-medium text-brand-dark">{slot.name}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+        {/* Schedule section – weekly calendar table */}
+        <section className="mb-20">
+          <h1 className="hero-title mb-2 text-center">מערכת שעות</h1>
+          <p className="text-center text-brand-dark/70 mb-10">בחרי את היום והשעה המתאימים והצטרפי אלינו</p>
+          <div className="rounded-2xl border border-brand-primary-muted/40 bg-brand-bg-soft/80 shadow-[0_10px_30px_rgba(0,0,0,0.05)] overflow-hidden overflow-x-auto">
+            <table className="w-full min-w-[480px] border-collapse text-right">
+              <thead>
+                <tr className="border-b border-brand-primary-muted/40 bg-brand-primary-muted/10">
+                  <th className="py-3 px-4 text-sm font-semibold text-brand-dark">שעה</th>
+                  {WEEKDAYS.map((day) => (
+                    <th key={day} className="py-3 px-4 text-sm font-semibold text-brand-primary">
+                      {day}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {times.map((time) => (
+                  <tr
+                    key={time}
+                    className="border-b border-brand-primary-muted/20 last:border-b-0 hover:bg-brand-primary-muted/5 transition-colors"
+                  >
+                    <td className="py-3 px-4 text-sm font-medium text-brand-dark/80">{time}</td>
+                    {WEEKDAYS.map((day) => {
+                      const name = byDay[day]?.[time];
+                      return (
+                        <td key={day} className="py-3 px-4 text-sm text-brand-dark">
+                          {name ?? "—"}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 

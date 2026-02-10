@@ -1,15 +1,48 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base UI colors */
+  --background: #F9F7F2;
+  --foreground: #2D2D2D;
+
+  /* Brand dark text (alias to foreground for now) */
+  --brand-dark: var(--foreground);
+
+  /* Pilates studio brand palette – "Organic Luxury" */
+  --brand-primary: #3A4D39;       /* CTA sage green */
+  --brand-primary-soft: #4F6F52;  /* lighter hover tone */
+  --brand-primary-muted: #A9B2A8; /* subtle text / borders */
+
+  --brand-bg: #F9F7F2;           /* warm off‑white page background */
+  --brand-bg-soft: #F1EDE4;      /* cards / surfaces */
+
+  --brand-accent: #8C7365;       /* soft dark brown */
+  --brand-accent-soft: #6B705C;  /* smoky olive green */
+
+  --brand-card-border: #EAE2B7;  /* card borders */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Brand dark text color */
+  --color-brand-dark: var(--brand-dark);
+
+  /* Brand colors exposed to Tailwind utilities */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-soft: var(--brand-primary-soft);
+  --color-brand-primary-muted: var(--brand-primary-muted);
+  --color-brand-bg: var(--brand-bg);
+  --color-brand-bg-soft: var(--brand-bg-soft);
+
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-soft: var(--brand-accent-soft);
+  --color-brand-card-border: var(--brand-card-border);
+
+  /* Typography tokens (connected to next/font variables) */
+  --font-sans: var(--font-assistant);
+  --font-serif: var(--font-cormorant);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +55,51 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-assistant), system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+
+  direction: rtl;
+
+  overflow-x: hidden;
+}
+
+/* Headings – elegant serif for "organic luxury" feel */
+h1,
+h2 {
+  font-family: var(--font-cormorant), var(--font-assistant), system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 700;
+  color: #4A4A4A;
+}
+
+@layer components {
+  /* Impressive Hero Title */
+  .hero-title {
+    line-height: 1.1;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--brand-primary);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+  }
+
+  /* Feature card – soft, floating container */
+  .feature-card {
+    @apply bg-white/50 backdrop-blur-sm border border-brand-bg-soft rounded-[2.5rem] p-10 shadow-sm transition-all duration-500 hover:shadow-md hover:-translate-y-1;
+  }
+
+  /* Gentle entrance animation */
+  .reveal {
+    animation: fadeUp 0.8s ease-out forwards;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "מחירים ומסלולים | פילאטיס מכשירים",
+  title: "מחירים ומסלולים | עונג של פילאטיס",
   description: "מגוון אפשרויות למנויים, כרטיסיות ושיעורי ניסיון בסטודיו פילאטיס מכשירים.",
 };
 

@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "ראשי | עונג של פילאטיס",
+  description: "דף הבית",
+};
 
 export default function Home() {
   return (

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "צור קשר | עונג של פילאטיס מכשירים",
+  title: "צור קשר | עונג של פילאטיס ",
   description: "צרו איתנו קשר לתיאום שיעור ניסיון בכפר סבא. כתובת, טלפון ושעות פעילות.",
 };
 

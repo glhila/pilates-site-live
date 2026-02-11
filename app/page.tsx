@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-brand-bg">
-      <section className="relative min-h-[80vh] flex items-center px-4 py-20 sm:px-6 lg:px-8 bg-brand-bg">
+      <section className="relative min-h-[80vh] flex items-center px-4 py-20 sm:px-6 lg:px-8 bg-brand-bg overflow-x-hidden">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-20 lg:grid-cols-2">
           {/* Text content */}
           <div className="reveal text-right text-brand-dark relative">

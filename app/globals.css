@@ -81,6 +81,15 @@ h1, h2, h3 {
   font-weight: 400;
 }
 
+@layer base {
+  /* מציג פוקוס רק למשתמשי מקלדת, לא בלחיצת עכבר */
+  :focus-visible {
+    outline: 2px solid var(--brand-taupe);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+}
+
 @layer components {
   /* כותרת Hero - דקה ומרשימה */
   .hero-title {

@@ -1,29 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  /* שינוי לרקע שמנת רך יותר ויוקרתי */
+  /* רקע שמנת חם ויוקרתי */
   --background: #FDFBFA;         
-  --foreground: #292524;         /* פחם חם - פחות נוקשה משחור */
+  
+  /* טקסט ראשי - פחם אדמה עמוק (נגישות מקסימלית) */
+  --foreground: #2D2926;         
+  --brand-dark: #2D2926;
 
-  --brand-dark: #3D3935;
-
-  /* צבעי זית ואדמה רכים */
+  /* צבעי זית מקצועיים וכהים יותר */
   --brand-primary: #3A3F34;       
   --brand-primary-soft: #4A4E44;  
-  --brand-primary-muted: #5D5952; /* צבע אבן עדין יותר */
 
-  --brand-bg: #FDFBFA;            
-  --brand-bg-soft: #FAF8F6;       /* רקע כרטיסים כמעט לבן */
+  /* צבע אבן כהה לטקסט (Muted) - עכשיו הוא נגיש וקריא */
+  --brand-primary-muted: #5E5954; 
 
-  --brand-accent: #BC9B8B;        
+  /* צבעי דגש רכים (ניוד/חמר) */
+  --brand-accent: #A68B7C;        
   --brand-accent-soft: #D4B9A5;   
 
-  --brand-card-border: #F0EDE8;   /* גבולות כמעט בלתי נראים */
-
+  /* גבולות עדינים (נשארים בהירים לאסתטיקה) */
+  --brand-card-border: #F0EDE8;   
   --brand-stone: #D6D1C9;
-  --brand-taupe: #4A433F;
-
   --brand-border-light: #E5E1DB; 
+  
+  --brand-bg: #FDFBFA;            
+  --brand-bg-soft: #F7F5F2;
 }
 
 @theme inline {
@@ -33,87 +35,86 @@
   --color-brand-primary: var(--brand-primary);
   --color-brand-primary-soft: var(--brand-primary-soft);
   --color-brand-primary-muted: var(--brand-primary-muted);
-  --color-brand-bg: var(--brand-bg);
+  --color-brand-bg: var(--background);
   --color-brand-bg-soft: var(--brand-bg-soft);
   --color-brand-accent: var(--brand-accent);
   --color-brand-accent-soft: var(--brand-accent-soft);
   --color-brand-card-border: var(--brand-card-border);
   --color-brand-stone: var(--brand-stone);
-  --color-brand-taupe: var(--brand-taupe);
 
-  /* וודאי שב-layout.tsx הגדרת את המשתנים האלו */
   --font-sans: var(--font-assistant);
-  --font-serif: var(--font-cardo); /* שיניתי ל-Cardo שהוא יוקרתי מאוד */
+  --font-serif: var(--font-cardo);
 }
 
-/* ביטול Dark Mode נוקשה - שומר על האווירה הבהירה של הסטודיו */
+/* ביטול Dark Mode כדי לשמור על שפת המותג */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #FDFBFA; 
-    --foreground: #3D3935;
+    --foreground: #2D2926;
   }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  /* משקל 300 הוא הסוד למראה יוקרתי */
-  font-family: var(--font-assistant), sans-serif;
+  font-family: var(--font-sans), sans-serif;
+  /* משקל 400 חובה לקריאות במחשב */
   font-weight: 400; 
-  line-height: 1.6;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   direction: rtl;
   overflow-x: hidden;
 }
 
-/* כותרות - שימוש בפונט Serif עם ריווח אותיות נדיב */
+/* כותרות - שימוש בפונט Serif עם משקל נגיש */
 h1, h2, h3 {
   font-family: var(--font-serif), serif;
-  font-weight: 300;
-  letter-spacing: -0.01em; /* כותרות גדולות צריכות צפיפות קלה */
+  font-weight: 400;
+  letter-spacing: -0.01em;
   color: var(--brand-dark);
   line-height: 1.2;
 }
 
-.text-brand-taupe {
-  color: var(--brand-taupe);
-  font-weight: 400;
+/* טיפול ספציפי בטקסט Muted כדי שיהיה קריא */
+.text-brand-primary-muted {
+  color: var(--brand-primary-muted) !important;
+  font-weight: 500;
 }
 
 @layer base {
-  /* מציג פוקוס רק למשתמשי מקלדת, לא בלחיצת עכבר */
+  /* נגישות: פוקוס ברור למשתמשי מקלדת */
   :focus-visible {
-    outline: 2px solid var(--brand-taupe);
+    outline: 2px solid var(--brand-accent);
     outline-offset: 4px;
     border-radius: 4px;
   }
 }
 
 @layer components {
-  /* כותרת Hero  -דקה ומרשימה */
+  /* כותרת Hero מרשימה */
   .hero-title {
     font-family: var(--font-serif), serif;
-    font-weight: 200;
+    font-weight: 300;
     line-height: 1.1;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     color: var(--brand-dark);
     font-size: clamp(2.8rem, 6vw, 5rem);
   }
 
-  /* כרטיס יוקרתי - צללית רכה מאוד וגבול עדין */
+  /* כרטיס יוקרתי - צללית רכה וגבול עדין */
   .feature-card {
     @apply bg-white/40 backdrop-blur-md border border-brand-card-border rounded-[3rem] p-10 transition-all duration-700 hover:shadow-2xl hover:shadow-brand-primary/5;
     box-shadow: 0 10px 40px rgba(61, 57, 53, 0.03);
   }
 
-  /* כפתור "עונג" - רך ומזמין */
+  /* כפתור "עונג" - נגיש וברור */
   .btn-luxury {
-    @apply inline-flex items-center justify-center rounded-full px-8 py-3.5 text-xs tracking-[0.2em] uppercase transition-all duration-300;
+    @apply inline-flex items-center justify-center rounded-full bg-brand-dark text-white px-8 py-3.5 text-xs tracking-[0.15em] uppercase transition-all duration-300 hover:opacity-90;
   }
 }
 
-/* אפקט הנייר - החלשתי אותו כדי שיהיה סופר עדין */
+/* אפקט הנייר העדין שביקשת */
 body::before {
   content: "";
   position: fixed;

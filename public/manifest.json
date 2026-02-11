@@ -1,0 +1,21 @@
+{
+    "name": "עונג של פילאטיס",
+    "short_name": "עונג",
+    "description": "סטודיו בוטיק לפילאטיס מכשירים",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FDFBFA",
+    "theme_color": "#3D3935",
+    "icons": [
+      {
+        "src": "/logo.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/logo.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }

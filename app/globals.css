@@ -91,7 +91,7 @@ h1, h2, h3 {
 }
 
 @layer components {
-  /* כותרת Hero - דקה ומרשימה */
+  /* כותרת Hero  -דקה ומרשימה */
   .hero-title {
     font-family: var(--font-serif), serif;
     font-weight: 200;

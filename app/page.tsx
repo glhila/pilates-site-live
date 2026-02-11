@@ -1,48 +1,67 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 
 export const metadata: Metadata = {
-  title: "ראשי | עונג של פילאטיס",
-  description: "דף הבית",
+  title: "ראשי | עונג פילאטיס",
+  description: "סטודיו בוטיק לפילאטיס מכשירים באווירה אינטימית ויוקרתית.",
 };
 
 export default function Home() {
   return (
-    <main id="main-content" className="min-h-[calc(100vh-4rem)] bg-brand-bg">
+    <main id="main-content" className="min-h-screen bg-brand-bg">
       {/* Editorial hero */}
-      <section className="relative min-h-[80vh] flex items-center px-4 py-20 sm:px-6 lg:px-8 bg-brand-bg overflow-x-hidden">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 lg:grid-cols-2">
-          {/* Left: image / visual */}
-          <div className="reveal order-2 flex justify-center lg:order-1 lg:justify-start">
-            <div className="relative h-64 w-64 sm:h-80 sm:w-80 lg:h-[22rem] lg:w-[22rem] rounded-[10rem] border border-brand-card-border bg-brand-bg-soft shadow-[0_24px_60px_rgba(74,78,68,0.18)] overflow-hidden flex items-center justify-center">
-              <div className="text-center text-xs font-medium tracking-[0.25em] uppercase text-brand-primary-muted">
-              ברוכה הבאה לאיזון שלך
+      <section className="relative min-h-[90vh] flex items-center px-6 py-20 overflow-hidden">
+        <div className="container mx-auto grid lg:grid-cols-2 gap-16 items-center">
+          
+          {/* Left: Image side (במחשב מופיע משמאל, בנייד יורד למטה) */}
+          <div className="reveal order-2 lg:order-1 flex justify-center">
+            <div className="relative aspect-[4/5] w-full max-w-md">
+              {/* אלמנט עיצובי - עיגול רך מאחורי התמונה */}
+              <div className="absolute -inset-4 bg-brand-stone/20 rounded-[10rem] rotate-3 blur-2xl" />
+              
+              <div className="feature-card relative h-full w-full overflow-hidden flex items-center justify-center border-[12px] border-white/50">
+                {/* כאן תבוא תמונת אווירה מהסטודיו */}
+                <div className="text-center p-8">
+                  <span className="font-serif italic text-brand-stone text-lg">
+                    Balance & Grace
+                  </span>
+                </div>
+                {/* דוגמה להטמעת תמונה אמיתית:
+                <Image 
+                  src="/studio-hero.jpg" 
+                  alt="סטודיו עונג פילאטיס" 
+                  fill 
+                  className="object-cover"
+                /> 
+                */}
               </div>
             </div>
           </div>
 
-          {/* Right: editorial text */}
-          <div className="reveal order-1 text-right text-brand-dark lg:order-2">
-            <span className="mb-4 block text-[0.7rem] sm:text-xs font-medium tracking-[0.35em] uppercase text-brand-primary-muted">
+          {/* Right: Text side */}
+          <div className="reveal order-1 lg:order-2 text-right">
+            <span className="mb-6 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
               Mindful Movement • Organic Luxury
             </span>
-            <h1 className="mb-5 font-serif text-4xl leading-[1.3] tracking-[0.06em] text-brand-dark sm:text-5xl lg:text-6xl">
-              עונג של פילאטיס לגוף ולנפש
+            
+            <h1 className="hero-title mb-8">
+              עונג של <br />
+              <span className="luxury-italic text-brand-accent-text">פילאטיס</span>
             </h1>
-            <p className="mb-10 max-w-md text-sm leading-relaxed text-brand-primary-muted ml-auto">
-             שיעורי פילאטיס מכשירים מותאמים אישית בקבוצות קטנות, עם דגש על תנועה
-              נכונה, חיזוק הליבה ושקט פני. בואי לגלות מחדש את האיזון שלך
+            
+            <p className="mb-12 max-w-md text-base leading-relaxed text-brand-primary/80 ml-auto font-light">
+              סטודיו בוטיק למכשירים המשלב דיוק תנועתי עם שקט פנימי. 
+              בואי לגלות את העוצמה שברוגע, בחיזוק הליבה ובחיבור עמוק לגוף שלך.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row-reverse">
-              <Link
-                href="/#booking"
-                className="inline-flex items-center justify-center rounded-full bg-brand-primary px-8 py-2.5 text-sm font-medium text-white shadow-[0_10px_25px_-5px_rgba(74,78,68,0.18)] transition-all duration-200 hover:bg-brand-primary-soft hover:shadow-[0_18px_40px_-8px_rgba(74,78,68,0.22)] hover:-translate-y-0.5"
-              >
+            
+            <div className="flex flex-col sm:flex-row-reverse gap-6">
+              <Link href="/contact" className="btn-luxury">
                 קביעת שיעור היכרות
               </Link>
               <Link
                 href="/classes"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-brand-primary transition-all duration-300 hover:opacity-70"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-brand-primary hover:text-brand-accent-text transition-all duration-300"
               >
                 לצפייה במערכת השעות
                 <span className="text-lg">←</span>
@@ -52,42 +71,42 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Social proof strip */}
-      <section className="border-t border-brand-card-border/70 bg-brand-bg-soft/60 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 text-[0.75rem] text-brand-primary-muted sm:flex-row">
-          <span className="tracking-[0.28em] uppercase">
-            Featured in / Trusted by
-          </span>
-          <div className="flex flex-wrap items-center justify-center gap-4 text-[0.7rem]">
-            <span className="rounded-full bg-white/40 px-4 py-1">
-              לקוחות פרטיים מכל הארץ
-            </span>
-            <span className="rounded-full bg-white/40 px-4 py-1">
-              התמחות בשיקום ותנועה מודעת
-            </span>
+      {/* Social proof strip - מעוצב כפס מגזיני נקי */}
+      <section className="border-y border-brand-stone/30 bg-white/20 backdrop-blur-sm px-6 py-10">
+        <div className="container mx-auto flex flex-col md:flex-row items-center justify-around gap-8 text-center">
+          <div className="space-y-1">
+            <div className="font-serif text-2xl text-brand-primary italic">Professional</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-brand-accent-text font-bold">הדרכה מוסמכת ומדויקת</div>
+          </div>
+          <div className="h-10 w-px bg-brand-stone/30 hidden md:block" />
+          <div className="space-y-1">
+            <div className="font-serif text-2xl text-brand-primary italic">Boutique</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-brand-accent-text font-bold">קבוצות קטנות ויחס אישי</div>
+          </div>
+          <div className="h-10 w-px bg-brand-stone/30 hidden md:block" />
+          <div className="space-y-1">
+            <div className="font-serif text-2xl text-brand-primary italic">Organic</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-brand-accent-text font-bold">חומרי גלם ואווירה טבעית</div>
           </div>
         </div>
       </section>
 
-      {/* Booking section – anchor for /#booking */}
-      <section
-        id="booking"
-        className="border-t border-brand-primary-muted/30 bg-brand-bg-soft/40 px-4 py-16 sm:px-6 lg:px-8"
-      >
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mb-4 font-serif text-2xl text-brand-dark">
-            קביעת שיעור היכרות
-          </h2>
-          <p className="mb-8 text-sm leading-relaxed text-brand-dark/80">
-            רוצה להרגיש איך זה בגוף שלך? השאירי פרטים או צרי קשר ונחזור אלייך
-            לתיאום שיעור ראשון מותאם אישית.
-          </p>
-          <Link
-            href="/contact"
-            className="inline-flex items-center justify-center rounded-full bg-brand-primary px-8 py-2.5 text-sm font-medium text-white shadow-[0_10px_25px_-5px_rgba(74,78,68,0.18)] transition-all duration-200 hover:bg-brand-primary-soft"
-          >
-            צרי קשר להזמנת שיעור
-          </Link>
+      {/* Intro section with card */}
+      <section className="py-24 px-6 bg-brand-bg-soft/30">
+        <div className="container mx-auto max-w-4xl">
+          <div className="feature-card text-center space-y-8">
+            <h2 className="text-3xl md:text-4xl font-serif text-brand-primary">תנועה עדינה, חיזוק עמוק</h2>
+            <p className="text-lg font-light leading-relaxed max-w-2xl mx-auto">
+              הסטודיו שלנו תוכנן כדי להעניק לך מרחב של שקט בתוך השגרה. 
+              כל שיעור הוא הזדמנות לעבוד על הגוף מבלי להעמיס על הנפש, 
+              עם מכשור מתקדם וליווי מקצועי צמוד.
+            </p>
+            <div className="pt-4">
+              <Link href="/about" className="text-brand-accent-text font-bold text-xs uppercase tracking-widest border-b border-brand-accent/30 pb-2 hover:border-brand-accent transition-all">
+                הסיפור מאחורי עונג ←
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </main>

@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  /* Base UI colors */
-  --background: #F9F7F2;
-  --foreground: #2D2D2D;
+  /* Base UI colors – sand, body and earth */
+  --background: #F2EFE9;         /* soft sand / greige */
+  --foreground: #333333;         /* warm charcoal for general text */
 
-  /* Brand dark text (alias to foreground for now) */
-  --brand-dark: var(--foreground);
+  /* Brand dark text */
+  --brand-dark: #333333;
 
-  /* Pilates studio brand palette – "Organic Luxury" */
-  --brand-primary: #3A4D39;       /* CTA sage green */
-  --brand-primary-soft: #4F6F52;  /* lighter hover tone */
-  --brand-primary-muted: #A9B2A8; /* subtle text / borders */
+  /* Pilates studio brand palette – warm olive & antique rose */
+  --brand-primary: #4A4E44;       /* deep olive green with brown */
+  --brand-primary-soft: #6E7266;  /* softer hover tone */
+  --brand-primary-muted: #B4B4A8; /* pebble muted tone */
 
-  --brand-bg: #F9F7F2;           /* warm off‑white page background */
-  --brand-bg-soft: #F1EDE4;      /* cards / surfaces */
+  --brand-bg: #F2EFE9;            /* page background */
+  --brand-bg-soft: #FAF7F1;       /* cards / surfaces */
 
-  --brand-accent: #8C7365;       /* soft dark brown */
-  --brand-accent-soft: #6B705C;  /* smoky olive green */
+  --brand-accent: #BC9B8B;        /* antique pink / soft crimson */
+  --brand-accent-soft: #D4B9A5;   /* lighter accent */
 
-  --brand-card-border: #EAE2B7;  /* card borders */
+  --brand-card-border: #E5DFD2;   /* very soft, warm border */
 }
 
 @theme inline {
@@ -57,6 +57,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-assistant), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 
   direction: rtl;
 
@@ -68,8 +69,10 @@ h1,
 h2 {
   font-family: var(--font-cormorant), var(--font-assistant), system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-weight: 700;
-  color: #4A4A4A;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  text-transform: none;
+  color: var(--brand-primary);
 }
 
 @layer components {
@@ -84,7 +87,8 @@ h2 {
 
   /* Feature card – soft, floating container */
   .feature-card {
-    @apply bg-white/50 backdrop-blur-sm border border-brand-bg-soft rounded-[2.5rem] p-10 shadow-sm transition-all duration-500 hover:shadow-md hover:-translate-y-1;
+    @apply bg-white/50 backdrop-blur-sm border border-brand-bg-soft rounded-[2.5rem] p-10 transition-all duration-500 hover:-translate-y-1;
+    box-shadow: 0 18px 45px rgba(74, 78, 68, 0.05);
   }
 
   /* Gentle entrance animation */
@@ -102,4 +106,14 @@ h2 {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Subtle grain effect for the whole page */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  pointer-events: none;
+  background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
 }

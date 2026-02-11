@@ -25,34 +25,36 @@ export default function PricingPage() {
   ];
 
   return (
-    <main className="max-w-2xl mx-auto px-6 py-20 text-center font-sans">
-      <h1 className="text-4xl md:text-5xl font-serif text-brand-primary mb-16">מחירון ומסלולים</h1>
+    <main className="max-w-2xl mx-auto px-6 py-20 text-center">
+      <h1 className="hero-title mb-12">מחירון ומסלולים</h1>
 
       {categories.map((category, idx) => (
-        <div key={idx} className="mb-16">
-          {/* כותרת קטגוריה - מעוצבת לפי שפת המותג */}
-          <div className="inline-block bg-brand-primary text-white text-lg font-medium px-10 py-2 rounded-full mb-8 shadow-sm">
+        <div key={idx} className="mb-16 text-right">
+          <div className="mb-6 text-sm tracking-[0.25em] uppercase text-brand-primary-muted">
             {category.title}
           </div>
 
           <div className="space-y-4">
             {category.items.map((item, itemIdx) => (
-              <button 
-                key={itemIdx} 
-                className="flex items-stretch w-full group transition-all duration-300 hover:-translate-y-0.5"
+              <button
+                key={itemIdx}
+                className="flex w-full items-center group border-b border-brand-primary/10 py-6 transition-all hover:bg-white/30"
               >
-                {/* מחיר - צד שמאל */}
-                <div className="bg-brand-primary text-white w-24 py-4 flex items-center justify-center rounded-r-2xl font-semibold border-l border-white/10">
+                {/* Price - serif, subtle */}
+                <div className="w-24 text-right font-serif text-2xl text-brand-primary">
                   {item.price}
                 </div>
-                
-                {/* שם המסלול + טקסט הנעה לפעולה - צד ימין */}
-                <div className="bg-brand-bg-soft text-brand-dark flex-1 py-4 px-8 flex items-center justify-between mr-1 rounded-l-2xl font-medium transition-colors group-hover:bg-brand-primary-muted/20">
-                  <span className="text-lg">{item.name}</span>
-                  
-                  <span className="text-sm text-brand-primary font-bold opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                    רכישה מהירה ←
+
+                {/* Plan name - airy, light */}
+                <div className="flex-1 px-8 text-right">
+                  <span className="text-lg font-light tracking-wide text-brand-dark group-hover:text-brand-primary transition-colors">
+                    {item.name}
                   </span>
+                </div>
+
+                {/* Minimal icon */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-accent">
+                  <span className="text-xl">→</span>
                 </div>
               </button>
             ))}
@@ -60,8 +62,7 @@ export default function PricingPage() {
         </div>
       ))}
 
-      {/* הערות שוליים בשפה עדינה */}
-      <footer className="mt-16 pt-8 border-t border-brand-primary-muted/20 text-sm text-brand-primary-muted space-y-2">
+      <footer className="mt-16 pt-8 border-t border-brand-primary-muted/20 text-sm text-brand-primary-muted space-y-2 text-right">
         <p>• המנויים הינם בהוראת קבע ללא תפיסת מסגרת אשראי</p>
         <p>• ביטול מנוי בהודעה של 30 יום מראש</p>
         <p>• הכרטיסיות תקפות לשימוש בטווח של חודשיים מיום הרכישה</p>

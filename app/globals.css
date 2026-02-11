@@ -2,24 +2,24 @@
 
 :root {
   /* צבעי הרקע המדויקים מהלוגו */
-  --background: #F2EDE4;         /* השמנת החמה מהרקע של הלוגו */
-  --brand-bg-soft: #EBE5DB;       /* גרסה מעט כהה יותר לכרטיסים */
+  --background: #F2EDE4;         
+  --brand-bg-soft: #EBE5DB;       
   
-  /* צבע הטקסט הראשי - הירוק זית העמוק מהמילה "עונג של" */
+  /* צבע הטקסט הראשי - הירוק זית העמוק מהלוגו */
   --foreground: #3E4537;         
   --brand-dark: #3E4537;
 
-  /* צבעי המותג (זית) */
+  /* צבעי המותג */
   --brand-primary: #3E4537;       
   --brand-primary-soft: #4F5846;  
 
   /* צבעי הדגש (הורדרד-חמר מהמילה "פילאטיס") */
   --brand-accent: #B08976;        
-  --brand-accent-text: #845D4B;   /* גרסה כהה יותר שחוקית לנגישות טקסט */
+  --brand-accent-text: #845D4B;   
 
-  /* צבע ה"זהב" מהאיור - לשימוש בגבולות וקווים בלבד */
+  /* צבע ה"זהב" מהאיור - לשימוש בגבולות וקווים */
   --brand-stone: #D1B48C;
-  --brand-card-border: rgba(209, 180, 140, 0.3); /* שקיפות עדינה */
+  --brand-card-border: rgba(209, 180, 140, 0.3); 
 }
 
 @theme inline {
@@ -33,11 +33,12 @@
   --color-brand-stone: var(--brand-stone);
   --color-brand-bg-soft: var(--brand-bg-soft);
 
+  /* כאן התיקון: מקשרים למשתנים שהגדרנו ב-Layout */
   --font-sans: var(--font-assistant);
-  --font-serif: var(--font-cardo);
+  --font-serif: var(--font-serif);
 }
 
-/* ביטול מצב לילה כדי לשמור על צבעי הלוגו האורגניים */
+/* ביטול מצב לילה כדי לשמור על שפת המותג */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #F2EDE4; 
@@ -49,30 +50,32 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
-  font-weight: 400; 
-  line-height: 1.7;
+  /* משקל 300 נותן מראה רך ויוקרתי יותר במחשב */
+  font-weight: 300; 
+  line-height: 1.8;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   direction: rtl;
   overflow-x: hidden;
 }
 
-/* כותרות - שימוש בירוק הזית העמוק */
+/* כותרות - פונט סריפי יוקרתי (Cormorant) עם ריווח אותיות */
 h1, h2, h3 {
   font-family: var(--font-serif), serif;
-  font-weight: 400;
+  font-weight: 300;
   color: var(--brand-primary);
   line-height: 1.2;
+  letter-spacing: 0.02em;
 }
 
-/* הגדרה לטקסט נגיש בצבע החמר */
-.text-accent-safe {
-  color: var(--brand-accent-text) !important;
-  font-weight: 500;
+/* טריק עיצובי: כותרות בכתב נטוי (Italic) נראות מדהים בפונט הזה */
+.luxury-italic {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  font-weight: 400;
 }
 
 @layer base {
-  /* נגישות: פוקוס מעוצב בצבע החמר */
   :focus-visible {
     outline: 2px solid var(--brand-accent);
     outline-offset: 4px;
@@ -81,34 +84,34 @@ h1, h2, h3 {
 }
 
 @layer components {
-  /* כותרת Hero - דקה ויוקרתית */
+  /* כותרת Hero - דקה ומרשימה כמו בלוגו */
   .hero-title {
     font-family: var(--font-serif), serif;
-    font-weight: 300;
+    font-weight: 200;
     line-height: 1.1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     color: var(--brand-primary);
-    font-size: clamp(2.8rem, 6vw, 5rem);
+    font-size: clamp(3rem, 8vw, 6rem);
   }
 
-  /* כרטיס יוקרתי - רקע בהיר מאוד וצללית של המותג */
+  /* כרטיס יוקרתי - צללית עדינה מאוד בגוון הזית */
   .feature-card {
-    @apply bg-white/40 backdrop-blur-md border border-brand-stone/20 rounded-[3rem] p-10 transition-all duration-700 hover:shadow-2xl hover:shadow-brand-primary/5;
-    box-shadow: 0 10px 40px rgba(62, 69, 55, 0.05);
+    @apply bg-white/40 backdrop-blur-md border border-brand-stone/20 rounded-[3rem] p-10 transition-all duration-700;
+    box-shadow: 0 15px 40px rgba(62, 69, 55, 0.04);
   }
 
-  /* כפתור "עונג" - הרמוניה עם הלוגו */
+  /* כפתור "עונג" - אלגנטי, דק ורחב */
   .btn-luxury {
-    @apply inline-flex items-center justify-center rounded-full bg-brand-primary text-[#F2EDE4] px-8 py-3.5 text-xs tracking-[0.15em] uppercase transition-all duration-300 hover:opacity-90;
+    @apply inline-flex items-center justify-center rounded-full bg-brand-primary text-[#F2EDE4] px-10 py-3.5 text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 hover:bg-brand-primary-soft hover:opacity-95 shadow-lg shadow-brand-primary/10;
   }
 }
 
-/* אפקט הנייר העדין (Grain) */
+/* אפקט הנייר העדין שמחבר את כל העיצוב יחד */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  opacity: 0.02; /* עדין מאוד */
+  opacity: 0.015; /* הופחת מעט כדי להיות סופר עדין */
   pointer-events: none;
   background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
   z-index: 50;

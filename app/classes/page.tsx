@@ -1,7 +1,8 @@
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "מערכת שעות ושיעורים | עונג של פילאטיס",
+  title: "מערכת שעות ושיעורים | עונג פילאטיס",
   description: "מערכת שבועית ומגוון שיעורי פילאטיס מכשירים: רפורמר, קדילאק, שיעורי שיקום ופילאטיס לנשים בהריון.",
 };
 
@@ -41,85 +42,99 @@ export default function ClassesPage() {
   const { byDay, times } = buildScheduleTable();
 
   return (
-    <main id="main-content" className="min-h-[calc(100vh-4rem)] bg-brand-bg">
-      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
-        {/* Schedule section – weekly calendar table */}
-        <section className="mb-20">
-          <h1 className="hero-title mb-2 text-center">מערכת שעות</h1>
-          <p className="text-center text-brand-dark/70 mb-10">בחרי את היום והשעה המתאימים והצטרפי אלינו</p>
-          <div className="rounded-2xl border border-brand-primary-muted/40 bg-brand-bg-soft/80 shadow-[0_10px_30px_rgba(0,0,0,0.05)] overflow-hidden overflow-x-auto">
-            <table className="w-full min-w-[480px] border-collapse text-right font-sans">
-              <thead>
-                <tr className="border-b border-brand-primary-muted/30 bg-brand-bg-soft">
-                  <th className="py-3 px-4 text-xs sm:text-sm font-semibold text-brand-dark">
-                    שעה
-                  </th>
-                  {WEEKDAYS.map((day) => (
-                    <th
-                      key={day}
-                      className="py-3 px-4 text-xs sm:text-sm font-semibold text-brand-dark"
-                    >
-                      {day}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {times.map((time) => (
-                  <tr
-                    key={time}
-                    className="border-b border-brand-primary-muted/20 last:border-b-0 hover:bg-brand-primary-muted/10 transition-colors"
-                  >
-                    <td className="py-3 px-4 text-xs sm:text-sm font-medium text-brand-dark/80">
-                      {time}
-                    </td>
-                    {WEEKDAYS.map((day) => {
-                      const name = byDay[day]?.[time];
-                      return (
-                        <td
-                          key={day}
-                          className="py-3 px-4 text-xs sm:text-sm text-brand-dark align-middle"
-                        >
-                          {name ? (
-                            <span className="inline-flex items-center justify-center rounded-full border border-brand-primary-muted/40 bg-brand-bg-soft px-3 py-1 text-xs font-medium text-brand-dark">
-                              {name}
-                            </span>
-                          ) : (
-                            <span className="text-brand-primary-muted/80">—</span>
-                          )}
-                        </td>
-                      );
-                    })}
+    <main id="main-content" className="min-h-screen bg-brand-bg">
+      <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
+        
+        {/* Header Section */}
+        <header className="mb-20 text-center">
+          <span className="mb-4 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
+            Our Schedule • Time for You
+          </span>
+          <h1 className="hero-title mb-4">
+            מערכת <span className="luxury-italic text-brand-accent-text">שעות</span>
+          </h1>
+          <p className="max-w-xl mx-auto font-light text-brand-primary/70 italic">
+            בחרי את הרגע המדויק עבורך, והצטרפי אלינו לתנועה של רוגע ועוצמה.
+          </p>
+        </header>
+
+        {/* Schedule Table Section */}
+        <section className="mb-32">
+          <div className="relative overflow-hidden rounded-[2.5rem] border border-brand-stone/30 bg-white/30 backdrop-blur-sm shadow-[0_20px_50px_rgba(62,69,55,0.05)]">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px] border-collapse text-right">
+                <thead>
+                  <tr className="border-b border-brand-stone/30 bg-brand-bg-soft/50">
+                    <th className="py-6 px-6 font-serif italic text-lg text-brand-primary">שעה</th>
+                    {WEEKDAYS.map((day) => (
+                      <th key={day} className="py-6 px-4 text-xs font-bold uppercase tracking-widest text-brand-primary">
+                        {day}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="font-sans">
+                  {times.map((time) => (
+                    <tr key={time} className="border-b border-brand-stone/10 last:border-b-0 hover:bg-white/40 transition-colors">
+                      <td className="py-5 px-6 font-serif italic text-brand-primary/80">{time}</td>
+                      {WEEKDAYS.map((day) => {
+                        const name = byDay[day]?.[time];
+                        return (
+                          <td key={day} className="py-5 px-4">
+                            {name ? (
+                              <div className="group relative">
+                                <span className="inline-block rounded-full border border-brand-accent/20 bg-brand-accent/5 px-4 py-1 text-[11px] font-semibold text-brand-accent-text transition-all group-hover:border-brand-accent group-hover:bg-brand-accent/10">
+                                  {name}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-brand-stone/40">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+          <p className="mt-6 text-center text-[10px] text-brand-stone uppercase tracking-widest md:hidden">
+            ← ניתן לגלול לצדדים לצפייה בכל המערכת →
+          </p>
         </section>
 
-        {/* Lesson types details */}
+        {/* Lesson Types Section */}
         <section id="lesson-types">
-          <h2 className="hero-title mb-2 text-center">סוגי השיעורים</h2>
-          <p className="text-center text-brand-dark/70 mb-12 max-w-xl mx-auto">הכירי את סוגי האימון שאנחנו מציעות בסטודיו</p>
-          <div className="grid md:grid-cols-2 gap-8">
-            {LESSONS.map((c) => (
+          <div className="mb-16 text-center">
+            <h2 className="text-4xl font-serif text-brand-primary mb-4">סוגי השיעורים</h2>
+            <div className="h-px w-20 bg-brand-accent/30 mx-auto" />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-10">
+            {LESSONS.map((lesson) => (
               <article
-                key={c.id}
-                id={c.id}
-                className="feature-card rounded-[2rem] p-8 bg-brand-bg-soft border border-brand-primary-muted/30"
+                key={lesson.id}
+                className="feature-card group"
               >
-                <h3 className="text-xl font-semibold text-brand-dark mb-3">{c.title}</h3>
-                <p className="text-brand-dark/70 leading-relaxed">{c.desc}</p>
-                <a
+                <h3 className="text-2xl font-serif text-brand-primary mb-4 group-hover:text-brand-accent-text transition-colors">
+                  {lesson.title}
+                </h3>
+                <p className="text-brand-primary/70 font-light leading-relaxed mb-8">
+                  {lesson.desc}
+                </p>
+                <Link
                   href="/contact"
-                  className="mt-6 inline-block text-sm font-semibold text-brand-primary hover:text-brand-accent transition-colors"
-                  >
-                  למידע והרשמה ←
-                </a>
+                  className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary border-b border-brand-stone/50 pb-2 hover:border-brand-accent transition-all inline-flex items-center gap-2"
+                >
+                  למידע והרשמה 
+                  <span className="text-lg leading-none">←</span>
+                </Link>
               </article>
             ))}
           </div>
         </section>
+
       </div>
     </main>
   );

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Assistant, Cormorant_Garamond } from "next/font/google";
+import { Assistant, Cormorant_Garamond, Cardo } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/Navbar";
 import Footer from "../src/components/Footer";
@@ -9,6 +9,12 @@ const assistant = Assistant({
   subsets: ["latin", "hebrew"],
   weight: ["300", "400", "500", "600", "700"],
 });
+
+const cardo = Cardo ({
+  variable: "--font-assistant",
+  subsets: ["latin", "hebrew"],
+  weight:  "400",
+})
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -27,10 +33,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl">
+    <html lang="he" dir="rtl" className={`${assistant.className} ${cardo.variable}`}>
       <body
-        className={`${assistant.variable} ${cormorant.variable} antialiased`}
-      >
+        className="antialiased">
         <Navbar />
         {children}
         <Footer />

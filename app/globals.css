@@ -6,20 +6,24 @@
   --foreground: #333333;         /* warm charcoal for general text */
 
   /* Brand dark text */
-  --brand-dark: #333333;
+  --brand-dark: #3D3935;
 
   /* Pilates studio brand palette – warm olive & antique rose */
   --brand-primary: #4A4E44;       /* deep olive green with brown */
   --brand-primary-soft: #6E7266;  /* softer hover tone */
   --brand-primary-muted: #B4B4A8; /* pebble muted tone */
 
-  --brand-bg: #F2EFE9;            /* page background */
+  --brand-bg: #FDFBFA;            /* page background */
   --brand-bg-soft: #FAF7F1;       /* cards / surfaces */
 
   --brand-accent: #BC9B8B;        /* antique pink / soft crimson */
   --brand-accent-soft: #D4B9A5;   /* lighter accent */
 
   --brand-card-border: #E5DFD2;   /* very soft, warm border */
+
+  --brand-stone: #E5E1DB;
+  --brand-taupe: #8C8279;
+
 }
 
 @theme inline {

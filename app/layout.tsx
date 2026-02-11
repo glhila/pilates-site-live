@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Assistant, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/Navbar";
+import Footer from "../src/components/Footer";
 
 const assistant = Assistant({
   variable: "--font-assistant",
@@ -32,6 +33,7 @@ export default function RootLayout({
       >
         <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );

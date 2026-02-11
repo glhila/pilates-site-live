@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React from "react";
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import Image from "next/image";
 
 const links = [
   { href: "/", label: "בית" },
@@ -22,14 +23,17 @@ export default function Navbar() {
           
           {/* 1. לוגו - שימוש בצבע הזית העמוק החדש */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="h-14 w-14 rounded-full bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center transition-transform hover:scale-105">
-                <span className="px-1 text-[9px] font-bold leading-tight text-center text-brand-primary tracking-tighter">
-                  עונג של <br/> פילאטיס
-                </span>
-              </div>
-            </Link>
-          </div>
+            <Link href="/" className="flex items-center transition-transform hover:scale-105">
+            <Image 
+            src="/logo.png" //
+            alt="עונג פילאטיס לוגו" 
+            width={120}    // התאימי את הגודל לפי הצורך
+            height={50}     
+            className="h-12 w-auto object-contain sm:h-14" // הגובה יתאים את עצמו
+            priority        // מבטיח שהלוגו ייטען ראשון (חשוב ל-LCP)
+          />
+        </Link>
+      </div>
 
           {/* 2. תפריט דסקטופ - שיפור ריווח אותיות (Luxury feel) */}
           <div className="hidden md:flex items-center gap-8">
@@ -38,7 +42,7 @@ export default function Navbar() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="transition-colors hover:text-brand-primary font-medium"
+                    className="text-brand-dark/90 hover:text-brand-primary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -47,7 +51,7 @@ export default function Navbar() {
             </ul>
             <Link
               href="/classes"
-              className="inline-flex items-center justify-center rounded-full border border-brand-dark px-5 py-2 text-xs font-bold uppercase tracking-widest transition-all hover:bg-brand-dark hover:text-white"
+              className="inline-flex items-center justify-center rounded-full bg-brand-dark px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-all hover:opacity-90 shadow-md shadow-brand-dark/10"
             >
               קביעת שיעור
             </Link>

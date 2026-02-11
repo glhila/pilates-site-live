@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "מחירון ומסלולים | עונג של פילאטיס",
-  description: "מגוון אפשרויות למנויים וכרטיסיות בסטודיו עונג של פילאטיס. השקעה בגוף ובנפש באווירה יוקרתית.",
+  title: "מחירון ומסלולים | עונג פילאטיס",
+  description: "מגוון אפשרויות למנויים וכרטיסיות בסטודיו עונג פילאטיס. השקעה בגוף ובנפש באווירה יוקרתית.",
 };
 
 export default function PricingPage() {
@@ -32,7 +32,7 @@ export default function PricingPage() {
       <div className="container mx-auto px-6 py-20 max-w-3xl">
         
         {/* Header Section */}
-        <header className="mb-20 text-center">
+        <header className="mb-24 text-center">
           <span className="mb-4 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
             Invest in Yourself • Balance & Flow
           </span>
@@ -49,10 +49,11 @@ export default function PricingPage() {
           {categories.map((category, idx) => (
             <section key={idx} className="reveal">
               <div className="mb-10 text-right">
-                <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-accent-text mb-2">
+                {/* תיקון 1: הגדלת כותרת הקטגוריה */}
+                <h2 className="text-xl sm:text-2xl font-serif text-brand-primary mb-1">
                   {category.title}
                 </h2>
-                <p className="font-serif italic text-brand-primary/60 text-lg">
+                <p className="text-sm tracking-widest uppercase text-brand-accent-text font-medium">
                   {category.subtitle}
                 </p>
               </div>
@@ -86,25 +87,25 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* Small Print / Terms */}
+        {/* Small Print / Terms - תיקון 2: יישור לימין */}
         <footer className="mt-24 p-10 rounded-[2.5rem] bg-brand-bg-soft/50 border border-brand-stone/20">
-          <h4 className="font-serif italic text-brand-primary mb-6 text-xl text-right">דגשים חשובים</h4>
-          <ul className="space-y-4 text-sm font-light text-brand-primary/80 text-right">
-            <li className="flex items-start justify-end gap-3 italic">
-              המנויים הינם בהוראת קבע ללא תפיסת מסגרת אשראי
-              <span className="text-brand-accent-text">◦</span>
+          <h4 className="font-serif italic text-brand-primary mb-8 text-2xl text-right">דגשים חשובים</h4>
+          <ul className="space-y-6 text-base font-light text-brand-primary/90 text-right">
+            <li className="flex items-center justify-start gap-3 flex-row-reverse">
+              <span className="text-brand-accent-text text-lg">◦</span>
+              <span>המנויים הינם בהוראת קבע ללא תפיסת מסגרת אשראי</span>
             </li>
-            <li className="flex items-start justify-end gap-3 italic">
-              ביטול מנוי בהודעה של 30 יום מראש
-              <span className="text-brand-accent-text">◦</span>
+            <li className="flex items-center justify-start gap-3 flex-row-reverse">
+              <span className="text-brand-accent-text text-lg">◦</span>
+              <span>ביטול מנוי בהודעה של 30 יום מראש</span>
             </li>
-            <li className="flex items-start justify-end gap-3 italic">
-              הכרטיסיות תקפות לשימוש בטווח של חודשיים מיום הרכישה
-              <span className="text-brand-accent-text">◦</span>
+            <li className="flex items-center justify-start gap-3 flex-row-reverse">
+              <span className="text-brand-accent-text text-lg">◦</span>
+              <span>הכרטיסיות תקפות לשימוש בטווח של חודשיים מיום הרכישה</span>
             </li>
           </ul>
           
-          <div className="mt-12 text-center">
+          <div className="mt-14 text-center">
             <Link href="/contact" className="btn-luxury">
               להרשמה ותיאום שיעור
             </Link>

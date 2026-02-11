@@ -3,6 +3,7 @@ import { Assistant, Cormorant_Garamond, Cardo } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/Navbar";
 import Footer from "../src/components/Footer";
+import { ClerkProvider } from '@clerk/nextjs'
 
 const assistant = Assistant({
   variable: "--font-assistant",
@@ -27,12 +28,19 @@ export const metadata: Metadata = {
   description: "שיעורי פילאטיס מכשירים מקצועיים",
 };
 
+export const application: Metadata = {
+  manifest: "/manifest.json",
+  themeColor: "#3D3935",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
+    <ClerkProvider>
     <html lang="he" dir="rtl" className={`${assistant.className} ${cardo.variable}`}>
       <body
         className="antialiased">
@@ -41,5 +49,6 @@ export default function RootLayout({
         <Footer />
       </body>
     </html>
+    </ClerkProvider>
   );
 }

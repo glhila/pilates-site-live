@@ -16,30 +16,29 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-brand-bg/95 text-brand-dark backdrop-blur border-b border-brand-border-light">
+    <header className="sticky top-0 z-50 bg-brand-bg/95 text-brand-dark backdrop-blur border-b border-brand-stone/30">
       <div className="mx-auto max-w-7xl">
-        {/* ה-nav משתמש ב-justify-between כדי לפזר את האלמנטים לצדדים */}
         <nav className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           
-          {/* 1. לוגו (צד ימין ב-RTL) */}
+          {/* 1. לוגו - שימוש בצבע הזית העמוק החדש */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-3">
-              <div className="h-14 w-14 rounded-full bg-brand-primary-soft/20 border border-brand-primary-soft flex items-center justify-center transition-transform hover:scale-105">
-                <span className="px-1 text-[9px] font-bold leading-tight text-center text-brand-primary">
+              <div className="h-14 w-14 rounded-full bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center transition-transform hover:scale-105">
+                <span className="px-1 text-[9px] font-bold leading-tight text-center text-brand-primary tracking-tighter">
                   עונג של <br/> פילאטיס
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* 2. תפריט דסקטופ (מרכז - מוסתר בנייד) */}
+          {/* 2. תפריט דסקטופ - שיפור ריווח אותיות (Luxury feel) */}
           <div className="hidden md:flex items-center gap-8">
-            <ul className="flex items-center gap-6 text-sm font-medium">
+            <ul className="flex items-center gap-6 text-sm font-medium tracking-wide">
               {links.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="transition-colors hover:text-brand-primary-soft"
+                    className="transition-colors hover:text-brand-primary font-medium"
                   >
                     {link.label}
                   </Link>
@@ -48,27 +47,26 @@ export default function Navbar() {
             </ul>
             <Link
               href="/classes"
-              className="inline-flex items-center justify-center rounded-full border border-brand-dark px-5 py-2 text-sm font-medium transition-all hover:bg-brand-dark hover:text-white"
+              className="inline-flex items-center justify-center rounded-full border border-brand-dark px-5 py-2 text-xs font-bold uppercase tracking-widest transition-all hover:bg-brand-dark hover:text-white"
             >
               קביעת שיעור
             </Link>
           </div>
 
-          {/* 3. קבוצת הפעולות (צד שמאל ב-RTL) - כאן איחדנו את הלוגין וההמבורגר */}
+          {/* 3. קבוצת הפעולות (לוגין והמבורגר) */}
           <div className="flex items-center gap-3">
             
-            {/* כפתורי התחברות / פרופיל */}
             <div className="flex items-center">
               <SignedOut>
                 <SignInButton mode="modal">
-                  <button className="bg-brand-dark text-white px-4 py-2 rounded-full text-xs sm:text-sm font-medium hover:opacity-90 transition-opacity">
+                  <button className="bg-brand-dark text-white px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
                     התחברות
                   </button>
                 </SignInButton>
               </SignedOut>
               <SignedIn>
                 <div className="flex items-center gap-3">
-                  <Link href="/dashboard" className="hidden sm:inline text-xs font-medium text-brand-dark hover:underline">
+                  <Link href="/dashboard" className="hidden sm:inline text-xs font-bold uppercase tracking-wider text-brand-dark hover:text-brand-primary transition-colors">
                     האזור האישי
                   </Link>
                   <UserButton afterSignOutUrl="/" />
@@ -76,13 +74,13 @@ export default function Navbar() {
               </SignedIn>
             </div>
 
-            {/* כפתור המבורגר (נייד בלבד) */}
+            {/* כפתור המבורגר - שימוש ב-brand-stone לקווי מתאר עדינים */}
             <button
               type="button"
-              className="md:hidden inline-flex items-center justify-center rounded-full border border-brand-border-light bg-brand-bg-soft p-2 text-brand-dark transition hover:bg-brand-bg"
+              className="md:hidden inline-flex items-center justify-center rounded-full border border-brand-stone bg-brand-bg-soft p-2 text-brand-dark transition hover:bg-brand-bg"
+              aria-label={isOpen ? "סגור תפריט" : "פתח תפריט"}
               onClick={() => setIsOpen((prev) => !prev)}
             >
-              <span className="sr-only">תפריט</span>
               <span className="flex flex-col gap-1.5">
                 <span className={`block h-0.5 w-5 rounded-full bg-brand-dark transition-all ${isOpen ? "translate-y-[5px] rotate-45" : ""}`} />
                 <span className={`block h-0.5 w-4 rounded-full bg-brand-dark transition-all ${isOpen ? "opacity-0" : "opacity-100"}`} />
@@ -94,16 +92,16 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* תפריט נפתח לנייד */}
+      {/* תפריט נפתח לנייד - התאמת צבעים */}
       {isOpen && (
-        <div className="border-b border-brand-border-light bg-brand-bg-soft md:hidden animate-in slide-in-from-top duration-300">
+        <div className="border-b border-brand-stone/30 bg-brand-bg-soft md:hidden animate-in slide-in-from-top duration-300">
           <div className="mx-auto max-w-7xl px-4 pb-6 pt-2">
             <ul className="flex flex-col gap-2">
               {links.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="block rounded-lg px-4 py-3 text-base font-medium text-brand-dark hover:bg-brand-primary-soft/10"
+                    className="block rounded-lg px-4 py-3 text-base font-medium text-brand-dark hover:bg-brand-primary/5 hover:text-brand-primary"
                     onClick={() => setIsOpen(false)}
                   >
                     {link.label}

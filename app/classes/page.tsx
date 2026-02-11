@@ -48,12 +48,17 @@ export default function ClassesPage() {
           <h1 className="hero-title mb-2 text-center">מערכת שעות</h1>
           <p className="text-center text-brand-dark/70 mb-10">בחרי את היום והשעה המתאימים והצטרפי אלינו</p>
           <div className="rounded-2xl border border-brand-primary-muted/40 bg-brand-bg-soft/80 shadow-[0_10px_30px_rgba(0,0,0,0.05)] overflow-hidden overflow-x-auto">
-            <table className="w-full min-w-[480px] border-collapse text-right">
+            <table className="w-full min-w-[480px] border-collapse text-right font-sans">
               <thead>
-                <tr className="border-b border-brand-primary-muted/40 bg-brand-primary-muted/10">
-                  <th className="py-3 px-4 text-sm font-semibold text-brand-dark">שעה</th>
+                <tr className="border-b border-brand-primary-muted/30 bg-brand-bg-soft">
+                  <th className="py-3 px-4 text-xs sm:text-sm font-semibold text-brand-dark">
+                    שעה
+                  </th>
                   {WEEKDAYS.map((day) => (
-                    <th key={day} className="py-3 px-4 text-sm font-semibold text-brand-primary">
+                    <th
+                      key={day}
+                      className="py-3 px-4 text-xs sm:text-sm font-semibold text-brand-dark"
+                    >
                       {day}
                     </th>
                   ))}
@@ -63,14 +68,25 @@ export default function ClassesPage() {
                 {times.map((time) => (
                   <tr
                     key={time}
-                    className="border-b border-brand-primary-muted/20 last:border-b-0 hover:bg-brand-primary-muted/5 transition-colors"
+                    className="border-b border-brand-primary-muted/20 last:border-b-0 hover:bg-brand-primary-muted/10 transition-colors"
                   >
-                    <td className="py-3 px-4 text-sm font-medium text-brand-dark/80">{time}</td>
+                    <td className="py-3 px-4 text-xs sm:text-sm font-medium text-brand-dark/80">
+                      {time}
+                    </td>
                     {WEEKDAYS.map((day) => {
                       const name = byDay[day]?.[time];
                       return (
-                        <td key={day} className="py-3 px-4 text-sm text-brand-dark">
-                          {name ?? "—"}
+                        <td
+                          key={day}
+                          className="py-3 px-4 text-xs sm:text-sm text-brand-dark align-middle"
+                        >
+                          {name ? (
+                            <span className="inline-flex items-center justify-center rounded-full border border-brand-primary-muted/40 bg-brand-bg-soft px-3 py-1 text-xs font-medium text-brand-dark">
+                              {name}
+                            </span>
+                          ) : (
+                            <span className="text-brand-primary-muted/80">—</span>
+                          )}
                         </td>
                       );
                     })}

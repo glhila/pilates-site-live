@@ -41,7 +41,7 @@ export default function ClassesPage() {
   const { byDay, times } = buildScheduleTable();
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-brand-bg">
+    <main id="main-content" className="min-h-[calc(100vh-4rem)] bg-brand-bg">
       <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
         {/* Schedule section – weekly calendar table */}
         <section className="mb-20">

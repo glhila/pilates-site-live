@@ -25,7 +25,7 @@ export default function PricingPage() {
   ];
 
   return (
-    <main className="max-w-2xl mx-auto px-6 py-20 text-center">
+    <main id="main-content" className="max-w-2xl mx-auto px-6 py-20 text-center">
       <h1 className="hero-title mb-12">מחירון ומסלולים</h1>
 
       {categories.map((category, idx) => (

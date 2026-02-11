@@ -9,7 +9,7 @@ export default function AccessibilityPage() {
   const lastUpdated = "פברואר 2026"; // עדכני לתאריך הנוכחי
 
   return (
-    <main className="min-h-screen bg-brand-bg pb-20">
+    <main id="main-content" className="min-h-screen bg-brand-bg pb-20">
       <div className="container mx-auto px-6 py-16 max-w-4xl">
         
         <header className="text-center mb-16">

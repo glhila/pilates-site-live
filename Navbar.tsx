@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React from "react";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 const links = [
   { href: "/", label: "בית" },
@@ -32,6 +33,27 @@ export default function Navbar() {
           </Link>
         </div>
 
+        <div className="flex items-center gap-4">
+        
+        <SignedOut>
+          {/* מה שמופיע כשהמשתמשת לא מחוברת */}
+          <SignInButton mode="modal">
+            <button className="bg-brand-dark text-white px-6 py-2 rounded-full text-sm font-medium hover:opacity-90">
+              התחברות
+            </button>
+          </SignInButton>
+        </SignedOut>
+        
+        <SignedIn>
+          {/* מה שמופיע כשהמשתמשת מחוברת */}
+          <div className="flex items-center gap-4">
+            <a href="/dashboard" className="text-sm font-medium text-brand-dark">האזור האישי</a>
+            <UserButton afterSignOutUrl="/" />
+          </div>
+        </SignedIn>
+      </div>
+
+        
         {/* Desktop nav */}
         <div className="hidden items-center gap-8 md:flex flex-row-reverse">
           <ul className="flex items-center gap-6 text-sm">

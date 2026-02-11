@@ -13,8 +13,9 @@ const assistant = Assistant({
 
 const cardo = Cardo ({
   variable: "--font-assistant",
-  subsets: ["latin", "hebrew"],
+  subsets: ["latin"],
   weight:  "400",
+  style: ["italic"],
 })
 
 const cormorant = Cormorant_Garamond({
@@ -44,6 +45,9 @@ export default function RootLayout({
     <html lang="he" dir="rtl" className={`${assistant.className} ${cardo.variable}`}>
       <body
         className="antialiased">
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:right-4 bg-brand-dark text-white px-4 py-2 rounded-md z-[100]">
+            דלג לתוכן המרכזי
+          </a>
         <Navbar />
         {children}
         <Footer />

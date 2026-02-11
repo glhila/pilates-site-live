@@ -1,38 +1,38 @@
-import type { Metadata } from "next";
-import { Assistant, Cormorant_Garamond, Cardo } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Assistant, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/Navbar";
-import Footer from "../src/components/Footer";
+import Navbar from "@/Navbar"; 
+import Footer from "@/src/components/Footer"; 
 import { ClerkProvider } from '@clerk/nextjs'
 
+// פונט עברי נקי - משקלים קלים נותנים מראה יוקרתי
 const assistant = Assistant({
+  subsets: ["hebrew", "latin"],
+  weight: ["200", "300", "400", "500"],
   variable: "--font-assistant",
-  subsets: ["latin", "hebrew"],
-  weight: ["300", "400", "500", "600", "700"],
 });
 
-const cardo = Cardo ({
-  variable: "--font-assistant",
-  subsets: ["latin"],
-  weight:  "400",
-  style: ["italic"],
-})
-
+// פונט סריפי לכותרות - דק ואלגנטי (כמו המילה "פילאטיס" בלוגו)
 const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["300"],
+  style: ["italic", "normal"],
+  variable: "--font-serif",
 });
 
+// איחוד כל המטא-דאטה לאובייקט אחד תקני
 export const metadata: Metadata = {
-  title: "סטודיו פילאטיס מכשירים",
-  description: "שיעורי פילאטיס מכשירים מקצועיים",
+  title: "עונג פילאטיס | סטודיו פילאטיס מכשירים בוטיק",
+  description: "סטודיו פילאטיס מכשירים באווירה אינטימית, רכה ויוקרתית. תנועה נכונה, חיזוק הליבה ושקט פנימי.",
+  manifest: "/manifest.json",
 };
 
-export const application: Metadata = {
-  manifest: "/manifest.json",
-  themeColor: "#3D3935",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+// הגדרות Viewport בנפרד (הסטנדרט החדש ב-Next.js)
+export const viewport: Viewport = {
+  themeColor: "#3E4537", // הצבע הירוק-זית מהלוגו שלך
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -42,17 +42,22 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-    <html lang="he" dir="rtl" className={`${assistant.className} ${cardo.variable}`}>
-      <body
-        className="antialiased">
-          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:right-4 bg-brand-dark text-white px-4 py-2 rounded-md z-[100]">
+      {/* מחברים את המשתנים של הפונטים ל-HTML */}
+      <html lang="he" dir="rtl" className={`${assistant.variable} ${cormorant.variable}`}>
+        <body className="antialiased font-sans">
+          {/* נגישות: קישור נסתר למקלדת */}
+          <a 
+            href="#main-content" 
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:right-4 bg-brand-primary text-white px-4 py-2 rounded-md z-[100]"
+          >
             דלג לתוכן המרכזי
           </a>
-        <Navbar />
-        {children}
-        <Footer />
-      </body>
-    </html>
+          
+          <Navbar />
+          {children}
+          <Footer />
+        </body>
+      </html>
     </ClerkProvider>
   );
 }

@@ -1,123 +1,116 @@
 @import "tailwindcss";
 
 :root {
-  /* Base UI colors – sand, body and earth */
-  --background: #F2EFE9;         /* soft sand / greige */
-  --foreground: #333333;         /* warm charcoal for general text */
+  /* שינוי לרקע שמנת רך יותר ויוקרתי */
+  --background: #FDFBFA;         
+  --foreground: #292524;         /* פחם חם - פחות נוקשה משחור */
 
-  /* Brand dark text */
   --brand-dark: #3D3935;
 
-  /* Pilates studio brand palette – warm olive & antique rose */
-  --brand-primary: #4A4E44;       /* deep olive green with brown */
-  --brand-primary-soft: #6E7266;  /* softer hover tone */
-  --brand-primary-muted: #B4B4A8; /* pebble muted tone */
+  /* צבעי זית ואדמה רכים */
+  --brand-primary: #3A3F34;       
+  --brand-primary-soft: #4A4E44;  
+  --brand-primary-muted: #5D5952; /* צבע אבן עדין יותר */
 
-  --brand-bg: #FDFBFA;            /* page background */
-  --brand-bg-soft: #FAF7F1;       /* cards / surfaces */
+  --brand-bg: #FDFBFA;            
+  --brand-bg-soft: #FAF8F6;       /* רקע כרטיסים כמעט לבן */
 
-  --brand-accent: #BC9B8B;        /* antique pink / soft crimson */
-  --brand-accent-soft: #D4B9A5;   /* lighter accent */
+  --brand-accent: #BC9B8B;        
+  --brand-accent-soft: #D4B9A5;   
 
-  --brand-card-border: #E5DFD2;   /* very soft, warm border */
+  --brand-card-border: #F0EDE8;   /* גבולות כמעט בלתי נראים */
 
-  --brand-stone: #E5E1DB;
-  --brand-taupe: #8C8279;
+  --brand-stone: #D6D1C9;
+  --brand-taupe: #4A433F;
 
+  --brand-border-light: #E5E1DB; 
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-
-  /* Brand dark text color */
   --color-brand-dark: var(--brand-dark);
-
-  /* Brand colors exposed to Tailwind utilities */
   --color-brand-primary: var(--brand-primary);
   --color-brand-primary-soft: var(--brand-primary-soft);
   --color-brand-primary-muted: var(--brand-primary-muted);
   --color-brand-bg: var(--brand-bg);
   --color-brand-bg-soft: var(--brand-bg-soft);
-
   --color-brand-accent: var(--brand-accent);
   --color-brand-accent-soft: var(--brand-accent-soft);
   --color-brand-card-border: var(--brand-card-border);
+  --color-brand-stone: var(--brand-stone);
+  --color-brand-taupe: var(--brand-taupe);
 
-  /* Typography tokens (connected to next/font variables) */
+  /* וודאי שב-layout.tsx הגדרת את המשתנים האלו */
   --font-sans: var(--font-assistant);
-  --font-serif: var(--font-cormorant);
+  --font-serif: var(--font-cardo); /* שיניתי ל-Cardo שהוא יוקרתי מאוד */
 }
 
+/* ביטול Dark Mode נוקשה - שומר על האווירה הבהירה של הסטודיו */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #FDFBFA; 
+    --foreground: #3D3935;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-assistant), system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
+  /* משקל 300 הוא הסוד למראה יוקרתי */
+  font-family: var(--font-assistant), sans-serif;
+  font-weight: 400; 
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-
+  -moz-osx-font-smoothing: grayscale;
   direction: rtl;
-
   overflow-x: hidden;
 }
 
-/* Headings – elegant serif for "organic luxury" feel */
-h1,
-h2 {
-  font-family: var(--font-cormorant), var(--font-assistant), system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+/* כותרות - שימוש בפונט Serif עם ריווח אותיות נדיב */
+h1, h2, h3 {
+  font-family: var(--font-serif), serif;
   font-weight: 300;
-  letter-spacing: 0.05em;
-  text-transform: none;
-  color: var(--brand-primary);
+  letter-spacing: -0.01em; /* כותרות גדולות צריכות צפיפות קלה */
+  color: var(--brand-dark);
+  line-height: 1.2;
+}
+
+.text-brand-taupe {
+  color: var(--brand-taupe);
+  font-weight: 400;
 }
 
 @layer components {
-  /* Impressive Hero Title */
+  /* כותרת Hero - דקה ומרשימה */
   .hero-title {
+    font-family: var(--font-serif), serif;
+    font-weight: 200;
     line-height: 1.1;
-    font-weight: 300;
-    letter-spacing: -0.02em;
-    color: var(--brand-primary);
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    letter-spacing: -0.03em;
+    color: var(--brand-dark);
+    font-size: clamp(2.8rem, 6vw, 5rem);
   }
 
-  /* Feature card – soft, floating container */
+  /* כרטיס יוקרתי - צללית רכה מאוד וגבול עדין */
   .feature-card {
-    @apply bg-white/50 backdrop-blur-sm border border-brand-bg-soft rounded-[2.5rem] p-10 transition-all duration-500 hover:-translate-y-1;
-    box-shadow: 0 18px 45px rgba(74, 78, 68, 0.05);
+    @apply bg-white/40 backdrop-blur-md border border-brand-card-border rounded-[3rem] p-10 transition-all duration-700 hover:shadow-2xl hover:shadow-brand-primary/5;
+    box-shadow: 0 10px 40px rgba(61, 57, 53, 0.03);
   }
 
-  /* Gentle entrance animation */
-  .reveal {
-    animation: fadeUp 0.8s ease-out forwards;
+  /* כפתור "עונג" - רך ומזמין */
+  .btn-luxury {
+    @apply inline-flex items-center justify-center rounded-full px-8 py-3.5 text-xs tracking-[0.2em] uppercase transition-all duration-300;
   }
 }
 
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Subtle grain effect for the whole page */
+/* אפקט הנייר - החלשתי אותו כדי שיהיה סופר עדין */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  opacity: 0.02;
+  opacity: 0.015;
   pointer-events: none;
   background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+  z-index: 50;
 }

@@ -91,7 +91,7 @@ export default function AdminPage() {
                 <h2 className="text-xl font-bold mb-6 text-brand-dark">הוספת שיעור</h2>
                 <form onSubmit={handleCreateClass} className="space-y-4">
                   <input 
-                    type="text" placeholder="שם השיעור (למשל: בוקר עוצמתי)" required
+                    type="text" placeholder="שם השיעור (למשל: level 2)" required
                     className="w-full p-3 bg-brand-bg rounded-xl border-none text-sm focus:ring-1 ring-brand-primary"
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
@@ -105,8 +105,10 @@ export default function AdminPage() {
                     <option>פילאטיס מזרן</option>
                   </select>
                   <input 
-                    type="datetime-local" required
-                    className="w-full p-3 bg-brand-bg rounded-xl border-none text-sm"
+                    type="datetime-local" 
+                    required
+                    className="w-full p-3 bg-brand-bg rounded-xl border-none text-sm text-brand-dark min-h-[50px] appearance-none block"
+                    style={{ colorScheme: 'light' }} // זה מבטיח שהדפדפן יציג אייקונים כהים על רקע בהיר
                     value={formData.start_time}
                     onChange={e => setFormData({...formData, start_time: e.target.value})}
                   />

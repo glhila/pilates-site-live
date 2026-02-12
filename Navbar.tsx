@@ -16,14 +16,13 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
   const { user } = useUser();
 
-  // הגדרת המייל שלך - ודאי שהוא תואם בדיוק למה שמופיע ב-Clerk
+  // המייל שלך - ודאי שהוא כתוב באותיות קטנות (lowercase)
   const adminEmail = "hilaglazz13@gmail.com".toLowerCase(); 
   const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
   
-  // בדיקה האם המשתמש המחובר הוא האדמין
+  // בדיקה האם המשתמש הוא אדמין
   const isAdmin = userEmail === adminEmail;
 
-  // הגדרת נתיב וטקסט לכפתור הפעולה המרכזי
   const actionPath = isAdmin ? "/admin" : "/users";
   const actionLabel = isAdmin ? "ניהול סטודיו" : "קביעת שיעור";
 
@@ -32,74 +31,67 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl">
         <nav className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           
-          {/* 1. לוגו */}
+          {/* לוגו */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center transition-transform hover:scale-105">
+            <Link href="/" className="flex items-center">
               <Image 
                 src="/logo.png"
-                alt="עונג פילאטיס לוגו" 
+                alt="עונג פילאטיס" 
                 width={120}
                 height={50} 
-                className="h-12 w-auto object-contain sm:h-14"
+                className="h-12 w-auto object-contain"
                 priority
               />
             </Link>
           </div>
 
-          {/* 2. תפריט דסקטופ */}
+          {/* תפריט דסקטופ */}
           <div className="hidden md:flex items-center gap-8">
-            <ul className="flex items-center gap-6 text-sm font-medium tracking-wide">
+            <ul className="flex items-center gap-6 text-sm font-medium">
               {links.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-brand-dark/90 hover:text-brand-primary transition-colors"
-                  >
+                  <Link href={link.href} className="hover:text-brand-primary transition-colors">
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
 
-            {/* כפתור פעולה מרכזי - מוצג רק למחוברים */}
             <SignedIn>
               <Link
                 href={actionPath}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-dark px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-all hover:opacity-90 shadow-md shadow-brand-dark/10"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-dark px-6 py-2.5 text-xs font-bold text-white hover:opacity-90 transition-all"
               >
-                {isAdmin && <span className="text-sm">⚙️</span>}
+                {isAdmin && <span>⚙️</span>}
                 {actionLabel}
               </Link>
             </SignedIn>
           </div>
 
-          {/* 3. קבוצת הפעולות (לוגין ופרופיל) */}
+          {/* כפתורי התחברות ופרופיל */}
           <div className="flex items-center gap-3">
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="bg-brand-dark text-white px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
+                <button className="bg-brand-dark text-white px-5 py-2 rounded-full text-xs font-bold uppercase">
                   התחברות
                 </button>
               </SignInButton>
             </SignedOut>
             
             <SignedIn>
-              <div className="flex items-center gap-4">
-                {/* כאן מופיע רק כפתור המשתמש כדי למנוע כפילות */}
-                <UserButton afterSignOutUrl="/" />
-              </div>
+              <UserButton afterSignOutUrl="/" />
             </SignedIn>
 
             {/* כפתור המבורגר לנייד */}
             <button
               type="button"
-              className="md:hidden inline-flex items-center justify-center rounded-full border border-brand-stone bg-brand-bg-soft p-2 text-brand-dark transition hover:bg-brand-bg"
-              onClick={() => setIsOpen((prev) => !prev)}
+              className="md:hidden p-2 text-brand-dark"
+              onClick={() => setIsOpen(!isOpen)}
             >
               <span className="flex flex-col gap-1.5">
-                <span className={`block h-0.5 w-5 rounded-full bg-brand-dark transition-all ${isOpen ? "translate-y-[5px] rotate-45" : ""}`} />
-                <span className={`block h-0.5 w-4 rounded-full bg-brand-dark transition-all ${isOpen ? "opacity-0" : "opacity-100"}`} />
-                <span className={`block h-0.5 w-5 rounded-full bg-brand-dark transition-all ${isOpen ? "-translate-y-[5px] -rotate-45" : ""}`} />
+                <span className={`block h-0.5 w-5 bg-brand-dark transition-all ${isOpen ? "rotate-45 translate-y-2" : ""}`} />
+                <span className={`block h-0.5 w-5 bg-brand-dark ${isOpen ? "opacity-0" : ""}`} />
+                <span className={`block h-0.5 w-5 bg-brand-dark transition-all ${isOpen ? "-rotate-45 -translate-y-1" : ""}`} />
               </span>
             </button>
           </div>
@@ -108,35 +100,23 @@ export default function Navbar() {
 
       {/* תפריט נייד */}
       {isOpen && (
-        <div className="border-b border-brand-stone/30 bg-brand-bg-soft md:hidden">
-          <div className="mx-auto max-w-7xl px-4 pb-6 pt-2">
-            <ul className="flex flex-col gap-2">
-              {links.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="block rounded-lg px-4 py-3 text-base font-medium text-brand-dark hover:bg-brand-primary/5 hover:text-brand-primary"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-              
-              <SignedIn>
-                <li className="pt-2">
-                  <Link
-                    href={actionPath}
-                    className="flex items-center justify-center gap-2 rounded-lg bg-brand-dark px-4 py-3 text-center text-base font-bold text-white shadow-md"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {isAdmin && <span>⚙️</span>}
-                    {actionLabel}
-                  </Link>
-                </li>
-              </SignedIn>
-            </ul>
-          </div>
+        <div className="md:hidden bg-brand-bg-soft border-b border-brand-stone/30 p-4">
+          <ul className="flex flex-col gap-4">
+            {links.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="block text-base font-medium" onClick={() => setIsOpen(false)}>
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            <SignedIn>
+              <li>
+                <Link href={actionPath} className="block bg-brand-dark text-white p-3 rounded-lg text-center font-bold" onClick={() => setIsOpen(false)}>
+                  {actionLabel}
+                </Link>
+              </li>
+            </SignedIn>
+          </ul>
         </div>
       )}
     </header>

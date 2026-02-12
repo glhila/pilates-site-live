@@ -2,40 +2,47 @@
 
 import Link from "next/link";
 import React from "react";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 
 const links = [
   { href: "/", label: "בית" },
   { href: "/about", label: "אודות" },
-  { href: "/classes", label: "שיעורים" },
   { href: "/pricing", label: "מחירון" },
   { href: "/contact", label: "צור קשר" },
 ];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { user } = useUser();
 
+  // המייל של האדמין - ודאי שהוא תואם ל-Clerk
+  const adminEmail = "your-email@gmail.com"; 
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === adminEmail;
+
+  // הגדרת נתיב וטקסט לכפתור הפעולה
+  const actionPath = isAdmin ? "/admin" : "/users";
+  
   return (
     <header className="sticky top-0 z-50 bg-brand-bg/95 text-brand-dark backdrop-blur border-b border-brand-stone/30">
       <div className="mx-auto max-w-7xl">
         <nav className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           
-          {/* 1. לוגו - שימוש בצבע הזית העמוק החדש */}
+          {/* 1. לוגו */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center transition-transform hover:scale-105">
-            <Image 
-            src="/logo.png" //
-            alt="עונג פילאטיס לוגו" 
-            width={120}    // התאימי את הגודל לפי הצורך
-            height={50}     
-            className="h-12 w-auto object-contain sm:h-14" // הגובה יתאים את עצמו
-            priority        // מבטיח שהלוגו ייטען ראשון (חשוב ל-LCP)
-          />
-        </Link>
-      </div>
+              <Image 
+                src="/logo.png"
+                alt="עונג פילאטיס לוגו" 
+                width={120}
+                height={50} 
+                className="h-12 w-auto object-contain sm:h-14"
+                priority
+              />
+            </Link>
+          </div>
 
-          {/* 2. תפריט דסקטופ - שיפור ריווח אותיות (Luxury feel) */}
+          {/* 2. תפריט דסקטופ */}
           <div className="hidden md:flex items-center gap-8">
             <ul className="flex items-center gap-6 text-sm font-medium tracking-wide">
               {links.map((link) => (
@@ -49,17 +56,21 @@ export default function Navbar() {
                 </li>
               ))}
             </ul>
-            <Link
-              href="/classes"
-              className="inline-flex items-center justify-center rounded-full bg-brand-dark px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-all hover:opacity-90 shadow-md shadow-brand-dark/10"
-            >
-              קביעת שיעור
-            </Link>
+
+            {/* כפתור פעולה - מוצג רק אם המשתמש מחובר */}
+            <SignedIn>
+              <Link
+                href={actionPath}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-dark px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-all hover:opacity-90 shadow-md shadow-brand-dark/10"
+              >
+                {isAdmin && <span className="text-sm">⚙️</span>}
+                {isAdmin ? "ניהול סטודיו" : "קביעת שיעור"}
+              </Link>
+            </SignedIn>
           </div>
 
-          {/* 3. קבוצת הפעולות (לוגין והמבורגר) */}
+          {/* 3. קבוצת הפעולות (לוגין ופרופיל) */}
           <div className="flex items-center gap-3">
-            
             <div className="flex items-center">
               <SignedOut>
                 <SignInButton mode="modal">
@@ -68,21 +79,25 @@ export default function Navbar() {
                   </button>
                 </SignInButton>
               </SignedOut>
+              
               <SignedIn>
-                <div className="flex items-center gap-3">
-                  <Link href="/dashboard" className="hidden sm:inline text-xs font-bold uppercase tracking-wider text-brand-dark hover:text-brand-primary transition-colors">
-                    האזור האישי
+                <div className="flex items-center gap-4">
+                  {/* קישור טקסט עדין נוסף */}
+                  <Link 
+                    href={actionPath} 
+                    className="hidden sm:flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-dark hover:text-brand-primary transition-colors"
+                  >
+                    {isAdmin ? "לוח בקרה" : "האזור האישי"}
                   </Link>
                   <UserButton afterSignOutUrl="/" />
                 </div>
               </SignedIn>
             </div>
 
-            {/* כפתור המבורגר - שימוש ב-brand-stone לקווי מתאר עדינים */}
+            {/* המבורגר לנייד */}
             <button
               type="button"
               className="md:hidden inline-flex items-center justify-center rounded-full border border-brand-stone bg-brand-bg-soft p-2 text-brand-dark transition hover:bg-brand-bg"
-              aria-label={isOpen ? "סגור תפריט" : "פתח תפריט"}
               onClick={() => setIsOpen((prev) => !prev)}
             >
               <span className="flex flex-col gap-1.5">
@@ -92,11 +107,10 @@ export default function Navbar() {
               </span>
             </button>
           </div>
-
         </nav>
       </div>
 
-      {/* תפריט נפתח לנייד - התאמת צבעים */}
+      {/* תפריט נייד */}
       {isOpen && (
         <div className="border-b border-brand-stone/30 bg-brand-bg-soft md:hidden animate-in slide-in-from-top duration-300">
           <div className="mx-auto max-w-7xl px-4 pb-6 pt-2">
@@ -112,6 +126,19 @@ export default function Navbar() {
                   </Link>
                 </li>
               ))}
+              
+              <SignedIn>
+                <li className="pt-2">
+                  <Link
+                    href={actionPath}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-brand-dark px-4 py-3 text-center text-base font-bold text-white"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {isAdmin && <span>⚙️</span>}
+                    {isAdmin ? "ניהול סטודיו" : "קביעת שיעור"}
+                  </Link>
+                </li>
+              </SignedIn>
             </ul>
           </div>
         </div>

@@ -5,7 +5,6 @@ import React from "react";
 import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 
-
 const links = [
   { href: "/", label: "בית" },
   { href: "/about", label: "אודות" },
@@ -17,13 +16,14 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
   const { user } = useUser();
 
-  // המייל של האדמין - ודאי שהוא תואם ל-Clerk
+  // המייל של האדמין - ודאי שהוא תואם למה שמופיע ב-Clerk
   const adminEmail = "hilaglazz13@gmail.com"; 
   const isAdmin = user?.primaryEmailAddress?.emailAddress === adminEmail;
 
-  // הגדרת נתיב וטקסט לכפתור הפעולה
+  // הגדרת נתיב וטקסט לכפתור הפעולה המרכזי
   const actionPath = isAdmin ? "/admin" : "/users";
-  
+  const actionLabel = isAdmin ? "ניהול סטודיו" : "קביעת שיעור";
+
   return (
     <header className="sticky top-0 z-50 bg-brand-bg/95 text-brand-dark backdrop-blur border-b border-brand-stone/30">
       <div className="mx-auto max-w-7xl">
@@ -58,19 +58,19 @@ export default function Navbar() {
               ))}
             </ul>
 
-            {/* כפתור פעולה - מוצג רק אם המשתמש מחובר */}
+            {/* כפתור פעולה מרכזי - מוצג רק למחוברים */}
             <SignedIn>
               <Link
                 href={actionPath}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-dark px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-all hover:opacity-90 shadow-md shadow-brand-dark/10"
               >
                 {isAdmin && <span className="text-sm">⚙️</span>}
-                {isAdmin ? "ניהול סטודיו" : "קביעת שיעור"}
+                {actionLabel}
               </Link>
             </SignedIn>
           </div>
 
-          {/* 3. קבוצת הפעולות (לוגין ופרופיל) */}
+          {/* 3. קבוצת הפעולות (לוגין, פרופיל והמבורגר) */}
           <div className="flex items-center gap-3">
             <div className="flex items-center">
               <SignedOut>
@@ -83,12 +83,13 @@ export default function Navbar() {
               
               <SignedIn>
                 <div className="flex items-center gap-4">
-                  {/* השארנו רק את הכפתור של הפרופיל וההתנתקות, כי הכפתור המרכזי כבר מוביל ליעד הנכון */}
+                  {/* השארנו רק את כפתור הפרופיל כאן כדי למנוע כפילות עם הכפתור המרכזי */}
                   <UserButton afterSignOutUrl="/" />
                 </div>
               </SignedIn>
+            </div>
 
-            {/* המבורגר לנייד */}
+            {/* כפתור המבורגר לנייד */}
             <button
               type="button"
               className="md:hidden inline-flex items-center justify-center rounded-full border border-brand-stone bg-brand-bg-soft p-2 text-brand-dark transition hover:bg-brand-bg"
@@ -129,7 +130,7 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     {isAdmin && <span>⚙️</span>}
-                    {isAdmin ? "ניהול סטודיו" : "קביעת שיעור"}
+                    {actionLabel}
                   </Link>
                 </li>
               </SignedIn>

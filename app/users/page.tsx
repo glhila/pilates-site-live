@@ -77,9 +77,22 @@ export default function UserPortal() {
   };
 
   const cancelBooking = async (booking: any) => {
-    if (!confirm("לבטל רישום?")) return;
+    // בדיקה ש-supabase קיים כדי להשקיט את TypeScript
+    if (!supabase) return; 
+    
+    if (!confirm("לבטל את הרישום לשיעור?")) return;
+
     const { error } = await supabase.from('bookings').delete().eq('id', booking.id);
-    if (!error) fetchData();
+    
+    if (!error) {
+      // אם התשלום היה מכרטיסייה, נחזיר ניקוב (אופציונלי - אם הוספת את הלוגיקה הזו קודם)
+      if (booking.payment_source === 'punch_card') {
+         await supabase.from('profiles').update({ 
+           punch_card_remaining: (profile?.punch_card_remaining || 0) + 1 
+         }).eq('id', user?.id);
+      }
+      fetchData();
+    }
   };
 
   return (

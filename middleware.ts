@@ -1,25 +1,26 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-// הגדרת הנתיבים המוגנים של הניהול
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
-  const adminEmail = "hilaglazz13@gmail.com"; // המייל של האדמין- לשנות לשל עונג
+  
+  // לעדכן למייל של עונג
+  const adminEmail = "hilaglazz13@gmail.com"; 
   const userEmail = sessionClaims?.email as string;
 
-  // 1. אם המשתמש הוא האדמין והוא נוחת בדף המשתמשים, נעביר אותו אוטומטית לניהול
-  if (userEmail === adminEmail && req.nextUrl.pathname.startsWith('/users')) {
+  // 1. ניתוב אוטומטי של אדמין מדף המשתמשים לדף הניהול
+  if (userEmail === adminEmail && req.nextUrl.pathname === '/users') {
     return NextResponse.redirect(new URL('/admin', req.url));
   }
 
-  // 2. הגנה על נתיבי אדמין - רק המייל שלך יכול להיכנס
+  // 2. הגנה על דפי האדמין
   if (isAdminRoute(req)) {
     if (!userId) return (await auth()).redirectToSignIn();
     
     if (userEmail !== adminEmail) {
-      // אם משתמש רגיל מנסה להיכנס לאדמין - נחזיר אותו לדף המשתמשים
+      // משתמש רגיל מנסה להכנס לאדמין - שלח אותו לדף המשתמשים
       return NextResponse.redirect(new URL('/users', req.url));
     }
   }

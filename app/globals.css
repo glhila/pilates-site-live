@@ -137,3 +137,12 @@ input[type="datetime-local"] {
   position: relative;
   text-align: right;
 }
+
+/* עדכון להצגת מערכת שעות בטלפון*/
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

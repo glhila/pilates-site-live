@@ -10,6 +10,8 @@ const supabase = createClient(
 
 const CANCELLATION_WINDOW_HOURS = 4; // זמן ביטול מוגדר מראש
 
+export const dynamic = 'force-dynamic';
+
 export default function UserPortal() {
   const { user } = useUser();
   const [profile, setProfile] = useState<any>(null);

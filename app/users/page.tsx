@@ -1,16 +1,21 @@
 'use client';
+
+// השורה הזו קריטית ל-Vercel כדי למנוע שגיאות Build
+export const dynamic = 'force-dynamic';
+
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// יצירת ה-client בתוך משתנה קבוע עם בדיקה שהמפתחות קיימים
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-const CANCELLATION_WINDOW_HOURS = 4; // זמן ביטול מוגדר מראש
+const supabase = (supabaseUrl && supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey) 
+  : null;
 
-export const dynamic = 'force-dynamic';
+const CANCELLATION_WINDOW_HOURS = 4;
 
 export default function UserPortal() {
   const { user } = useUser();
@@ -19,23 +24,31 @@ export default function UserPortal() {
   const [userBookings, setUserBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { if (user) fetchData(); }, [user]);
+  useEffect(() => {
+    // מוודא שיש יוזר וגם ש-supabase נוצר בהצלחה
+    if (user && supabase) {
+      fetchData();
+    }
+  }, [user]);
 
   const fetchData = async () => {
+    if (!supabase) return;
     setLoading(true);
-    // משיכת פרופיל
-    const { data: prof } = await supabase.from('profiles').select('*').eq('id', user?.id).single();
-    setProfile(prof);
+    try {
+      const { data: prof } = await supabase.from('profiles').select('*').eq('id', user?.id).single();
+      setProfile(prof);
 
-    // משיכת שיעורים קרובים (7 ימים)
-    const today = new Date();
-    const { data: cls } = await supabase.from('classes').select('*, bookings(id)').gte('start_time', today.toISOString()).order('start_time');
-    setClasses(cls || []);
+      const today = new Date();
+      const { data: cls } = await supabase.from('classes').select('*, bookings(id)').gte('start_time', today.toISOString()).order('start_time');
+      setClasses(cls || []);
 
-    // משיכת רישומים של המשתמשת כולל פרטי השיעור
-    const { data: books } = await supabase.from('bookings').select('*, classes(*)').eq('user_id', user?.id);
-    setUserBookings(books || []);
-    setLoading(false);
+      const { data: books } = await supabase.from('bookings').select('*, classes(*)').eq('user_id', user?.id);
+      setUserBookings(books || []);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getWeekRange = () => {
@@ -50,16 +63,14 @@ export default function UserPortal() {
   };
 
   const handleBooking = async (classItem: any) => {
-    if (!profile?.is_approved) return alert("החשבון ממתין לאישור המנהלת.");
-    if (userBookings.some(b => b.class_id === classItem.id)) return alert("את כבר רשומה לשיעור זה.");
-    if (classItem.bookings.length >= classItem.max_capacity) return alert("השיעור מלא.");
-
+    if (!supabase || !profile?.is_approved) return alert("החשבון ממתין לאישור.");
+    if (userBookings.some(b => b.class_id === classItem.id)) return alert("את כבר רשומה.");
+    
     const { start, end } = getWeekRange();
     const classDate = new Date(classItem.start_time);
     let paymentSource = 'membership';
     let shouldDeductPunch = false;
 
-    // בדיקת מכסה שבועית במידה והשיעור בשבוע הנוכחי
     if (classDate >= start && classDate <= end && profile.membership_type > 0) {
       const bookingsThisWeek = userBookings.filter(b => {
         const d = new Date(b.classes?.start_time);
@@ -71,7 +82,7 @@ export default function UserPortal() {
           paymentSource = 'punch_card';
           shouldDeductPunch = true;
         } else {
-          return alert(`ניצלת את המכסה השבועית שלך (${profile.membership_type} שיעורים).`);
+          return alert("ניצלת את המכסה השבועית.");
         }
       }
     } else if (profile.membership_type === 0) {
@@ -99,15 +110,16 @@ export default function UserPortal() {
   };
 
   const cancelBooking = async (booking: any) => {
+    if (!supabase) return;
     const classStartTime = new Date(booking.classes.start_time);
     const diffInHours = (classStartTime.getTime() - new Date().getTime()) / (1000 * 60 * 60);
     let shouldRefund = true;
 
     if (diffInHours < CANCELLATION_WINDOW_HOURS) {
-      if (!confirm(`ביטול מאוחר: נותרו פחות מ-${CANCELLATION_WINDOW_HOURS} שעות. האימון ינוכה מהמכסה. לבטל?`)) return;
+      if (!confirm(`ביטול מאוחר: האימון ינוכה מהמכסה. לבטל?`)) return;
       shouldRefund = false;
     } else {
-      if (!confirm("לבטל את הרישום?")) return;
+      if (!confirm("לבטל רישום?")) return;
     }
 
     const { error } = await supabase.from('bookings').delete().eq('id', booking.id);
@@ -117,7 +129,7 @@ export default function UserPortal() {
     fetchData();
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center italic opacity-50">טוען נתונים...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center opacity-50 font-sans">טוען נתונים...</div>;
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6 font-sans pb-20" dir="rtl">
@@ -125,40 +137,38 @@ export default function UserPortal() {
         <h1 className="text-3xl font-black mb-1">היי, {user?.firstName} 👋</h1>
         <div className="flex gap-6 mt-4">
           <p className="text-sm">מנוי: <strong>{profile?.membership_type} שיעורים/שבוע</strong></p>
-          <p className="text-sm">יתרה בכרטיסייה: <strong>{profile?.punch_card_remaining || 0}</strong></p>
+          <p className="text-sm">יתרה: <strong>{profile?.punch_card_remaining || 0}</strong></p>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto space-y-12">
-        {/* אימונים קרובים */}
-        {userBookings.filter(b => new Date(b.classes.start_time) >= new Date()).length > 0 && (
+        {userBookings.filter(b => new Date(b.classes?.start_time) >= new Date()).length > 0 && (
           <section>
             <h2 className="text-xl font-bold mb-4">האימונים הקרובים שלי</h2>
             <div className="grid gap-3">
-              {userBookings.filter(b => new Date(b.classes.start_time) >= new Date()).map(b => (
-                <div key={b.id} className="bg-foreground text-background p-5 rounded-2xl flex justify-between items-center">
+              {userBookings.filter(b => new Date(b.classes?.start_time) >= new Date()).map(b => (
+                <div key={b.id} className="bg-foreground text-background p-5 rounded-2xl flex justify-between items-center shadow-md">
                   <div>
-                    <h3 className="font-bold">{b.classes.name}</h3>
+                    <h3 className="font-bold">{b.classes?.name}</h3>
                     <p className="text-xs opacity-70">
-                      {new Date(b.classes.start_time).toLocaleString('he-IL', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(b.classes?.start_time).toLocaleString('he-IL', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  <button onClick={() => cancelBooking(b)} className="text-xs border border-background/20 px-4 py-2 rounded-full hover:bg-background/10">ביטול</button>
+                  <button onClick={() => cancelBooking(b)} className="text-xs border border-background/20 px-4 py-2 rounded-full hover:bg-white/10 transition-colors">ביטול</button>
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* מערכת שעות כללית */}
         <section>
           <h2 className="text-xl font-bold mb-4">מערכת שעות להרשמה</h2>
           <div className="grid gap-3">
             {classes.map(c => {
               const isBooked = userBookings.some(b => b.class_id === c.id);
-              const isFull = c.bookings.length >= c.max_capacity;
+              const isFull = c.bookings?.length >= c.max_capacity;
               return (
-                <div key={c.id} className={`bg-card border p-5 rounded-2xl flex justify-between items-center ${isBooked ? 'border-primary/50' : ''}`}>
+                <div key={c.id} className={`bg-card border p-5 rounded-2xl flex justify-between items-center transition-all ${isBooked ? 'border-primary/50 ring-1 ring-primary/20' : 'border-border'}`}>
                   <div>
                     <span className="text-[10px] font-bold text-primary uppercase">{c.class_type}</span>
                     <h3 className="font-bold">{c.name}</h3>
@@ -167,7 +177,7 @@ export default function UserPortal() {
                   <button 
                     disabled={isBooked || isFull}
                     onClick={() => handleBooking(c)}
-                    className={`px-6 py-2 rounded-full font-bold text-xs ${isBooked ? 'bg-muted text-muted-foreground' : isFull ? 'bg-gray-100 text-gray-400' : 'bg-foreground text-background'}`}
+                    className={`px-6 py-2 rounded-full font-bold text-xs transition-all ${isBooked ? 'bg-muted text-muted-foreground' : isFull ? 'bg-muted/50 text-muted-foreground/50' : 'bg-foreground text-background hover:scale-105'}`}
                   >
                     {isBooked ? 'רשומה' : isFull ? 'מלא' : 'הרשמה'}
                   </button>

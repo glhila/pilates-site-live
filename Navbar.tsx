@@ -16,9 +16,12 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
   const { user } = useUser();
 
-  // המייל של האדמין - ודאי שהוא תואם למה שמופיע ב-Clerk
-  const adminEmail = "hilaglazz13@gmail.com"; 
-  const isAdmin = user?.primaryEmailAddress?.emailAddress === adminEmail;
+  // הגדרת המייל שלך - ודאי שהוא תואם בדיוק למה שמופיע ב-Clerk
+  const adminEmail = "hilaglazz13@gmail.com".toLowerCase(); 
+  const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
+  
+  // בדיקה האם המשתמש המחובר הוא האדמין
+  const isAdmin = userEmail === adminEmail;
 
   // הגדרת נתיב וטקסט לכפתור הפעולה המרכזי
   const actionPath = isAdmin ? "/admin" : "/users";
@@ -70,24 +73,22 @@ export default function Navbar() {
             </SignedIn>
           </div>
 
-          {/* 3. קבוצת הפעולות (לוגין, פרופיל והמבורגר) */}
+          {/* 3. קבוצת הפעולות (לוגין ופרופיל) */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="bg-brand-dark text-white px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
-                    התחברות
-                  </button>
-                </SignInButton>
-              </SignedOut>
-              
-              <SignedIn>
-                <div className="flex items-center gap-4">
-                  {/* השארנו רק את כפתור הפרופיל כאן כדי למנוע כפילות עם הכפתור המרכזי */}
-                  <UserButton afterSignOutUrl="/" />
-                </div>
-              </SignedIn>
-            </div>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="bg-brand-dark text-white px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
+                  התחברות
+                </button>
+              </SignInButton>
+            </SignedOut>
+            
+            <SignedIn>
+              <div className="flex items-center gap-4">
+                {/* כאן מופיע רק כפתור המשתמש כדי למנוע כפילות */}
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            </SignedIn>
 
             {/* כפתור המבורגר לנייד */}
             <button
@@ -107,7 +108,7 @@ export default function Navbar() {
 
       {/* תפריט נייד */}
       {isOpen && (
-        <div className="border-b border-brand-stone/30 bg-brand-bg-soft md:hidden animate-in slide-in-from-top duration-300">
+        <div className="border-b border-brand-stone/30 bg-brand-bg-soft md:hidden">
           <div className="mx-auto max-w-7xl px-4 pb-6 pt-2">
             <ul className="flex flex-col gap-2">
               {links.map((link) => (
@@ -126,7 +127,7 @@ export default function Navbar() {
                 <li className="pt-2">
                   <Link
                     href={actionPath}
-                    className="flex items-center justify-center gap-2 rounded-lg bg-brand-dark px-4 py-3 text-center text-base font-bold text-white"
+                    className="flex items-center justify-center gap-2 rounded-lg bg-brand-dark px-4 py-3 text-center text-base font-bold text-white shadow-md"
                     onClick={() => setIsOpen(false)}
                   >
                     {isAdmin && <span>⚙️</span>}

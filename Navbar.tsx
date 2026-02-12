@@ -5,6 +5,7 @@ import React from "react";
 import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 
+
 const links = [
   { href: "/", label: "בית" },
   { href: "/about", label: "אודות" },
@@ -17,7 +18,7 @@ export default function Navbar() {
   const { user } = useUser();
 
   // המייל של האדמין - ודאי שהוא תואם ל-Clerk
-  const adminEmail = "your-email@gmail.com"; 
+  const adminEmail = "hilaglazz13@gmail.com"; 
   const isAdmin = user?.primaryEmailAddress?.emailAddress === adminEmail;
 
   // הגדרת נתיב וטקסט לכפתור הפעולה

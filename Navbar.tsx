@@ -83,17 +83,10 @@ export default function Navbar() {
               
               <SignedIn>
                 <div className="flex items-center gap-4">
-                  {/* קישור טקסט עדין נוסף */}
-                  <Link 
-                    href={actionPath} 
-                    className="hidden sm:flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-dark hover:text-brand-primary transition-colors"
-                  >
-                    {isAdmin ? "לוח בקרה" : "האזור האישי"}
-                  </Link>
+                  {/* השארנו רק את הכפתור של הפרופיל וההתנתקות, כי הכפתור המרכזי כבר מוביל ליעד הנכון */}
                   <UserButton afterSignOutUrl="/" />
                 </div>
               </SignedIn>
-            </div>
 
             {/* המבורגר לנייד */}
             <button

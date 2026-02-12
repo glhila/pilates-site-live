@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// אתחול Supabase מחוץ לקומפוננטה
+// אתחול Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
@@ -23,7 +23,6 @@ export default function AdminPage() {
     max_capacity: 6
   });
 
-  // פונקציית טעינה פשוטה
   const loadData = async () => {
     if (!supabase) return;
     setIsFetching(true);
@@ -52,67 +51,79 @@ export default function AdminPage() {
     const { error } = await supabase.from('classes').insert([formData]);
     if (error) alert("שגיאה: " + error.message);
     else {
-      alert("השיעור נוסף!");
+      alert("השיעור נוסף בהצלחה!");
       setFormData({ ...formData, name: '', start_time: '' });
       loadData();
     }
   };
 
-  // --- הממשק תמיד ירונדר כאן ---
   return (
-    <div className="min-h-screen bg-[#FDFBF7] p-4 sm:p-8 font-sans" dir="rtl">
+    <div className="min-h-screen bg-[#FDFBF7] p-4 sm:p-8 font-sans text-right" dir="rtl">
       <div className="max-w-6xl mx-auto">
         
-        {/* כותרת וניווט טאבים */}
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4 border-b border-brand-stone/20 pb-6">
-          <h1 className="text-4xl font-black text-brand-dark">ניהול הסטודיו ⚙️</h1>
-          <div className="bg-brand-stone/10 p-1 rounded-2xl flex gap-1">
+        {/* כותרת וניווט */}
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6 border-b border-gray-200 pb-6">
+          <h1 className="text-3xl md:text-4xl font-black text-slate-800">ניהול הסטודיו ⚙️</h1>
+          <div className="bg-gray-100 p-1.5 rounded-2xl flex gap-1 w-full sm:w-auto">
             <button 
               onClick={() => setActiveTab('schedule')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'schedule' ? 'bg-brand-dark text-white shadow-sm' : 'text-brand-dark/60'}`}
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'schedule' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-gray-200'}`}
             >
               מערכת שעות
             </button>
             <button 
               onClick={() => setActiveTab('users')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-brand-dark text-white shadow-sm' : 'text-brand-dark/60'}`}
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-gray-200'}`}
             >
               ניהול מתאמנות
             </button>
           </div>
         </header>
 
-        {/* תוכן הטאב הנבחר */}
         <div className="animate-in fade-in duration-500">
           {activeTab === 'schedule' ? (
             <div className="grid md:grid-cols-3 gap-8">
-              {/* טופס הוספה - חייב להופיע */}
-              <div className="md:col-span-1 bg-white p-6 rounded-[2rem] shadow-sm border border-brand-stone/20 h-fit">
-                <h2 className="text-xl font-bold mb-6 text-brand-dark">הוספת שיעור</h2>
-                <form onSubmit={handleCreateClass} className="space-y-4">
-                  <input 
-                    type="text" placeholder="שם השיעור (למשל: level 2)" required
-                    className="w-full p-3 bg-brand-bg rounded-xl border-none text-sm focus:ring-1 ring-brand-primary"
-                    value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
-                  />
-                  <select 
-                    className="w-full p-3 bg-brand-bg rounded-xl border-none text-sm"
-                    value={formData.class_type}
-                    onChange={e => setFormData({...formData, class_type: e.target.value})}
-                  >
-                    <option>פילאטיס מכשירים</option>
-                    <option>פילאטיס מזרן</option>
-                  </select>
-                  <input 
-                    type="datetime-local" 
-                    required
-                    className="w-full p-3 bg-brand-bg rounded-xl border-none text-sm text-brand-dark min-h-[50px] appearance-none block"
-                    style={{ colorScheme: 'light' }} // זה מבטיח שהדפדפן יציג אייקונים כהים על רקע בהיר
-                    value={formData.start_time}
-                    onChange={e => setFormData({...formData, start_time: e.target.value})}
-                  />
-                  <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-xl font-bold hover:opacity-90 transition-opacity shadow-lg shadow-brand-dark/10">
+              
+              {/* טופס הוספה */}
+              <div className="md:col-span-1 bg-white p-6 rounded-[2rem] shadow-sm border border-gray-200 h-fit">
+                <h2 className="text-xl font-bold mb-6 text-slate-800 border-b pb-2">הוספת שיעור חדש</h2>
+                <form onSubmit={handleCreateClass} className="space-y-5">
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 mr-1">שם השיעור:</label>
+                    <input 
+                      type="text" placeholder="למשל: Reformer Level 1" required
+                      className="w-full p-3.5 bg-gray-50 rounded-xl border border-gray-200 text-slate-800 focus:ring-2 focus:ring-slate-800 outline-none transition-all"
+                      value={formData.name}
+                      onChange={e => setFormData({...formData, name: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 mr-1">סוג שיעור:</label>
+                    <select 
+                      className="w-full p-3.5 bg-gray-50 rounded-xl border border-gray-200 text-slate-800 focus:ring-2 focus:ring-slate-800 outline-none appearance-none"
+                      value={formData.class_type}
+                      onChange={e => setFormData({...formData, class_type: e.target.value})}
+                    >
+                      <option>פילאטיס מכשירים</option>
+                      <option>פילאטיס מזרן</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 mr-1">תאריך ושעה:</label>
+                    <input 
+                      type="datetime-local" 
+                      required
+                      style={{ colorScheme: 'light' }}
+                      className="w-full p-3.5 bg-gray-50 rounded-xl border border-gray-200 text-slate-800 focus:ring-2 focus:ring-slate-800 outline-none min-h-[52px] block"
+                      value={formData.start_time}
+                      onChange={e => setFormData({...formData, start_time: e.target.value})}
+                    />
+                  </div>
+
+                  <button type="submit" className="w-full bg-slate-800 text-white p-4 rounded-xl font-bold hover:bg-slate-700 transition-colors shadow-lg mt-4">
                     צור שיעור במערכת
                   </button>
                 </form>
@@ -120,30 +131,59 @@ export default function AdminPage() {
 
               {/* רשימת השיעורים */}
               <div className="md:col-span-2">
-                <h2 className="text-xl font-bold mb-4 text-brand-dark">שיעורים קיימים במערכת</h2>
-                {isFetching ? <p className="opacity-50 animate-pulse">מעדכן נתונים...</p> : (
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold text-slate-800">שיעורים קיימים במערכת</h2>
+                    <button onClick={loadData} className="text-sm text-slate-500 hover:underline">רענן רשימה ↻</button>
+                </div>
+                
+                {isFetching ? (
+                   <div className="space-y-3">
+                     {[1,2,3].map(i => <div key={i} className="h-20 bg-gray-100 animate-pulse rounded-2xl"></div>)}
+                   </div>
+                ) : (
                   <div className="space-y-3">
                     {classes.map(c => (
-                      <div key={c.id} className="bg-white p-5 rounded-2xl border border-brand-stone/10 flex justify-between items-center shadow-sm">
+                      <div key={c.id} className="bg-white p-5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                         <div>
-                          <p className="font-bold text-brand-dark">{c.name}</p>
-                          <p className="text-xs opacity-60">{new Date(c.start_time).toLocaleString('he-IL', {weekday: 'long', hour: '2-digit', minute: '2-digit'})}</p>
+                          <p className="font-bold text-slate-800">{c.name}</p>
+                          <p className="text-xs text-slate-500 font-medium mt-1">
+                            {new Date(c.start_time).toLocaleString('he-IL', {weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                          </p>
+                          <span className="inline-block mt-2 px-2 py-0.5 bg-gray-100 text-[10px] rounded-full text-gray-600">{c.class_type}</span>
                         </div>
-                        <button onClick={async () => { if(confirm("למחוק?")) { await supabase?.from('classes').delete().eq('id', c.id); loadData(); } }} className="text-xs text-red-400 font-bold hover:underline">מחיקה</button>
+                        <button 
+                          onClick={async () => { if(confirm("למחוק את השיעור?")) { await supabase?.from('classes').delete().eq('id', c.id); loadData(); } }} 
+                          className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          מחיקה
+                        </button>
                       </div>
                     ))}
-                    {classes.length === 0 && <div className="p-10 border-2 border-dashed border-brand-stone/20 rounded-[2rem] text-center opacity-40">אין עדיין שיעורים להצגה</div>}
+                    {classes.length === 0 && (
+                      <div className="p-16 border-2 border-dashed border-gray-200 rounded-[2rem] text-center">
+                        <p className="text-gray-400">אין עדיין שיעורים להצגה. הוסיפי את השיעור הראשון!</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
           ) : (
             /* טאב ניהול מתאמנות */
-            <div className="bg-white rounded-[2rem] border border-brand-stone/20 p-8 shadow-sm text-center">
-               <h2 className="text-xl font-bold mb-4 text-brand-dark">רשימת המתאמנות שלך</h2>
-               {isFetching ? <p className="opacity-50">טוען רשימה...</p> : (
-                 profiles.length === 0 ? <p className="opacity-40 italic">טרם נרשמו מתאמנות לאתר</p> : (
-                   <p className="text-sm font-medium">נמצאו {profiles.length} מתאמנות במערכת</p>
+            <div className="bg-white rounded-[2rem] border border-gray-200 p-8 shadow-sm text-center">
+               <h2 className="text-2xl font-bold mb-4 text-slate-800">רשימת המתאמנות שלך</h2>
+               {isFetching ? <p className="text-gray-400">טוען רשימה...</p> : (
+                 profiles.length === 0 ? (
+                    <p className="text-gray-400 italic">טרם נרשמו מתאמנות לאתר</p>
+                 ) : (
+                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6 text-right">
+                     {profiles.map(p => (
+                       <div key={p.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                         <p className="font-bold text-slate-800">{p.full_name || 'ללא שם'}</p>
+                         <p className="text-xs text-gray-500">{p.email || ''}</p>
+                       </div>
+                     ))}
+                   </div>
                  )
                )}
             </div>

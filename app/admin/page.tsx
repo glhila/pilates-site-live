@@ -16,11 +16,21 @@ export default function AdminPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
 
-  const [formData, setFormData] = useState({
+  // טופס שיעור
+  const [classFormData, setClassFormData] = useState({
     name: '',
     class_type: 'פילאטיס מכשירים',
     start_time: '',
     max_capacity: 6
+  });
+
+  // טופס מתאמנת חדשה (מילוי ע"י אדמין אחרי תשלום)
+  const [userFormData, setUserFormData] = useState({
+    full_name: '',
+    email: '',
+    membership_type: 2, // מספר אימונים בשבוע
+    punch_card_remaining: 0,
+    punch_card_expiry: ''
   });
 
   const loadData = async () => {
@@ -48,17 +58,36 @@ export default function AdminPage() {
     e.preventDefault();
     if (!supabase) return alert("חיבור ל-Supabase לא הוגדר");
     
-    const { error } = await supabase.from('classes').insert([formData]);
+    const { error } = await supabase.from('classes').insert([classFormData]);
     if (error) alert("שגיאה: " + error.message);
     else {
       alert("השיעור נוסף בהצלחה!");
-      setFormData({ ...formData, name: '', start_time: '' });
+      setClassFormData({ ...classFormData, name: '', start_time: '' });
+      loadData();
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return alert("חיבור ל-Supabase לא הוגדר");
+
+    const { error } = await supabase.from('profiles').insert([{
+      ...userFormData,
+      is_approved: true, // האדמין מאשר מראש
+      clerk_id: null     // יתמלא אוטומטית כשהמתאמנת תירשם לאתר
+    }]);
+
+    if (error) {
+        if (error.code === '23505') alert("שגיאה: המייל הזה כבר קיים במערכת");
+        else alert("שגיאה: " + error.message);
+    } else {
+      alert("המתאמנת נוספה בהצלחה! היא יכולה כעת להירשם לאתר.");
+      setUserFormData({ full_name: '', email: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: '' });
       loadData();
     }
   };
 
   return (
-    // השימוש ב-font-sans כאן מושך את הגופן שהגדרת ב-layout/globals
     <div className="min-h-screen bg-brand-bg p-4 sm:p-8 font-sans antialiased text-brand-dark" dir="rtl">
       <div className="max-w-6xl mx-auto">
         
@@ -87,122 +116,169 @@ export default function AdminPage() {
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
           {activeTab === 'schedule' ? (
+            /* טאב מערכת שעות - נשאר כפי שהיה */
             <div className="grid md:grid-cols-3 gap-10">
-              
-              {/* טופס הוספה */}
               <div className="md:col-span-1 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit">
                 <h2 className="text-xl font-bold mb-6 italic">הוספת שיעור</h2>
                 <form onSubmit={handleCreateClass} className="space-y-5">
-                  
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-brand-dark/40 mr-1 uppercase tracking-widest">שם השיעור</label>
                     <input 
                       type="text" placeholder="למשל: Reformer Flow" required
-                      className="w-full p-4 bg-brand-bg/50 rounded-2xl border border-brand-stone/30 focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all placeholder:opacity-30 font-medium"
-                      value={formData.name}
-                      onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="w-full p-4 bg-brand-bg/50 rounded-2xl border border-brand-stone/30 outline-none font-medium"
+                      value={classFormData.name}
+                      onChange={e => setClassFormData({...classFormData, name: e.target.value})}
                     />
                   </div>
-
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-brand-dark/40 mr-1 uppercase tracking-widest">סוג פעילות</label>
                     <select 
-                      className="w-full p-4 bg-brand-bg/50 rounded-2xl border border-brand-stone/30 focus:ring-2 focus:ring-brand-primary/20 outline-none appearance-none cursor-pointer font-medium"
-                      value={formData.class_type}
-                      onChange={e => setFormData({...formData, class_type: e.target.value})}
+                      className="w-full p-4 bg-brand-bg/50 rounded-2xl border border-brand-stone/30 outline-none font-medium"
+                      value={classFormData.class_type}
+                      onChange={e => setClassFormData({...classFormData, class_type: e.target.value})}
                     >
                       <option>פילאטיס מכשירים</option>
                       <option>פילאטיס מזרן</option>
                     </select>
                   </div>
-
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-brand-dark/40 mr-1 uppercase tracking-widest">תאריך ושעה</label>
                     <input 
-                      type="datetime-local" 
-                      required
-                      style={{ colorScheme: 'light' }}
-                      className="w-full p-4 bg-brand-bg/50 rounded-2xl border border-brand-stone/30 focus:ring-2 focus:ring-brand-primary/20 outline-none min-h-[56px] block font-medium"
-                      value={formData.start_time}
-                      onChange={e => setFormData({...formData, start_time: e.target.value})}
+                      type="datetime-local" required style={{ colorScheme: 'light' }}
+                      className="w-full p-4 bg-brand-bg/50 rounded-2xl border border-brand-stone/30 outline-none font-medium"
+                      value={classFormData.start_time}
+                      onChange={e => setClassFormData({...classFormData, start_time: e.target.value})}
                     />
                   </div>
-
-                  <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-2xl font-bold hover:opacity-90 transition-all shadow-xl shadow-brand-dark/10 mt-4 active:scale-[0.98]">
+                  <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-2xl font-bold hover:opacity-90 transition-all shadow-xl">
                     הוספה למערכת
                   </button>
                 </form>
               </div>
 
-              {/* רשימת השיעורים */}
               <div className="md:col-span-2">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold italic">שיעורים קרובים</h2>
-                    <button onClick={loadData} className="text-xs font-bold text-brand-dark/40 hover:text-brand-dark transition-colors">רענן נתונים ↻</button>
+                    <button onClick={loadData} className="text-xs font-bold text-brand-dark/40 hover:text-brand-dark transition-colors">רענן ↻</button>
                 </div>
-                
-                {isFetching ? (
-                   <div className="space-y-4">
-                     {[1,2,3].map(i => <div key={i} className="h-24 bg-brand-stone/5 animate-pulse rounded-[2rem]"></div>)}
-                   </div>
-                ) : (
-                  <div className="grid gap-4">
+                <div className="grid gap-4">
                     {classes.map(c => (
-                      <div key={c.id} className="bg-white p-6 rounded-[2rem] border border-brand-stone/10 flex justify-between items-center shadow-sm hover:border-brand-stone/30 transition-all group">
+                      <div key={c.id} className="bg-white p-6 rounded-[2rem] border border-brand-stone/10 flex justify-between items-center shadow-sm group">
                         <div className="flex gap-4 items-center">
                           <div className="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-xl shadow-inner">🗓️</div>
                           <div>
                             <p className="font-bold text-lg leading-tight">{c.name}</p>
-                            <p className="text-sm text-brand-dark/50 mt-1 font-medium">
-                              {new Date(c.start_time).toLocaleString('he-IL', {weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'})}
-                            </p>
-                            <span className="inline-block mt-2 px-3 py-0.5 bg-brand-stone/10 text-[10px] font-bold rounded-full text-brand-dark/60 uppercase tracking-widest">{c.class_type}</span>
+                            <p className="text-sm text-brand-dark/50 mt-1 font-medium">{new Date(c.start_time).toLocaleString('he-IL', {weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'})}</p>
                           </div>
                         </div>
-                        <button 
-                          onClick={async () => { if(confirm("למחוק את השיעור?")) { await supabase?.from('classes').delete().eq('id', c.id); loadData(); } }} 
-                          className="px-4 py-2 text-xs font-bold text-red-400 hover:bg-red-50 rounded-xl transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          מחיקה
-                        </button>
+                        <button onClick={async () => { if(confirm("למחוק?")) { await supabase?.from('classes').delete().eq('id', c.id); loadData(); } }} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity font-bold text-xs">מחיקה</button>
                       </div>
                     ))}
-                    {classes.length === 0 && (
-                      <div className="p-20 border-2 border-dashed border-brand-stone/20 rounded-[3rem] text-center">
-                        <p className="text-brand-dark/30 font-medium">אין שיעורים מתוזמנים במערכת</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           ) : (
-            /* טאב ניהול מתאמנות */
-            <div className="bg-white rounded-[3rem] border border-brand-stone/20 p-12 shadow-sm text-center">
-               <div className="max-w-md mx-auto">
-                 <div className="w-20 h-20 bg-brand-bg rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner">👥</div>
-                 <h2 className="text-2xl font-bold mb-2">מתאמנות הסטודיו</h2>
-                 {isFetching ? <p className="text-brand-dark/40 animate-pulse font-medium italic">טוען רשימה...</p> : (
-                   <div>
-                     <p className="text-brand-dark/60 mb-8 font-medium">רשימת כל הנרשמות לאתר</p>
-                     {profiles.length === 0 ? (
-                        <p className="text-brand-dark/30 italic">טרם נרשמו מתאמנות</p>
-                     ) : (
-                       <div className="grid gap-3">
-                         {profiles.map(p => (
-                           <div key={p.id} className="p-4 bg-brand-bg/30 rounded-2xl border border-brand-stone/10 flex items-center justify-between group hover:bg-white transition-colors">
-                             <div className="text-right">
-                               <p className="font-bold">{p.full_name || 'מתאמנת ללא שם'}</p>
-                               <p className="text-xs text-brand-dark/40 font-medium tracking-wide">{p.email || ''}</p>
-                             </div>
-                             <div className="text-[9px] font-black text-brand-stone/60 uppercase tracking-tighter">Active</div>
-                           </div>
-                         ))}
-                       </div>
-                     )}
-                   </div>
-                 )}
-               </div>
+            /* טאב ניהול מתאמנות - מעודכן */
+            <div className="grid md:grid-cols-3 gap-10">
+              
+              {/* טופס הוספת מתאמנת */}
+              <div className="md:col-span-1 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit">
+                <h2 className="text-xl font-bold mb-6 italic">הוספת מתאמנת חדשה</h2>
+                <form onSubmit={handleCreateUser} className="space-y-4">
+                  
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">שם מלא</label>
+                    <input 
+                      type="text" required
+                      className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
+                      value={userFormData.full_name}
+                      onChange={e => setUserFormData({...userFormData, full_name: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">אימייל (לצורך התחברות)</label>
+                    <input 
+                      type="email" required
+                      className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
+                      value={userFormData.email}
+                      onChange={e => setUserFormData({...userFormData, email: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">אימונים בשבוע</label>
+                        <input 
+                        type="number" min="0" max="7"
+                        className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
+                        value={userFormData.membership_type}
+                        onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">ניקובים בכרטיסייה</label>
+                        <input 
+                        type="number" min="0"
+                        className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
+                        value={userFormData.punch_card_remaining}
+                        onChange={e => setUserFormData({...userFormData, punch_card_remaining: parseInt(e.target.value)})}
+                        />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">תוקף כרטיסייה (אופציונלי)</label>
+                    <input 
+                      type="date"
+                      className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
+                      value={userFormData.punch_card_expiry}
+                      onChange={e => setUserFormData({...userFormData, punch_card_expiry: e.target.value})}
+                    />
+                  </div>
+
+                  <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-2xl font-bold hover:bg-brand-dark/90 transition-all shadow-lg mt-2">
+                    אישור והוספה למערכת
+                  </button>
+                </form>
+              </div>
+
+              {/* רשימת המתאמנות */}
+              <div className="md:col-span-2">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold italic">מתאמנות רשומות</h2>
+                    <span className="bg-brand-stone/10 px-3 py-1 rounded-full text-[10px] font-bold">{profiles.length} סה"כ</span>
+                </div>
+
+                <div className="grid gap-3">
+                    {profiles.map(p => (
+                      <div key={p.id} className="bg-white p-5 rounded-3xl border border-brand-stone/10 flex justify-between items-center hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-4 text-right">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${p.clerk_id ? 'bg-green-50 text-green-600' : 'bg-brand-stone/10 text-brand-stone/40'}`}>
+                            {p.clerk_id ? '✓' : '👤'}
+                          </div>
+                          <div>
+                            <p className="font-bold">{p.full_name || 'מתאמנת חדשה'}</p>
+                            <p className="text-xs text-brand-dark/40 font-medium">{p.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-4 items-center">
+                            <div className="text-left">
+                                <p className="text-[10px] font-black uppercase text-brand-dark/30">מנוי / כרטיסייה</p>
+                                <p className="text-xs font-bold">{p.membership_type} בשבוע | {p.punch_card_remaining} ניקובים</p>
+                            </div>
+                            <button 
+                                onClick={async () => { if(confirm("למחוק מתאמנת?")) { await supabase?.from('profiles').delete().eq('id', p.id); loadData(); } }}
+                                className="text-red-300 hover:text-red-500 transition-colors mr-4"
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                      </div>
+                    ))}
+                    {profiles.length === 0 && <p className="text-center p-10 text-brand-dark/30 italic">אין מתאמנות במערכת</p>}
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -20,13 +20,13 @@ export async function POST(req: Request) {
     return new Response('Error occured -- no svix headers', { status: 400 })
   }
 
-  // 2. קבלת גוף ההודעה
-  //const payload = await req.json()
-  const body = await req.json();
+  // 2. קבלת גוף ההודעה כטקסט נקי (קריטי לאימות החתימה!)
+  const body = await req.text();
+  
   const wh = new Webhook(WEBHOOK_SECRET);
   let evt: WebhookEvent
 
-  // 3. אימות החתימה
+  // 3. אימות החתימה הדיגיטלית
   try {
     evt = wh.verify(body, {
       "svix-id": svix_id,
@@ -35,37 +35,61 @@ export async function POST(req: Request) {
     }) as WebhookEvent
   } catch (err) {
     console.error('Error verifying webhook:', err);
-    return new Response('Error occured', { status: 400 })
+    return new Response('Error occured during verification', { status: 400 })
   }
 
   // 4. טיפול באירוע יצירת משתמש
   const eventType = evt.type;
+  
   if (eventType === 'user.created') {
     const { id, email_addresses, first_name, last_name } = evt.data;
-    const email = email_addresses[0].email_address;
+    const email = email_addresses[0]?.email_address;
     const fullName = `${first_name || ''} ${last_name || ''}`.trim();
 
-    // התחברות ל-Supabase
+    // התחברות ל-Supabase עם ה-Secret Key
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SECRET_KEY!
     )
 
-    // הכנסה לטבלת profiles
-    const { error } = await supabase
+    /**
+     * לוגיקת החיבור:
+     * האדמין כבר יצר שורה עם המייל הזה. אנחנו מחפשים אותה ומעדכנים את ה-clerk_id.
+     */
+    const { data, error: updateError } = await supabase
       .from('profiles')
-      .insert({
-        id: id,
-        email: email,
-        full_name: fullName,
-        is_approved: false // ברירת מחדל - מחכה לאישור המנהלת
+      .update({ 
+        clerk_id: id,            // המזהה של Clerk
+        full_name: fullName,      // עדכון שם במידה והשתנה ברישום
+        updated_at: new Date().toISOString()
       })
+      .eq('email', email)         // חיפוש לפי המייל שהאדמין הזין מראש
+      .select();
 
-    if (error) {
-      console.error('Error inserting user to Supabase:', error)
+    // בדיקה: אם לא נמצאה שורה כזו (מישהו נרשם בלי שהאדמין הוסיף אותו מראש)
+    if (!data || data.length === 0) {
+      console.warn(`User ${email} registered but was not pre-approved by admin.`);
+      
+      // אופציונלי: יצירת פרופיל חדש חסום למי שנרשם "בטעות" בלי לשלם
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          clerk_id: id,
+          email: email,
+          full_name: fullName,
+          is_approved: false // חסום כברירת מחדל
+        });
+
+      if (insertError) {
+        console.error('Error creating new unapproved profile:', insertError);
+      }
+    }
+
+    if (updateError) {
+      console.error('Error updating profile in Supabase:', updateError)
       return new Response('Error updating database', { status: 500 })
     }
   }
 
-  return new Response('', { status: 200 })
+  return new Response('Webhook processed successfully', { status: 200 })
 }

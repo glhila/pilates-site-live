@@ -104,8 +104,8 @@ export default function UserPortal() {
           <div>
             <h1 className="text-2xl font-extrabold italic">היי, {user?.firstName} ✨</h1>
             <div className="flex gap-3 mt-2">
-               <span className="text-[11px] bg-brand-bg px-3 py-1 rounded-full border border-brand-stone/10 font-bold opacity-60">מנוי: {profile?.membership_type || 0} שיעורים</span>
-               <span className="text-[11px] bg-brand-bg px-3 py-1 rounded-full border border-brand-stone/10 font-bold opacity-60">יתרה: {profile?.punch_card_remaining || 0}</span>
+               <span className="text-[11px] bg-brand-bg px-3 py-1 rounded-full border border-brand-stone/10 font-bold opacity-60">מנוי: {profile?.membership_type || 0} שיעורים שבועיים</span>
+               <span className="text-[11px] bg-brand-bg px-3 py-1 rounded-full border border-brand-stone/10 font-bold opacity-60">יתרה בכרטיסיה: {profile?.punch_card_remaining || 0}</span>
             </div>
           </div>
           

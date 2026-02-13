@@ -8,11 +8,11 @@ A comprehensive web application built with Next.js, designed for a professional 
 
 This project provides an end-to-end solution for a Pilates studio:
 
-**- Marketing & Branding:** Public pages for pricing, studio information, and contact.
-**- Trainee Management:** A dedicated system to manage user profiles and trainee data.
-**- Class Registration:** A dynamic system for viewing and booking Pilates classes.
-**- Admin Dashboard:** A private area for studio owners to oversee the business.
-**- Secure Authentication:** Integrated with Clerk for robust user management and webhooks.
+* **Marketing & Branding:** Public pages for pricing, studio information, and contact.
+* **Trainee Management:** A dedicated system to manage user profiles and trainee data.
+* **Class Registration:** A dynamic system for viewing and booking Pilates classes.
+* **Admin Dashboard:** A private area for studio owners to oversee the business.
+* **Secure Authentication:** Integrated with Clerk for robust user management and webhooks.
 
 ---
 
@@ -51,8 +51,8 @@ pilates-studio/
 
 ## 🛠 Tech Stack
 
-***- Framework:** Next.js (App Router)
-**- Authentication:** Clerk (User management & Webhooks)
-**- Language:** TypeScript
-**- Styling:** Tailwind CSS
-**- Backend:** Next.js API Routes (Serverless)
+* **Framework:** Next.js (App Router)
+* **Authentication:** Clerk (User management & Webhooks)
+* **Language:** TypeScript
+* **Styling:** Tailwind CSS
+* **Backend:** Next.js API Routes (Serverless)

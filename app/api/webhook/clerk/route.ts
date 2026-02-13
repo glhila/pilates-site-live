@@ -21,8 +21,8 @@ export async function POST(req: Request) {
   }
 
   // 2. קבלת גוף ההודעה
-  const payload = await req.json()
-  const body = JSON.stringify(payload);
+  //const payload = await req.json()
+  const body = await req.json();
   const wh = new Webhook(WEBHOOK_SECRET);
   let evt: WebhookEvent
 

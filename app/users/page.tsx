@@ -90,7 +90,7 @@ export default function UserPortal() {
         const { data: cls } = await supabaseClient.from('classes').select('*, bookings(id)').order('start_time');
         setClasses(cls || []);
 
-        const { data: books } = await supabaseClient.from('bookings').select('*').eq('user_id', myProfile.id);
+        const { data: books } = await supabaseClient.from('bookings').select('*').filter('user_id', 'eq', myProfile.id);
         setUserBookings(books || []);
       } else {
         // מצב שבו אין פרופיל בכלל (משתמשת שלא הוזמנה ע"י האדמין)

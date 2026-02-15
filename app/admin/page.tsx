@@ -73,6 +73,7 @@ export default function AdminPage() {
 
     const { error } = await supabase.from('profiles').insert([{
       ...userFormData,
+      email: userFormData.email.trim().toLowerCase(), // ניקוי ושינוי לאותיות קטנות
       is_approved: true, // האדמין מאשר מראש
       clerk_id: null     // יתמלא אוטומטית כשהמתאמנת תירשם לאתר
     }]);

@@ -4,13 +4,16 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { useAuth, useUser } from "@clerk/nextjs"; // הוספנו את useAuth
 
-// אתחול Supabase
+// הגדרת בסיס ללא טוקן
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 export default function AdminPage() {
+  const { user, isLoaded } = useUser();
+  const { getToken } = useAuth(); // פונקציה לקבלת הטוקן
+  
   const [activeTab, setActiveTab] = useState<'schedule' | 'users'>('schedule');
   const [classes, setClasses] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -24,24 +27,49 @@ export default function AdminPage() {
     max_capacity: 6
   });
 
-  // טופס מתאמנת חדשה (מילוי ע"י אדמין אחרי תשלום)
+  // טופס מתאמנת
   const [userFormData, setUserFormData] = useState({
     full_name: '',
     email: '',
-    membership_type: 2, // מספר אימונים בשבוע
+    membership_type: 2,
     punch_card_remaining: 0,
     punch_card_expiry: ''
   });
 
+  // פונקציית עזר ליצירת קליינט מאובטח
+  // זה הקסם שפותר את השגיאה: אנחנו יוצרים חיבור שמכיל את הזהות שלך
+  const getAuthenticatedSupabase = async () => {
+    try {
+      const token = await getToken({ template: 'supabase' });
+      if (!token) return null;
+      
+      return createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      });
+    } catch (e) {
+      console.error("Auth error:", e);
+      return null;
+    }
+  };
+
   const loadData = async () => {
-    if (!supabase) return;
     setIsFetching(true);
+    const supabase = await getAuthenticatedSupabase();
+    
+    // אם אין חיבור מאובטח (למשל האדמין לא מחובר), לא ניתן לגשת לנתונים
+    if (!supabase) {
+        setIsFetching(false);
+        return;
+    }
+
     try {
       if (activeTab === 'schedule') {
-        const { data } = await supabase.from('classes').select('*').order('start_time', { ascending: true });
+        const { data, error } = await supabase.from('classes').select('*').order('start_time', { ascending: true });
+        if (error) console.error(error);
         setClasses(data || []);
       } else {
-        const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+        if (error) console.error(error);
         setProfiles(data || []);
       }
     } catch (e) {
@@ -51,14 +79,18 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, [activeTab]);
+    if (isLoaded && user) {
+        loadData();
+    }
+  }, [activeTab, isLoaded, user]);
 
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase) return alert("חיבור ל-Supabase לא הוגדר");
+    const supabase = await getAuthenticatedSupabase();
+    if (!supabase) return alert("שגיאת התחברות: אנא רענני את הדף");
     
     const { error } = await supabase.from('classes').insert([classFormData]);
+    
     if (error) alert("שגיאה: " + error.message);
     else {
       alert("השיעור נוסף בהצלחה!");
@@ -69,24 +101,53 @@ export default function AdminPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase) return alert("חיבור ל-Supabase לא הוגדר");
+    const supabase = await getAuthenticatedSupabase();
+    if (!supabase) return alert("שגיאת התחברות: אנא רענני את הדף");
+
+    // וידוא שהמייל תקין (אותיות קטנות וללא רווחים)
+    const cleanEmail = userFormData.email.trim().toLowerCase();
 
     const { error } = await supabase.from('profiles').insert([{
       ...userFormData,
-      email: userFormData.email.trim().toLowerCase(), // ניקוי ושינוי לאותיות קטנות
-      is_approved: true, // האדמין מאשר מראש
-      clerk_id: null     // יתמלא אוטומטית כשהמתאמנת תירשם לאתר
+      email: cleanEmail,
+      is_approved: true,
+      clerk_id: null
     }]);
 
     if (error) {
         if (error.code === '23505') alert("שגיאה: המייל הזה כבר קיים במערכת");
-        else alert("שגיאה: " + error.message);
+        else alert("שגיאה בהוספת מתאמנת: " + error.message);
     } else {
       alert("המתאמנת נוספה בהצלחה! היא יכולה כעת להירשם לאתר.");
       setUserFormData({ full_name: '', email: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: '' });
       loadData();
     }
   };
+
+  const handleDeleteProfile = async (id: string) => {
+      if(!confirm("למחוק מתאמנת?")) return;
+      const supabase = await getAuthenticatedSupabase();
+      if (!supabase) return;
+
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) alert("שגיאה במחיקה: " + error.message);
+      else loadData();
+  };
+
+  const handleDeleteClass = async (id: string) => {
+      if(!confirm("למחוק שיעור?")) return;
+      const supabase = await getAuthenticatedSupabase();
+      if (!supabase) return;
+
+      const { error } = await supabase.from('classes').delete().eq('id', id);
+      if (error) alert("שגיאה במחיקה: " + error.message);
+      else loadData();
+  };
+
+  // בדיקת הרשאות פשוטה בצד לקוח (לא מחליף את ה-RLS)
+  if (isLoaded && user?.primaryEmailAddress?.emailAddress !== 'hilaglazz13@gmail.com') {
+      return <div className="p-10 text-center font-bold text-red-500">אין לך הרשאת גישה לדף זה.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-brand-bg p-4 sm:p-8 font-sans antialiased text-brand-dark" dir="rtl">
@@ -96,7 +157,7 @@ export default function AdminPage() {
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6 border-b border-brand-stone/20 pb-8">
           <div>
             <h1 className="text-4xl font-extrabold tracking-tight">ניהול הסטודיו</h1>
-            <p className="text-brand-dark/50 text-base mt-1 font-medium">עונג של פילאטיס • לוח בקרה</p>
+            <p className="text-brand-dark/50 text-base mt-1 font-medium">מחוברת כ: {user?.fullName || user?.primaryEmailAddress?.emailAddress}</p>
           </div>
 
           <div className="bg-brand-stone/10 p-1.5 rounded-2xl flex gap-1 w-full sm:w-auto">
@@ -117,7 +178,7 @@ export default function AdminPage() {
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
           {activeTab === 'schedule' ? (
-            /* טאב מערכת שעות - נשאר כפי שהיה */
+            /* טאב מערכת שעות */
             <div className="grid md:grid-cols-3 gap-10">
               <div className="md:col-span-1 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit">
                 <h2 className="text-xl font-bold mb-6 italic">הוספת שיעור</h2>
@@ -172,14 +233,14 @@ export default function AdminPage() {
                             <p className="text-sm text-brand-dark/50 mt-1 font-medium">{new Date(c.start_time).toLocaleString('he-IL', {weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'})}</p>
                           </div>
                         </div>
-                        <button onClick={async () => { if(confirm("למחוק?")) { await supabase?.from('classes').delete().eq('id', c.id); loadData(); } }} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity font-bold text-xs">מחיקה</button>
+                        <button onClick={() => handleDeleteClass(c.id)} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity font-bold text-xs">מחיקה</button>
                       </div>
                     ))}
                 </div>
               </div>
             </div>
           ) : (
-            /* טאב ניהול מתאמנות - מעודכן */
+            /* טאב ניהול מתאמנות */
             <div className="grid md:grid-cols-3 gap-10">
               
               {/* טופס הוספת מתאמנת */}
@@ -269,7 +330,7 @@ export default function AdminPage() {
                                 <p className="text-xs font-bold">{p.membership_type} בשבוע | {p.punch_card_remaining} ניקובים</p>
                             </div>
                             <button 
-                                onClick={async () => { if(confirm("למחוק מתאמנת?")) { await supabase?.from('profiles').delete().eq('id', p.id); loadData(); } }}
+                                onClick={() => handleDeleteProfile(p.id)}
                                 className="text-red-300 hover:text-red-500 transition-colors mr-4"
                             >
                                 🗑️

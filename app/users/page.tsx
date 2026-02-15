@@ -50,26 +50,33 @@ export default function UserPortal() {
   }, [isLoaded, user]);
 
   const syncAndFetchData = async () => {
-    setLoading(true);
+    // 1. קבלת גישה מאובטחת
     const supabaseClient = await getAuthenticatedSupabase();
-    if (!supabaseClient) return; // אם אין טוקן לא ניתן להמשיך
+    if (!supabaseClient || !user) return; // עצירה אם אין משתמש או טוקן
+
+    setLoading(true);
 
     try {
-      const userEmail = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase();
+      // נרמול המייל (אותיות קטנות + בלי רווחים) כדי למנוע אי-התאמות
+      const userEmail = user.primaryEmailAddress?.emailAddress?.trim().toLowerCase();
       let currentProfile = null;
 
-      // 1. נסה למצוא פרופיל קיים לפי Clerk ID (כבר מסונכרן)
+      console.log("Checking profile for:", userEmail); // לוג לבדיקה
+
+      // שלב א: האם כבר יש פרופיל מחובר ל-Clerk ID הזה?
       const { data: existingProfile } = await supabaseClient
         .from('profiles')
         .select('*')
-        .eq('clerk_id', user?.id)
+        .eq('clerk_id', user.id)
         .single();
 
       if (existingProfile) {
+        console.log("Found existing linked profile");
         currentProfile = existingProfile;
-      } else if (userEmail) {
-        // 2. אם לא נמצא, נסה למצוא לפי אימייל (פרופיל שיצר האדמין)
-        // הערה: כאן ייתכן שנצטרך להשתמש בפונקציית שרת או בטריק RLS שהגדרנו (email = jwt email)
+      } 
+      else if (userEmail) {
+        // שלב ב: אם לא, נחפש לפי אימייל (מה שהאדמין יצר)
+        // בזכות התיקון ב-SQL, עכשיו המשתמש יכול "לראות" את השורה הזו
         const { data: inviteProfile } = await supabaseClient
           .from('profiles')
           .select('*')
@@ -77,41 +84,43 @@ export default function UserPortal() {
           .single();
 
         if (inviteProfile) {
-          // נמצא! נחבר את המשתמש הזה לפרופיל הקיים
-          const { data: updatedProfile, error } = await supabaseClient
+          console.log("Found invite profile via email. Syncing...");
+          
+          // שלב ג: חיבור ה-ID של Clerk לפרופיל הקיים
+          const { data: updatedProfile, error: updateError } = await supabaseClient
             .from('profiles')
             .update({ 
-                clerk_id: user?.id, 
-                full_name: inviteProfile.full_name || user?.fullName 
+                clerk_id: user.id,
+                // מעדכנים שם ותמונה רק אם חסר בפרופיל המקורי
+                full_name: inviteProfile.full_name || user.fullName,
+                updated_at: new Date()
             })
-            .eq('id', inviteProfile.id)
+            .eq('id', inviteProfile.id) // עדכון לפי ה-ID של השורה בטבלה
             .select()
             .single();
           
-          if (!error) currentProfile = updatedProfile;
+          if (updateError) {
+              console.error("Error syncing profile:", updateError);
+          } else {
+              currentProfile = updatedProfile;
+              console.log("Sync successful!");
+          }
         }
       }
 
       setProfile(currentProfile);
 
-      // טעינת שיעורים (ציבורי - לרוב לא צריך הרשאות מיוחדות, אבל נשתמש בלקוח המאובטח ליתר ביטחון)
-      const { data: cls } = await supabaseClient
-        .from('classes')
-        .select('*, bookings(id)')
-        .order('start_time');
-      setClasses(cls || []);
-
-      // טעינת הזמנות של המשתמשת
+      // המשך טעינת נתונים רגילה...
       if (currentProfile) {
-        const { data: books } = await supabaseClient
-            .from('bookings')
-            .select('*')
-            .eq('user_id', currentProfile.id);
+        const { data: cls } = await supabaseClient.from('classes').select('*, bookings(id)').order('start_time');
+        setClasses(cls || []);
+
+        const { data: books } = await supabaseClient.from('bookings').select('*').eq('user_id', currentProfile.id);
         setUserBookings(books || []);
       }
 
     } catch (err) {
-      console.error("Error fetching data:", err);
+      console.error("Critical error in sync:", err);
     } finally {
       setLoading(false);
     }

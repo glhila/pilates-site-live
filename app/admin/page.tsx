@@ -107,6 +107,7 @@ export default function AdminPage() {
     // וידוא שהמייל תקין (אותיות קטנות וללא רווחים)
     const cleanEmail = userFormData.email.trim().toLowerCase();
 
+    // הוספת מתאמנת חדשה לטבלה
     const { error } = await supabase.from('profiles').insert([{
       ...userFormData,
       email: cleanEmail,
@@ -124,6 +125,7 @@ export default function AdminPage() {
     }
   };
 
+  // מחיקת מתאמנת קיימת
   const handleDeleteProfile = async (id: string) => {
       if(!confirm("למחוק מתאמנת?")) return;
       const supabase = await getAuthenticatedSupabase();
@@ -240,6 +242,7 @@ export default function AdminPage() {
               </div>
             </div>
           ) : (
+            
             /* טאב ניהול מתאמנות */
             <div className="grid md:grid-cols-3 gap-10">
               

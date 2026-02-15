@@ -307,10 +307,13 @@ export default function AdminPage() {
 
               {/* רשימת המתאמנות */}
               <div className="md:col-span-2">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold italic">מתאמנות רשומות</h2>
-                    <span className="bg-brand-stone/10 px-3 py-1 rounded-full text-[10px] font-bold">{profiles.length} סה"כ</span>
-                </div>
+              <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold italic">מתאמנות רשומות</h2>
+                  <div className="flex gap-4 items-center">
+                      <button onClick={loadData} className="text-xs font-bold text-brand-dark/40 hover:text-brand-dark transition-colors">רענן רשימה ↻</button>
+                      <span className="bg-brand-stone/10 px-3 py-1 rounded-full text-[10px] font-bold">{profiles.length} סה"כ</span>
+                  </div>
+              </div>
 
                 <div className="grid gap-3">
                     {profiles.map(p => (

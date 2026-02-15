@@ -16,7 +16,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
   const { user } = useUser();
 
-  // המייל שלך - ודאי שהוא כתוב באותיות קטנות (lowercase)
+  // 
   const adminEmail = "hilaglazz13@gmail.com".toLowerCase(); 
   const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
   

@@ -30,6 +30,7 @@ export default function UserPortal() {
   const getAuthenticatedSupabase = async () => {
     try {
       const token = await getToken({ template: 'supabase' });
+      console.log("My JWT Token:", token);
       if (!token) {
           console.error("Failed to get Supabase token");
           return null;

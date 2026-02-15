@@ -50,77 +50,53 @@ export default function UserPortal() {
   }, [isLoaded, user]);
 
   const syncAndFetchData = async () => {
-    // 1. קבלת גישה מאובטחת
+    // 1. קבלת קליינט מאובטח
     const supabaseClient = await getAuthenticatedSupabase();
-    if (!supabaseClient || !user) return; // עצירה אם אין משתמש או טוקן
-
-    setLoading(true);
+    
+    // אם המשתמש לא מחובר או אין טוקן - עצור
+    if (!supabaseClient || !user) {
+        setLoading(false);
+        return;
+    }
 
     try {
-      // נרמול המייל (אותיות קטנות + בלי רווחים) כדי למנוע אי-התאמות
-      const userEmail = user.primaryEmailAddress?.emailAddress?.trim().toLowerCase();
-      let currentProfile = null;
+      // --- התיקון הגדול ---
+      // קריאה לפונקציה שיצרנו ב-SQL שמבצעת את החיבור בשרת
+      const { error: rpcError } = await supabaseClient.rpc('sync_user_profile');
+      
+      if (rpcError) {
+          console.error("Sync error:", rpcError);
+      } else {
+          console.log("Profile synced successfully via Server!");
+      }
+      // --------------------
 
-      console.log("Checking profile for:", userEmail); // לוג לבדיקה
-
-      // שלב א: האם כבר יש פרופיל מחובר ל-Clerk ID הזה?
-      const { data: existingProfile } = await supabaseClient
+      // כעת, כשהחיבור בוצע, אפשר למשוך את הנתונים כרגיל
+      // ה-RLS יאפשר לנו לראות את הפרופיל כי ה-clerk_id כבר מעודכן
+      const { data: myProfile, error: profileError } = await supabaseClient
         .from('profiles')
         .select('*')
-        .eq('clerk_id', user.id)
+        .eq('clerk_id', user.id) // חיפוש לפי ה-ID שלי
         .single();
 
-      if (existingProfile) {
-        console.log("Found existing linked profile");
-        currentProfile = existingProfile;
-      } 
-      else if (userEmail) {
-        // שלב ב: אם לא, נחפש לפי אימייל (מה שהאדמין יצר)
-        // בזכות התיקון ב-SQL, עכשיו המשתמש יכול "לראות" את השורה הזו
-        const { data: inviteProfile } = await supabaseClient
-          .from('profiles')
-          .select('*')
-          .eq('email', userEmail)
-          .single();
+      if (profileError) console.error("Error fetching profile:", profileError);
+      
+      setProfile(myProfile);
 
-        if (inviteProfile) {
-          console.log("Found invite profile via email. Syncing...");
-          
-          // שלב ג: חיבור ה-ID של Clerk לפרופיל הקיים
-          const { data: updatedProfile, error: updateError } = await supabaseClient
-            .from('profiles')
-            .update({ 
-                clerk_id: user.id,
-                // מעדכנים שם ותמונה רק אם חסר בפרופיל המקורי
-                full_name: inviteProfile.full_name || user.fullName,
-                updated_at: new Date()
-            })
-            .eq('id', inviteProfile.id) // עדכון לפי ה-ID של השורה בטבלה
-            .select()
-            .single();
-          
-          if (updateError) {
-              console.error("Error syncing profile:", updateError);
-          } else {
-              currentProfile = updatedProfile;
-              console.log("Sync successful!");
-          }
-        }
-      }
-
-      setProfile(currentProfile);
-
-      // המשך טעינת נתונים רגילה...
-      if (currentProfile) {
+      // טעינת שאר הנתונים
+      if (myProfile) {
         const { data: cls } = await supabaseClient.from('classes').select('*, bookings(id)').order('start_time');
         setClasses(cls || []);
 
-        const { data: books } = await supabaseClient.from('bookings').select('*').eq('user_id', currentProfile.id);
+        const { data: books } = await supabaseClient.from('bookings').select('*').eq('user_id', myProfile.id);
         setUserBookings(books || []);
+      } else {
+        // מצב שבו אין פרופיל בכלל (משתמשת שלא הוזמנה ע"י האדמין)
+        console.log("No profile found for this user.");
       }
 
     } catch (err) {
-      console.error("Critical error in sync:", err);
+      console.error("Critical error:", err);
     } finally {
       setLoading(false);
     }

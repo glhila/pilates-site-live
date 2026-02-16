@@ -327,7 +327,7 @@ export default function AdminPage() {
                                       {c.class_type}
                                     </span>
                                     {/* שורה 2: הרמה / שם השיעור - גדול ובולט */}
-                                    <span className="font-extrabold text-[13px] italic tracking-tight text-brand-dark mt-1">
+                                    <span className=" font-extrabold text-[13px] italic tracking-tight text-brand-dark mt-1">
                                       {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
                                     </span>
                                   </div>

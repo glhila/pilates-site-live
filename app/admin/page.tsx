@@ -28,6 +28,9 @@ const CLASS_TEMPLATES = [
   "מזרן - Level 1", "מזרן - Level 2", "מזרן - Level 3"
 ];
 
+const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'newadmin@gmail.com'];
+
+
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
@@ -201,8 +204,8 @@ export default function AdminPage() {
     });
   }, [viewDate]);
 
-  if (isLoaded && user?.primaryEmailAddress?.emailAddress !== 'hilaglazz13@gmail.com') {
-      return <div className="min-h-screen bg-brand-bg flex items-center justify-center font-bold text-red-500">אין הרשאת גישה.</div>;
+  if (isLoaded && !ADMIN_EMAILS.includes(user?.primaryEmailAddress?.emailAddress || '')) {
+    return <div className="min-h-screen bg-brand-bg flex items-center justify-center font-bold text-red-500">אין לך הרשאת גישה לדף זה.</div>;
   }
 
   return (

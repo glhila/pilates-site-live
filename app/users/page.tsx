@@ -85,10 +85,11 @@ export default function UserPortal() {
 
       // טעינת שאר הנתונים
       if (myProfile) {
-        //const { data: cls } = await supabaseClient.from('classes').select('*, bookings(id)').order('start_time');
-        // שינוי זמני לבדיקה:
-        const { data: cls } = await supabaseClient.from('classes').select('*').order('start_time');
+        const { data: cls , error: clsError} = await supabaseClient.from('classes').select('*, bookings(id)').order('start_time');
+        console.log("Classes from DB:", cls); 
+        if (clsError) console.error("Classes Error:", clsError);
         setClasses(cls || []);
+        
 
         const { data: books } = await supabaseClient.from('bookings').select('*').eq('user_id', myProfile.id);
         setUserBookings(books || []);

@@ -85,7 +85,11 @@ export default function UserPortal() {
 
       // טעינת שאר הנתונים
       if (myProfile) {
-        const { data: cls , error: clsError} = await supabaseClient.from('classes').select('*, bookings(id)').order('start_time');
+        const { data: cls, error: clsError } = await supabaseClient
+        .from('classes')
+        .select('*, bookings!class_id(id)') // הוספנו !class_id כדי להבהיר את הקשר
+        .order('start_time');
+        
         console.log("Classes from DB:", cls); 
         if (clsError) console.error("Classes Error:", clsError);
         setClasses(cls || []);

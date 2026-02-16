@@ -227,14 +227,15 @@ export default function AdminPage() {
         </header>
 
         {activeTab === 'schedule' ? (
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-10">
-            {/* טופס הוספה רחב וברור */}
-            <div className="lg:col-span-4 bg-white p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit sticky top-10">
-              <h2 className="text-2xl font-bold mb-10 italic">הוספת שיעור</h2>
+          <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-10">
+            
+            {/* עמודת טופס - במובייל היא חלק מהזרימה, במחשב היא נדבקת */}
+            <div className="w-full lg:col-span-4 bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit lg:sticky lg:top-10 z-20">
+              <h2 className="text-2xl font-bold mb-6 sm:mb-10 italic">הוספת שיעור</h2>
               <form onSubmit={handleCreateClass} className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">סוג ורמה</label>
-                  <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold border border-brand-stone/10 focus:ring-2 ring-brand-dark/5 transition-all" value={classFormData.name} onChange={e => setClassFormData({...classFormData, name: e.target.value})}>
+                  <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold border border-brand-stone/10" value={classFormData.name} onChange={e => setClassFormData({...classFormData, name: e.target.value})}>
                     {CLASS_TEMPLATES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
@@ -257,83 +258,80 @@ export default function AdminPage() {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">כמות משתתפות מקסימלי בשיעור</label>
-                    <input type="number" className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.max_capacity} onChange={e => setClassFormData({...classFormData, max_capacity: parseInt(e.target.value)})} />
+                    <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">קיבולת מקסימלית</label>
+                    <input type="number" className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold border border-brand-stone/10" value={classFormData.max_capacity} onChange={e => setClassFormData({...classFormData, max_capacity: parseInt(e.target.value)})} />
                 </div>
                 <label className="flex items-center gap-4 cursor-pointer p-4 bg-brand-stone/5 rounded-3xl border border-dashed border-brand-stone/20 transition-all hover:bg-brand-stone/10">
                     <input type="checkbox" className="w-6 h-6 accent-brand-dark" checked={classFormData.is_recurring} onChange={e => setClassFormData({...classFormData, is_recurring: e.target.checked})} />
-                    <span className="text-sm font-bold">שיעור קבוע לשנה הקרובה 🗓️</span>
+                    <span className="text-sm font-bold">שיעור קבוע לשנה 🗓️</span>
                 </label>
-                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-2xl transition-all hover:scale-[1.01] active:scale-95">הוספה למערכת</button>
+                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-xl transition-all hover:scale-[1.01]">הוספה</button>
               </form>
             </div>
 
-            {/* Time Grid View */}
-            <div className="hidden lg:flex lg:col-span-8 bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
-            
-             {/* Time Sidebar */}
-            <div className="w-24 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20">
-              {TIME_SLOTS.map((slot, i) => (
-              <div key={i} className={`flex items-start justify-center text-[10px] font-black opacity-20 tracking-tighter ${slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px]'}`}>
-                {slot !== 'break' && slot}
-              </div>
-              ))}
-            </div>
-
-              {/* Day Columns */}
-              <div className="flex-1 grid grid-cols-7 relative">
-              {weekDates.map((date, dayIdx) => (
-                <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
-                  <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10">
-                      <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
-                      <span className="font-bold text-xl mt-0.5">{date.getDate()}</span>
+            {/* עמודת התצוגה (לו"ז) */}
+            <div className="w-full lg:col-span-8">
+                {/* תצוגת דסקטופ (Grid) - מוסתרת במובייל */}
+                <div className="hidden lg:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
+                  <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[10px] opacity-20 font-black tabular-nums">
+                    {TIME_SLOTS.map((s, i) => <div key={i} className={s==='break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center'}>{s!=='break' && s}</div>)}
                   </div>
-
-                  {/* Scrollable/Relative area for classes */}
-                  <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
-                    {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
-                        const start = new Date(c.start_time);
-                        const h = start.getHours(); const m = start.getMinutes();
-                        let top = h >= 7 && h <= 13 ? (h-7 + m/60)*100 : (h-16 + m/60)*100 + 700 + 64;
-                        return (
-                          <div key={c.id} onClick={() => setDetailsModal(c)} className={`absolute inset-x-1.5 p-4 bg-brand-bg border rounded-[1.8rem] text-[11px] font-bold shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} style={{ top: `${top}px` }}>
-                            <p className="leading-tight mb-2 tracking-tight">{c.name}</p>
-                            <div className="flex justify-between items-center">
-                              <span className="opacity-40 text-[9px] font-black">{c.bookings?.length || 0}/{c.max_capacity}</span>
-                              <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-300 hover:text-red-500 transition-colors">🗑</button>
-                            </div>
-                          </div>
-                        );
-                    })}
-                  </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Mobile Schedule List */}
-            <div className="block lg:hidden w-full space-y-8">
-                <div className="flex overflow-x-auto gap-3 pb-4 no-scrollbar">
-                    {weekDates.map((date, i) => (
-                        <button key={i} onClick={() => setSelectedDateMobile(date)} className={`flex-shrink-0 w-16 h-24 rounded-[2rem] flex flex-col items-center justify-center border transition-all ${date.toDateString() === selectedDateMobile.toDateString() ? 'bg-brand-dark text-white border-brand-dark shadow-xl scale-105' : 'bg-white border-brand-stone/10'}`}>
-                            <span className="text-[10px] font-black uppercase opacity-40">{DAYS_HEBREW[i]}</span>
-                            <span className="text-2xl font-black mt-1">{date.getDate()}</span>
-                        </button>
-                    ))}
-                </div>
-                <div className="space-y-4">
-                    {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).map(c => (
-                        <div key={c.id} onClick={() => setDetailsModal(c)} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 flex justify-between items-center shadow-sm">
-                            <div>
-                                <span className="text-[10px] font-black bg-brand-bg px-3 py-1 rounded-full uppercase">{new Date(c.start_time).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}</span>
-                                <h3 className="font-bold text-xl mt-3 italic">{c.name}</h3>
-                            </div>
-                            <div className="text-left flex flex-col items-end gap-3">
-                                <span className="text-[10px] font-bold opacity-30">{c.bookings?.length}/{c.max_capacity} רשומות</span>
-                                <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-400 text-xs font-bold underline">ביטול שיעור</button>
-                            </div>
+                  <div className="flex-1 grid grid-cols-7 relative">
+                    {weekDates.map((date, dayIdx) => (
+                      <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
+                        <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10 bg-white sticky top-0 z-20">
+                            <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
+                            <span className="text-xl font-bold mt-0.5">{date.getDate()}</span>
                         </div>
+                        <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
+                          {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
+                              const start = new Date(c.start_time);
+                              const h = start.getHours(); const m = start.getMinutes();
+                              let top = h >= 7 && h <= 13 ? (h-7 + m/60)*100 : (h-16 + m/60)*100 + 700 + 64;
+                              return (
+                                <div key={c.id} onClick={() => setDetailsModal(c)} className={`absolute inset-x-1.5 p-4 bg-brand-bg border rounded-[1.8rem] text-[11px] font-bold shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} style={{ top: `${top}px` }}>
+                                  <p className="leading-tight mb-2 tracking-tight">{c.name}</p>
+                                  <div className="flex justify-between items-center">
+                                    <span className="opacity-40 text-[9px] font-black">{c.bookings?.length || 0}/{c.max_capacity}</span>
+                                    <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-300 hover:text-red-500 transition-colors text-[14px]">🗑</button>
+                                  </div>
+                                </div>
+                              );
+                          })}
+                        </div>
+                      </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* תצוגת מובייל (List) - מוצגת רק בטלפון */}
+                <div className="flex lg:hidden flex-col w-full space-y-8">
+                    <div className="flex overflow-x-auto gap-3 pb-4 no-scrollbar px-1">
+                        {weekDates.map((date, i) => (
+                            <button key={i} onClick={() => setSelectedDateMobile(date)} className={`flex-shrink-0 w-16 h-24 rounded-[2rem] flex flex-col items-center justify-center border transition-all ${date.toDateString() === selectedDateMobile.toDateString() ? 'bg-brand-dark text-white border-brand-dark shadow-xl scale-105' : 'bg-white border-brand-stone/10'}`}>
+                                <span className="text-[10px] font-black uppercase opacity-40">{DAYS_HEBREW[i]}</span>
+                                <span className="text-2xl font-black mt-1">{date.getDate()}</span>
+                            </button>
+                        ))}
+                    </div>
+                    <div className="space-y-4 px-1">
+                        {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).length > 0 ? (
+                          classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).map(c => (
+                            <div key={c.id} onClick={() => setDetailsModal(c)} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 flex justify-between items-center shadow-sm w-full">
+                                <div>
+                                    <span className="text-[10px] font-black bg-brand-bg px-3 py-1 rounded-full uppercase">{new Date(c.start_time).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}</span>
+                                    <h3 className="font-bold text-xl mt-3 italic tracking-tight">{c.name}</h3>
+                                </div>
+                                <div className="text-left flex flex-col items-end gap-3">
+                                    <span className="text-[10px] font-bold opacity-30 whitespace-nowrap">{c.bookings?.length || 0}/{c.max_capacity} רשומות</span>
+                                    <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-400 text-xs font-bold underline decoration-red-100 underline-offset-4">ביטול שיעור</button>
+                                </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-20 opacity-30 italic text-sm bg-white/50 rounded-[2.5rem] border border-dashed border-brand-stone/30">אין אימונים מתוכננים ליום זה</div>
+                        )}
+                    </div>
                 </div>
             </div>
           </div>

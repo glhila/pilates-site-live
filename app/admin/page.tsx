@@ -217,14 +217,14 @@ export default function AdminPage() {
             <button onClick={() => setActiveTab('users')} className={`px-10 py-3 rounded-3xl font-bold transition-all ${activeTab === 'users' ? 'bg-brand-dark text-white shadow-xl scale-[1.02]' : 'text-brand-dark/50 hover:text-brand-dark'}`}>ניהול מתאמנות</button>
           </div>
           <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl">
-             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">←</button>
+             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">→</button>
              <span className="font-bold text-sm min-w-[160px] text-center tabular-nums">{weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}</span>
-             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">→</button>
+             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">←</button>
           </div>
         </header>
 
         {activeTab === 'schedule' ? (
-          <div className="grid lg:grid-cols-12 gap-10">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-10">
             {/* טופס הוספה רחב וברור */}
             <div className="lg:col-span-4 bg-white p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit sticky top-10">
               <h2 className="text-2xl font-bold mb-10 italic">הוספת שיעור</h2>
@@ -254,7 +254,7 @@ export default function AdminPage() {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">קיבולת שיעור</label>
+                    <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">כמות משתתפות מקסימלי בשיעור</label>
                     <input type="number" className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.max_capacity} onChange={e => setClassFormData({...classFormData, max_capacity: parseInt(e.target.value)})} />
                 </div>
                 <label className="flex items-center gap-4 cursor-pointer p-4 bg-brand-stone/5 rounded-3xl border border-dashed border-brand-stone/20 transition-all hover:bg-brand-stone/10">
@@ -287,7 +287,7 @@ export default function AdminPage() {
                               <p className="leading-tight mb-2 tracking-tight">{c.name}</p>
                               <div className="flex justify-between items-center">
                                 <span className="opacity-40 text-[9px] font-black">{c.bookings?.length || 0}/{c.max_capacity}</span>
-                                <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-300 hover:text-red-500 transition-colors">✕</button>
+                                <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-300 hover:text-red-500 transition-colors">🗑</button>
                               </div>
                             </div>
                           );
@@ -327,7 +327,7 @@ export default function AdminPage() {
         ) : (
           /* Users Management Section */
           <div className="grid lg:grid-cols-12 gap-10">
-            <div className="lg:col-span-4 bg-white p-10 rounded-[3rem] shadow-sm border border-brand-stone/20 h-fit sticky top-10">
+             <div className="lg:col-span-4 bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit lg:sticky lg:top-10 z-20">
               <h2 className="text-2xl font-bold mb-10 italic">{editingUserId ? 'עריכת מתאמנת' : 'מתאמנת חדשה'}</h2>
               <form onSubmit={handleSaveUser} className="space-y-6">
                 <div className="space-y-2">
@@ -378,8 +378,8 @@ export default function AdminPage() {
                             <div className="mt-6 pt-4 border-t border-brand-stone/5 flex justify-between items-center">
                                 <span className="text-[10px] font-black opacity-30 uppercase">{p.membership_type} בשבוע</span>
                                 <div className="flex gap-4">
-                                    <button onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} className="text-xs font-bold opacity-60 underline">עריכה</button>
-                                    <button onClick={() => handleDeleteProfile(p.id)} className="text-xs font-bold text-red-400 underline">מחיקה</button>
+                                    <button onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} className="text-xs font-bold opacity-60 underline">עריכה ✎</button>
+                                    <button onClick={() => handleDeleteProfile(p.id)} className="text-xs font-bold text-red-400 underline">מחיקה 🗑</button>
                                 </div>
                             </div>
                         </div>
@@ -395,14 +395,14 @@ export default function AdminPage() {
             <div className="bg-white p-10 rounded-[3.5rem] max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-start mb-10">
                     <div><h3 className="text-2xl font-bold italic tracking-tight">{detailsModal.name}</h3><p className="opacity-40 text-sm font-bold uppercase tracking-widest">{new Date(detailsModal.start_time).toLocaleString('he-IL', {weekday: 'long', hour:'2-digit', minute:'2-digit'})}</p></div>
-                    <button onClick={() => setDetailsModal(null)} className="text-2xl opacity-20 hover:opacity-100 transition-all">✕</button>
+                    <button onClick={() => setDetailsModal(null)} className="text-2xl opacity-20 hover:opacity-100 transition-all">🗑</button>
                 </div>
                 <div className="mb-10"><h4 className="text-[10px] font-black uppercase opacity-40 mb-5 tracking-widest">מתאמנות רשומות ({detailsModal.bookings?.length || 0})</h4>
                     <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                         {detailsModal.bookings?.map((b: any) => (
                             <div key={b.id} className="bg-brand-bg p-4 rounded-2xl flex justify-between items-center text-sm shadow-sm transition-transform hover:scale-[1.01]">
                                 <span className="font-bold">{b.profiles?.full_name}</span>
-                                <button onClick={() => handleRemoveAttendee(b.id)} className="text-red-300 hover:text-red-500 font-bold text-[10px] transition-all uppercase">הסרה ✕</button>
+                                <button onClick={() => handleRemoveAttendee(b.id)} className="text-red-300 hover:text-red-500 font-bold text-[10px] transition-all uppercase">הסרה 🗑</button>
                             </div>
                         ))}
                         {!detailsModal.bookings?.length && <p className="text-center py-6 opacity-30 italic text-sm">אין עדיין רשומות לשיעור זה</p>}

@@ -323,11 +323,11 @@ export default function AdminPage() {
                                   {/* כותרת השיעור מחולקת לשתי שורות */}
                                   <div className="flex flex-col mb-3 leading-tight">
                                     {/* שורה 1: סוג השיעור - קטן ועדין */}
-                                    <span className="text-[9px] font-black opacity-50 uppercase tracking-widest truncate">
+                                    <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">
                                       {c.class_type}
                                     </span>
                                     {/* שורה 2: הרמה / שם השיעור - גדול ובולט */}
-                                    <span className="text-[13px] font-extrabold text-brand-dark tracking-tighter">
+                                    <span className="font-extrabold text-[13px] italic tracking-tight text-brand-dark mt-1">
                                       {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
                                     </span>
                                   </div>

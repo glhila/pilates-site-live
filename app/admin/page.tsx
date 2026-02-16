@@ -222,9 +222,9 @@ export default function AdminPage() {
             <button onClick={() => setActiveTab('users')} className={`px-10 py-2.5 rounded-2xl font-bold transition-all ${activeTab === 'users' ? 'bg-brand-dark text-white shadow-lg' : 'text-brand-dark/50'}`}>ניהול מתאמנות</button>
           </div>
           <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-brand-stone/20 shadow-sm">
-             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="p-2 hover:bg-brand-bg rounded-xl">←</button>
+             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="p-2 hover:bg-brand-bg rounded-xl">→</button>
              <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">{weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}</span>
-             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="p-2 hover:bg-brand-bg rounded-xl">→</button>
+             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="p-2 hover:bg-brand-bg rounded-xl">←</button>
           </div>
         </header>
 
@@ -286,7 +286,7 @@ export default function AdminPage() {
                           return (
                             <div key={c.id} className={`absolute inset-x-1 p-3 bg-brand-bg border rounded-2xl text-[11px] font-bold shadow-sm ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} style={{ top: `${top}px` }}>
                               {c.name} {c.recurring_id && "🔄"}
-                              <button onClick={() => setDeleteModal({show: true, classItem: c})} className="float-left text-red-300 hover:text-red-500">✕</button>
+                              <button onClick={() => setDeleteModal({show: true, classItem: c})} className="float-left text-red-300 hover:text-red-500">🗑</button>
                               <div className="mt-1 flex justify-between items-center opacity-40">
                                 <span>{c.bookings?.length || 0}/{c.max_capacity} רשומות</span>
                               </div>

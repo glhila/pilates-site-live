@@ -12,26 +12,28 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const CANCELLATION_WINDOW_HOURS = 4;
 const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
 
-// טווחי השעות להצגה בלוח
+// הגדרות לוח השעות
+const HOUR_HEIGHT = 100; // גובה שעה בפיקסלים
 const MORNING_START = 7;
 const MORNING_END = 13;
 const EVENING_START = 16;
 const EVENING_END = 22;
-const HOUR_HEIGHT = 90; // גובה בפיקסלים לכל שעה בלוח
 
 const TIME_SLOTS = [
   '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-  'break', // הפסקה בצהריים
+  'break', // הפסקת צהריים
   '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
 ];
 
-// פונקציית עזר לבדיקה אם שני תאריכים הם באותו שבוע (ראשון עד שבת)
+// פונקציית עזר לבדיקה אם שני תאריכים הם באותו שבוע (ראשון-שבת)
 const isSameWeek = (date1: Date, date2: Date) => {
   const d1 = new Date(date1);
   const d2 = new Date(date2);
   const diff1 = d1.getDate() - d1.getDay();
   const diff2 = d2.getDate() - d2.getDay();
-  return new Date(d1.setDate(diff1)).toDateString() === new Date(d2.setDate(diff2)).toDateString();
+  const week1 = new Date(d1.setDate(diff1)).toDateString();
+  const week2 = new Date(d2.setDate(diff2)).toDateString();
+  return week1 === week2;
 };
 
 export default function UserPortal() {
@@ -43,8 +45,8 @@ export default function UserPortal() {
   const [userBookings, setUserBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [viewDate, setViewDate] = useState(new Date()); // לניווט שבועי
-  const [selectedDateMobile, setSelectedDateMobile] = useState(new Date()); // ליום נבחר במובייל
+  const [viewDate, setViewDate] = useState(new Date()); // ניווט שבועי
+  const [selectedDateMobile, setSelectedDateMobile] = useState(new Date()); // יום נבחר במובייל
 
   const getAuthenticatedSupabase = async () => {
     try {
@@ -67,7 +69,7 @@ export default function UserPortal() {
     }
 
     try {
-      // 1. שליפת שיעורים (עם התיקון לכפילות קשרים שדיברנו עליה)
+      // 1. שליפת שיעורים
       const { data: cls } = await supabaseClient
         .from('classes')
         .select('*, bookings!class_id(id)')
@@ -83,7 +85,7 @@ export default function UserPortal() {
         .single();
       setProfile(myProfile);
 
-      // 3. שליפת הזמנות המשתמשת יחד עם נתוני השיעור (לצורך חישוב שבועי)
+      // 3. שליפת הזמנות עם נתוני השיעור לחישוב שבועי
       if (myProfile) {
         const { data: books } = await supabaseClient
           .from('bookings')
@@ -154,10 +156,10 @@ export default function UserPortal() {
 
     const hoursDiff = (new Date(classDate).getTime() - new Date().getTime()) / (1000 * 60 * 60);
     if (hoursDiff < CANCELLATION_WINDOW_HOURS) {
-        return alert(`ביטול אפשרי עד ${CANCELLATION_WINDOW_HOURS} שעות לפני השיעור.`);
+        return alert(`ניתן לבטל עד ${CANCELLATION_WINDOW_HOURS} שעות לפני תחילת השיעור.`);
     }
 
-    if (!confirm("לבטל את הרישום?")) return;
+    if (!confirm("לבטל את הרישום לשיעור?")) return;
     const { error } = await supabaseClient.from('bookings').delete().eq('id', bookingId);
     
     if (!error) {
@@ -166,7 +168,7 @@ export default function UserPortal() {
            punch_card_remaining: (profile.punch_card_remaining || 0) + 1 
          }).eq('id', profile.id);
       }
-      alert("הרישום בוטל");
+      alert("הרישום בוטל בהצלחה");
       syncAndFetchData();
     }
   };
@@ -181,53 +183,62 @@ export default function UserPortal() {
     });
   }, [viewDate]);
 
-  if (!isLoaded || loading) return <div className="min-h-screen flex items-center justify-center font-bold text-brand-dark/20 italic">טוען נתונים...</div>;
+  if (!isLoaded || loading) return (
+    <div className="min-h-screen bg-brand-bg flex items-center justify-center font-bold text-brand-dark/20 italic">
+      טוען נתונים...
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-brand-bg p-4 sm:p-8 font-sans antialiased text-brand-dark" dir="rtl">
+    <div className="min-h-screen bg-brand-bg p-4 sm:p-10 font-sans antialiased text-brand-dark" dir="rtl">
       <div className="max-w-7xl mx-auto">
         
-        {/* Header */}
-        <header className="bg-white border border-brand-stone/20 p-6 rounded-[2.5rem] shadow-sm mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        {/* Header Section */}
+        <header className="bg-white border border-brand-stone/20 p-8 rounded-[3rem] shadow-sm mb-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-right">
-            <h1 className="text-2xl font-extrabold italic">היי, {profile?.full_name || user?.firstName} ✨</h1>
-            <div className="flex gap-3 mt-2 justify-center md:justify-start">
-                <span className="text-[11px] bg-brand-stone/5 px-3 py-1 rounded-full border border-brand-stone/10 font-bold">מנוי: {profile?.membership_type || 0} בשבוע</span>
-                <span className={`text-[11px] px-3 py-1 rounded-full border font-bold ${profile?.punch_card_remaining > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>יתרת ניקובים: {profile?.punch_card_remaining || 0}</span>
+            <h1 className="text-3xl font-extrabold italic tracking-tight">היי, {profile?.full_name || user?.firstName} ✨</h1>
+            <div className="flex gap-3 mt-3 justify-center md:justify-start">
+                <span className="text-[11px] bg-brand-stone/5 px-4 py-1.5 rounded-full border border-brand-stone/10 font-bold uppercase tracking-wider">
+                  מנוי: {profile?.membership_type || 0} בשבוע
+                </span>
+                <span className={`text-[11px] px-4 py-1.5 rounded-full border font-bold uppercase tracking-wider ${profile?.punch_card_remaining > 0 ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                  יתרת ניקובים: {profile?.punch_card_remaining || 0}
+                </span>
             </div>
           </div>
           
-          <div className="flex items-center gap-4 bg-brand-stone/5 p-2 rounded-2xl">
-            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="p-2 hover:bg-white rounded-xl transition-all">←</button>
-            <span className="font-bold text-sm w-40 text-center tabular-nums">
+          <div className="flex items-center gap-6 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
+            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">←</button>
+            <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">
               {weekDates[0].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})} - {weekDates[6].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})}
             </span>
-            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="p-2 hover:bg-white rounded-xl transition-all">→</button>
+            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">→</button>
           </div>
         </header>
 
-        {/* Desktop View: Time Grid */}
-        <div className="hidden md:flex bg-white rounded-[2.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[800px]">
-          {/* עמודת שעות */}
-          <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-16">
+        {/* Desktop View: Interactive Time Grid */}
+        <div className="hidden md:flex bg-white rounded-[3rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[900px]">
+          
+          {/* Time Sidebar */}
+          <div className="w-24 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20">
             {TIME_SLOTS.map((slot, i) => (
-              <div key={i} className={`flex items-start justify-center text-[10px] font-black opacity-20 ${slot === 'break' ? 'h-12 bg-brand-stone/10' : 'h-[90px]'}`}>
+              <div key={i} className={`flex items-start justify-center text-[10px] font-black opacity-20 tracking-tighter ${slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px]'}`}>
                 {slot !== 'break' && slot}
               </div>
             ))}
           </div>
 
-          {/* עמודות ימים */}
+          {/* Day Columns */}
           <div className="flex-1 grid grid-cols-7 relative">
             {weekDates.map((date, dayIdx) => (
               <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
-                <div className="h-16 flex flex-col items-center justify-center border-b border-brand-stone/5">
-                    <span className="text-[10px] font-black opacity-30 uppercase">{DAYS_HEBREW[dayIdx]}</span>
-                    <span className="font-bold">{date.getDate()}</span>
+                <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10">
+                    <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
+                    <span className="font-bold text-xl mt-0.5">{date.getDate()}</span>
                 </div>
                 
-                {/* שטח הצבת השיעורים */}
-                <div className="relative" style={{ height: 'calc(14 * 90px + 48px)' }}>
+                {/* Scrollable/Relative area for classes */}
+                <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
                   {classes
                     .filter(c => new Date(c.start_time).toDateString() === date.toDateString())
                     .map(c => {
@@ -240,11 +251,11 @@ export default function UserPortal() {
                       if (hour >= MORNING_START && hour <= MORNING_END) {
                         topPos = (hour - MORNING_START + mins/60) * HOUR_HEIGHT;
                       } else if (hour >= EVENING_START && hour <= EVENING_END) {
-                        topPos = (hour - EVENING_START + mins/60) * HOUR_HEIGHT + (7 * HOUR_HEIGHT) + 48;
+                        topPos = (hour - EVENING_START + mins/60) * HOUR_HEIGHT + (7 * HOUR_HEIGHT) + 64;
                       } else return null;
 
                       return (
-                        <div key={c.id} className="absolute inset-x-1.5" style={{ top: `${topPos}px` }}>
+                        <div key={c.id} className="absolute inset-x-2 transition-transform hover:scale-[1.02] z-10" style={{ top: `${topPos}px` }}>
                           <ClassCard c={c} booking={booking} onBook={() => handleBooking(c)} onCancel={() => handleCancel(booking.id, c.start_time, booking.payment_source)} compact />
                         </div>
                       );
@@ -255,22 +266,27 @@ export default function UserPortal() {
           </div>
         </div>
 
-        {/* Mobile View: Vertical List */}
+        {/* Mobile View: Selection + List */}
         <div className="block md:hidden">
-          <div className="flex overflow-x-auto gap-3 pb-6 no-scrollbar px-1">
+          <div className="flex overflow-x-auto gap-3 pb-8 no-scrollbar px-1">
             {weekDates.map((date, i) => {
               const isSelected = date.toDateString() === selectedDateMobile.toDateString();
+              const isToday = date.toDateString() === new Date().toDateString();
               return (
-                <button key={i} onClick={() => setSelectedDateMobile(date)} className={`flex-shrink-0 w-14 h-20 rounded-2xl flex flex-col items-center justify-center transition-all border ${isSelected ? 'bg-brand-dark text-white border-brand-dark shadow-lg' : 'bg-white border-brand-stone/10'}`}>
-                  <span className={`text-[10px] font-bold ${isSelected ? 'opacity-70' : 'opacity-40'}`}>{DAYS_HEBREW[i]}</span>
-                  <span className="text-xl font-black mt-1">{date.getDate()}</span>
+                <button 
+                  key={i} 
+                  onClick={() => setSelectedDateMobile(date)} 
+                  className={`flex-shrink-0 w-16 h-24 rounded-3xl flex flex-col items-center justify-center transition-all border ${isSelected ? 'bg-brand-dark text-white border-brand-dark shadow-xl scale-105' : 'bg-white border-brand-stone/10'} ${isToday && !isSelected ? 'ring-2 ring-brand-dark/20' : ''}`}
+                >
+                  <span className={`text-[10px] font-bold uppercase ${isSelected ? 'opacity-70' : 'opacity-40'}`}>{DAYS_HEBREW[i]}</span>
+                  <span className="text-2xl font-black mt-1">{date.getDate()}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="space-y-4 pb-20">
-            <h3 className="font-bold text-lg px-2">אימונים ליום {selectedDateMobile.toLocaleDateString('he-IL', {weekday: 'long'})}</h3>
+          <div className="space-y-5 pb-24">
+            <h3 className="font-bold text-xl px-2">שיעורים ליום {selectedDateMobile.toLocaleDateString('he-IL', {weekday: 'long'})}</h3>
             {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).length > 0 ? (
               classes
                 .filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString())
@@ -279,7 +295,9 @@ export default function UserPortal() {
                     return <ClassCard key={c.id} c={c} booking={booking} onBook={() => handleBooking(c)} onCancel={() => handleCancel(booking.id, c.start_time, booking.payment_source)} />;
                 })
             ) : (
-              <div className="text-center py-16 opacity-30 italic text-sm bg-white/50 rounded-3xl border border-dashed border-brand-stone/20">אין אימונים ביום זה 🧘‍♀️</div>
+              <div className="text-center py-24 opacity-30 italic text-sm bg-white/50 rounded-[2.5rem] border border-dashed border-brand-stone/30">
+                אין אימונים מתוכננים ליום זה 🧘‍♀️
+              </div>
             )}
           </div>
         </div>
@@ -296,21 +314,47 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
   const time = new Date(c.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className={`border rounded-[1.5rem] p-3 transition-all shadow-sm flex flex-col gap-2 relative overflow-hidden group hover:shadow-md ${isBooked ? 'bg-green-50 border-green-200 ring-1 ring-green-100' : 'bg-white border-brand-stone/10'}`}>
-      {isBooked && <div className="absolute top-0 left-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-br-lg">רשומה ✓</div>}
+    <div className={`border rounded-[2rem] p-4 transition-all shadow-sm flex flex-col gap-3 relative overflow-hidden group hover:shadow-md ${isBooked ? 'bg-green-50 border-green-200 ring-1 ring-green-100' : 'bg-white border-brand-stone/10'}`}>
+      
+      {isBooked && (
+        <div className="absolute top-0 left-0 bg-green-500 text-white text-[9px] font-bold px-3 py-1 rounded-br-2xl uppercase tracking-tighter">
+          רשומה ✓
+        </div>
+      )}
+
       <div className="mt-1">
         <div className="flex justify-between items-center">
-          <span className="text-[10px] font-black text-brand-dark/40 bg-brand-bg px-2 py-0.5 rounded-md">{time}</span>
-          {!isBooked && <span className={`text-[9px] font-bold ${isFull ? 'text-red-400' : 'text-brand-dark/20'}`}>{count}/{c.max_capacity}</span>}
+          <span className="text-[10px] font-black text-brand-dark/40 bg-brand-bg px-3 py-1 rounded-full uppercase tracking-widest">{time}</span>
+          {!isBooked && (
+            <span className={`text-[10px] font-bold ${isFull ? 'text-red-400' : 'text-brand-dark/20'}`}>
+              {count}/{c.max_capacity}
+            </span>
+          )}
         </div>
-        <h3 className={`font-bold leading-tight mt-1 ${compact ? 'text-[13px]' : 'text-base'}`}>{c.name}</h3>
+        <h3 className={`font-bold leading-tight mt-2 tracking-tight ${compact ? 'text-[14px]' : 'text-lg'}`}>
+          {c.name}
+        </h3>
+        {!compact && <p className="text-[11px] text-brand-dark/50 font-medium mt-1">{c.class_type}</p>}
       </div>
       
-      {isBooked ? (
-          <button onClick={onCancel} className="w-full py-1.5 rounded-xl font-bold text-[10px] bg-white border border-red-100 text-red-400 hover:bg-red-50">ביטול ✕</button>
-      ) : (
-          <button disabled={isFull} onClick={onBook} className={`w-full py-1.5 rounded-xl font-bold text-[10px] transition-all ${isFull ? 'bg-brand-stone/5 text-brand-dark/20 cursor-not-allowed' : 'bg-brand-dark text-white shadow-md'}`}>{isFull ? 'מלא' : 'הרשמה'}</button>
-      )}
+      <div className="mt-auto pt-1">
+        {isBooked ? (
+            <button 
+              onClick={onCancel} 
+              className="w-full py-2.5 rounded-2xl font-bold text-[10px] bg-white border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 transition-all uppercase tracking-wider"
+            >
+              ביטול רישום ✕
+            </button>
+        ) : (
+            <button 
+              disabled={isFull} 
+              onClick={onBook} 
+              className={`w-full py-2.5 rounded-2xl font-bold text-[10px] transition-all uppercase tracking-wider shadow-sm ${isFull ? 'bg-brand-stone/5 text-brand-dark/10 cursor-not-allowed' : 'bg-brand-dark text-white hover:bg-brand-dark/90 hover:scale-[1.01]'}`}
+            >
+              {isFull ? 'רשימת המתנה' : 'הרשמה לאימון'}
+            </button>
+        )}
+      </div>
     </div>
   );
 }

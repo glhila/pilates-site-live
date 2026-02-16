@@ -169,6 +169,22 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteProfile = async (id: string) => {
+    if(!confirm("האם למחוק את המתאמנת לצמיתות? הפעולה תמחק גם את כל ההיסטוריה וההרשמות שלה.")) return;
+    
+    const supabase = await getAuthenticatedSupabase();
+    if (!supabase) return;
+
+    const { error } = await supabase.from('profiles').delete().eq('id', id);
+    
+    if (error) {
+        alert("שגיאה במחיקה: " + error.message);
+    } else {
+        alert("המתאמנת נמחקה בהצלחה מהמערכת.");
+        loadData();
+    }
+  };
+
   const startEditUser = (p: any) => {
       setEditingUserId(p.id);
       setUserFormData({

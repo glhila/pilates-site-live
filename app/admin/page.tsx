@@ -267,32 +267,42 @@ export default function AdminPage() {
 
             {/* Time Grid View */}
             <div className="hidden lg:flex lg:col-span-8 bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
-              <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[10px] opacity-20 font-black tabular-nums">
-                {TIME_SLOTS.map((s, i) => <div key={i} className={s==='break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center'}>{s!=='break' && s}</div>)}
+            
+             {/* Time Sidebar */}
+            <div className="w-24 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20">
+              {TIME_SLOTS.map((slot, i) => (
+              <div key={i} className={`flex items-start justify-center text-[10px] font-black opacity-20 tracking-tighter ${slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px]'}`}>
+                {slot !== 'break' && slot}
               </div>
+              ))}
+            </div>
+
+              {/* Day Columns */}
               <div className="flex-1 grid grid-cols-7 relative">
-                {weekDates.map((date, dayIdx) => (
-                  <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
-                    <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10 bg-white sticky top-0 z-20">
-                        <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
-                        <span className="text-xl font-bold mt-1">{date.getDate()}</span>
-                    </div>
-                    <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
-                      {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
-                          const start = new Date(c.start_time);
-                          const h = start.getHours(); const m = start.getMinutes();
-                          let top = h >= 7 && h <= 13 ? (h-7 + m/60)*100 : (h-16 + m/60)*100 + 700 + 64;
-                          return (
-                            <div key={c.id} onClick={() => setDetailsModal(c)} className={`absolute inset-x-1.5 p-4 bg-brand-bg border rounded-[1.8rem] text-[11px] font-bold shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} style={{ top: `${top}px` }}>
-                              <p className="leading-tight mb-2 tracking-tight">{c.name}</p>
-                              <div className="flex justify-between items-center">
-                                <span className="opacity-40 text-[9px] font-black">{c.bookings?.length || 0}/{c.max_capacity}</span>
-                                <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-300 hover:text-red-500 transition-colors">❌</button>
-                              </div>
+              {weekDates.map((date, dayIdx) => (
+                <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
+                  <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10">
+                      <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
+                      <span className="font-bold text-xl mt-0.5">{date.getDate()}</span>
+                  </div>
+
+                  {/* Scrollable/Relative area for classes */}
+                  <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
+                    {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
+                        const start = new Date(c.start_time);
+                        const h = start.getHours(); const m = start.getMinutes();
+                        let top = h >= 7 && h <= 13 ? (h-7 + m/60)*100 : (h-16 + m/60)*100 + 700 + 64;
+                        return (
+                          <div key={c.id} onClick={() => setDetailsModal(c)} className={`absolute inset-x-1.5 p-4 bg-brand-bg border rounded-[1.8rem] text-[11px] font-bold shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} style={{ top: `${top}px` }}>
+                            <p className="leading-tight mb-2 tracking-tight">{c.name}</p>
+                            <div className="flex justify-between items-center">
+                              <span className="opacity-40 text-[9px] font-black">{c.bookings?.length || 0}/{c.max_capacity}</span>
+                              <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-300 hover:text-red-500 transition-colors">🗑</button>
                             </div>
-                          );
-                      })}
-                    </div>
+                          </div>
+                        );
+                    })}
+                  </div>
                   </div>
                 ))}
               </div>
@@ -395,7 +405,7 @@ export default function AdminPage() {
             <div className="bg-white p-10 rounded-[3.5rem] max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-start mb-10">
                     <div><h3 className="text-2xl font-bold italic tracking-tight">{detailsModal.name}</h3><p className="opacity-40 text-sm font-bold uppercase tracking-widest">{new Date(detailsModal.start_time).toLocaleString('he-IL', {weekday: 'long', hour:'2-digit', minute:'2-digit'})}</p></div>
-                    <button onClick={() => setDetailsModal(null)} className="text-2xl opacity-20 hover:opacity-100 transition-all">🗑</button>
+                    <button onClick={() => setDetailsModal(null)} className="text-2xl opacity-20 hover:opacity-100 transition-all">❌</button>
                 </div>
                 <div className="mb-10"><h4 className="text-[10px] font-black uppercase opacity-40 mb-5 tracking-widest">מתאמנות רשומות ({detailsModal.bookings?.length || 0})</h4>
                     <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">

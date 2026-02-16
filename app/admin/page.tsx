@@ -2,22 +2,37 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { useAuth, useUser } from "@clerk/nextjs"; // הוספנו את useAuth
+import { useAuth, useUser } from "@clerk/nextjs";
 
-// הגדרת בסיס ללא טוקן
+// הגדרות בסיס
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
+// הגדרות לוח שעות
+const HOUR_HEIGHT = 100;
+const MORNING_START = 7;
+const MORNING_END = 13;
+const EVENING_START = 16;
+const EVENING_END = 22;
+const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
+
+const TIME_SLOTS = [
+  '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
+  'break',
+  '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
+];
+
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
-  const { getToken } = useAuth(); // פונקציה לקבלת הטוקן
+  const { getToken } = useAuth();
   
   const [activeTab, setActiveTab] = useState<'schedule' | 'users'>('schedule');
   const [classes, setClasses] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
+  const [viewDate, setViewDate] = useState(new Date());
 
   // טופס שיעור
   const [classFormData, setClassFormData] = useState({
@@ -36,13 +51,10 @@ export default function AdminPage() {
     punch_card_expiry: ''
   });
 
-  // פונקציית עזר ליצירת קליינט מאובטח
-  // זה הקסם שפותר את השגיאה: אנחנו יוצרים חיבור שמכיל את הזהות שלך
   const getAuthenticatedSupabase = async () => {
     try {
       const token = await getToken({ template: 'supabase' });
       if (!token) return null;
-      
       return createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: `Bearer ${token}` } },
       });
@@ -55,21 +67,24 @@ export default function AdminPage() {
   const loadData = async () => {
     setIsFetching(true);
     const supabase = await getAuthenticatedSupabase();
-    
-    // אם אין חיבור מאובטח (למשל האדמין לא מחובר), לא ניתן לגשת לנתונים
-    if (!supabase) {
-        setIsFetching(false);
-        return;
-    }
+    if (!supabase) { setIsFetching(false); return; }
 
     try {
       if (activeTab === 'schedule') {
-        const { data, error } = await supabase.from('classes').select('*').order('start_time', { ascending: true });
-        if (error) console.error(error);
+        // שליפת שיעורים עם ספירת הרשמות (פותר שגיאה 406 ע"י ציון הקשר המפורש)
+        const { data, error } = await supabase
+          .from('classes')
+          .select('*, bookings!class_id(id)')
+          .order('start_time');
+        if (error) throw error;
         setClasses(data || []);
       } else {
-        const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-        if (error) console.error(error);
+        // שליפת כל הפרופילים (פותר שגיאה 400 אם ה-RLS תוקן ב-SQL)
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
         setProfiles(data || []);
       }
     } catch (e) {
@@ -79,18 +94,21 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (isLoaded && user) {
-        loadData();
-    }
+    if (isLoaded && user) loadData();
   }, [activeTab, isLoaded, user]);
 
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = await getAuthenticatedSupabase();
-    if (!supabase) return alert("שגיאת התחברות: אנא רענני את הדף");
+    if (!supabase) return;
+
+    // מניעת כפל שיעורים באותו זמן
+    const newTime = new Date(classFormData.start_time).getTime();
+    if (classes.some(c => new Date(c.start_time).getTime() === newTime)) {
+        return alert("כבר קיים שיעור בשעה זו! אנא בחרי שעה אחרת.");
+    }
     
     const { error } = await supabase.from('classes').insert([classFormData]);
-    
     if (error) alert("שגיאה: " + error.message);
     else {
       alert("השיעור נוסף בהצלחה!");
@@ -102,254 +120,200 @@ export default function AdminPage() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = await getAuthenticatedSupabase();
-    if (!supabase) return alert("שגיאת התחברות: אנא רענני את הדף");
+    if (!supabase) return;
 
-    // וידוא שהמייל תקין (אותיות קטנות וללא רווחים)
-    const cleanEmail = userFormData.email.trim().toLowerCase();
-
-    // הוספת מתאמנת חדשה לטבלה
     const { error } = await supabase.from('profiles').insert([{
       ...userFormData,
-      email: cleanEmail,
-      is_approved: true,
-      clerk_id: null
+      email: userFormData.email.trim().toLowerCase(),
+      is_approved: true
     }]);
 
-    if (error) {
-        if (error.code === '23505') alert("שגיאה: המייל הזה כבר קיים במערכת");
-        else alert("שגיאה בהוספת מתאמנת: " + error.message);
-    } else {
-      alert("המתאמנת נוספה בהצלחה! היא יכולה כעת להירשם לאתר.");
+    if (error) alert("שגיאה: " + error.message);
+    else {
+      alert("המתאמנת נוספה בהצלחה!");
       setUserFormData({ full_name: '', email: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: '' });
       loadData();
     }
   };
 
-  // מחיקת מתאמנת קיימת
-  const handleDeleteProfile = async (id: string) => {
-      if(!confirm("למחוק מתאמנת?")) return;
-      const supabase = await getAuthenticatedSupabase();
-      if (!supabase) return;
-
-      const { error } = await supabase.from('profiles').delete().eq('id', id);
-      if (error) alert("שגיאה במחיקה: " + error.message);
-      else loadData();
-  };
-
   const handleDeleteClass = async (id: string) => {
-      if(!confirm("למחוק שיעור?")) return;
-      const supabase = await getAuthenticatedSupabase();
-      if (!supabase) return;
-
-      const { error } = await supabase.from('classes').delete().eq('id', id);
-      if (error) alert("שגיאה במחיקה: " + error.message);
-      else loadData();
+    if(!confirm("למחוק את השיעור?")) return;
+    const supabase = await getAuthenticatedSupabase();
+    await supabase?.from('classes').delete().eq('id', id);
+    loadData();
   };
 
-  // בדיקת הרשאות פשוטה בצד לקוח (לא מחליף את ה-RLS)
+  const handleDeleteProfile = async (id: string) => {
+    if(!confirm("למחוק מתאמנת?")) return;
+    const supabase = await getAuthenticatedSupabase();
+    await supabase?.from('profiles').delete().eq('id', id);
+    loadData();
+  };
+
+  const weekDates = useMemo(() => {
+    const start = new Date(viewDate);
+    start.setDate(viewDate.getDate() - viewDate.getDay());
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d;
+    });
+  }, [viewDate]);
+
   if (isLoaded && user?.primaryEmailAddress?.emailAddress !== 'hilaglazz13@gmail.com') {
       return <div className="p-10 text-center font-bold text-red-500">אין לך הרשאת גישה לדף זה.</div>;
   }
 
   return (
-    <div className="min-h-screen bg-brand-bg p-4 sm:p-8 font-sans antialiased text-brand-dark" dir="rtl">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-brand-bg p-4 sm:p-10 font-sans text-brand-dark" dir="rtl">
+      <div className="max-w-7xl mx-auto">
         
-        {/* כותרת וניווט */}
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6 border-b border-brand-stone/20 pb-8">
+        {/* Header & Tabs */}
+        <header className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight">ניהול הסטודיו</h1>
-            <p className="text-brand-dark/50 text-base mt-1 font-medium">מחוברת כ: {user?.fullName || user?.primaryEmailAddress?.emailAddress}</p>
+            <h1 className="text-4xl font-extrabold italic tracking-tight">ניהול הסטודיו</h1>
+            <div className="flex gap-4 mt-6">
+                <button 
+                  onClick={() => setActiveTab('schedule')} 
+                  className={`px-8 py-3 rounded-2xl font-bold transition-all shadow-sm ${activeTab === 'schedule' ? 'bg-brand-dark text-white shadow-lg' : 'bg-white border border-brand-stone/20'}`}
+                >
+                  מערכת שעות
+                </button>
+                <button 
+                  onClick={() => setActiveTab('users')} 
+                  className={`px-8 py-3 rounded-2xl font-bold transition-all shadow-sm ${activeTab === 'users' ? 'bg-brand-dark text-white shadow-lg' : 'bg-white border border-brand-stone/20'}`}
+                >
+                  ניהול מתאמנות
+                </button>
+            </div>
           </div>
 
-          <div className="bg-brand-stone/10 p-1.5 rounded-2xl flex gap-1 w-full sm:w-auto">
-            <button 
-              onClick={() => setActiveTab('schedule')}
-              className={`flex-1 sm:flex-none px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'schedule' ? 'bg-brand-dark text-white shadow-lg' : 'text-brand-dark/60 hover:bg-brand-stone/20'}`}
-            >
-              מערכת שעות
-            </button>
-            <button 
-              onClick={() => setActiveTab('users')}
-              className={`flex-1 sm:flex-none px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'users' ? 'bg-brand-dark text-white shadow-lg' : 'text-brand-dark/60 hover:bg-brand-stone/20'}`}
-            >
-              ניהול מתאמנות
-            </button>
+          <div className="flex items-center gap-4 bg-white p-3 rounded-[2rem] border border-brand-stone/20 shadow-sm">
+            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="p-2 font-bold hover:bg-brand-bg rounded-xl w-10 h-10 flex items-center justify-center">←</button>
+            <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">
+              {weekDates[0].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})} - {weekDates[6].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})}
+            </span>
+            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="p-2 font-bold hover:bg-brand-bg rounded-xl w-10 h-10 flex items-center justify-center">→</button>
           </div>
         </header>
 
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-          {activeTab === 'schedule' ? (
-            /* טאב מערכת שעות */
-            <div className="grid md:grid-cols-3 gap-10">
-              <div className="md:col-span-1 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit">
-                <h2 className="text-xl font-bold mb-6 italic">הוספת שיעור</h2>
-                <form onSubmit={handleCreateClass} className="space-y-5">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-dark/40 mr-1 uppercase tracking-widest">שם השיעור</label>
-                    <input 
-                      type="text" placeholder="למשל: Reformer Flow" required
-                      className="w-full p-4 bg-brand-bg/50 rounded-2xl border border-brand-stone/30 outline-none font-medium"
-                      value={classFormData.name}
-                      onChange={e => setClassFormData({...classFormData, name: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-dark/40 mr-1 uppercase tracking-widest">סוג פעילות</label>
-                    <select 
-                      className="w-full p-4 bg-brand-bg/50 rounded-2xl border border-brand-stone/30 outline-none font-medium"
-                      value={classFormData.class_type}
-                      onChange={e => setClassFormData({...classFormData, class_type: e.target.value})}
-                    >
-                      <option>פילאטיס מכשירים</option>
-                      <option>פילאטיס מזרן</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-dark/40 mr-1 uppercase tracking-widest">תאריך ושעה</label>
-                    <input 
-                      type="datetime-local" required style={{ colorScheme: 'light' }}
-                      className="w-full p-4 bg-brand-bg/50 rounded-2xl border border-brand-stone/30 outline-none font-medium"
-                      value={classFormData.start_time}
-                      onChange={e => setClassFormData({...classFormData, start_time: e.target.value})}
-                    />
-                  </div>
-                  <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-2xl font-bold hover:opacity-90 transition-all shadow-xl">
-                    הוספה למערכת
-                  </button>
-                </form>
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold italic">שיעורים קרובים</h2>
-                    <button onClick={loadData} className="text-xs font-bold text-brand-dark/40 hover:text-brand-dark transition-colors">רענן ↻</button>
-                </div>
-                <div className="grid gap-4">
-                    {classes.map(c => (
-                      <div key={c.id} className="bg-white p-6 rounded-[2rem] border border-brand-stone/10 flex justify-between items-center shadow-sm group">
-                        <div className="flex gap-4 items-center">
-                          <div className="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-xl shadow-inner">🗓️</div>
-                          <div>
-                            <p className="font-bold text-lg leading-tight">{c.name}</p>
-                            <p className="text-sm text-brand-dark/50 mt-1 font-medium">{new Date(c.start_time).toLocaleString('he-IL', {weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'})}</p>
-                          </div>
-                        </div>
-                        <button onClick={() => handleDeleteClass(c.id)} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity font-bold text-xs">מחיקה</button>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          ) : (
+        {activeTab === 'schedule' ? (
+          <div className="grid lg:grid-cols-4 gap-8">
             
-            /* טאב ניהול מתאמנות */
-            <div className="grid md:grid-cols-3 gap-10">
-              
-              {/* טופס הוספת מתאמנת */}
-              <div className="md:col-span-1 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit">
-                <h2 className="text-xl font-bold mb-6 italic">הוספת מתאמנת חדשה</h2>
-                <form onSubmit={handleCreateUser} className="space-y-4">
-                  
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">שם מלא</label>
-                    <input 
-                      type="text" required
-                      className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
-                      value={userFormData.full_name}
-                      onChange={e => setUserFormData({...userFormData, full_name: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">אימייל (לצורך התחברות)</label>
-                    <input 
-                      type="email" required
-                      className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
-                      value={userFormData.email}
-                      onChange={e => setUserFormData({...userFormData, email: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">אימונים בשבוע</label>
-                        <input 
-                        type="number" min="0" max="7"
-                        className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
-                        value={userFormData.membership_type}
-                        onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})}
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">ניקובים בכרטיסייה</label>
-                        <input 
-                        type="number" min="0"
-                        className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
-                        value={userFormData.punch_card_remaining}
-                        onChange={e => setUserFormData({...userFormData, punch_card_remaining: parseInt(e.target.value)})}
-                        />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-brand-dark/40 mr-1 uppercase">תוקף כרטיסייה (אופציונלי)</label>
-                    <input 
-                      type="date"
-                      className="w-full p-3 bg-brand-bg/50 rounded-xl border border-brand-stone/20 outline-none font-medium text-sm"
-                      value={userFormData.punch_card_expiry}
-                      onChange={e => setUserFormData({...userFormData, punch_card_expiry: e.target.value})}
-                    />
-                  </div>
-
-                  <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-2xl font-bold hover:bg-brand-dark/90 transition-all shadow-lg mt-2">
-                    אישור והוספה למערכת
-                  </button>
-                </form>
-              </div>
-
-              {/* רשימת המתאמנות */}
-              <div className="md:col-span-2">
-              <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold italic">מתאמנות רשומות</h2>
-                  <div className="flex gap-4 items-center">
-                      <button onClick={loadData} className="text-xs font-bold text-brand-dark/40 hover:text-brand-dark transition-colors">רענן רשימה ↻</button>
-                      <span className="bg-brand-stone/10 px-3 py-1 rounded-full text-[10px] font-bold">{profiles.length} סה"כ</span>
-                  </div>
-              </div>
-
-                <div className="grid gap-3">
-                    {profiles.map(p => (
-                      <div key={p.id} className="bg-white p-5 rounded-3xl border border-brand-stone/10 flex justify-between items-center hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-4 text-right">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${p.clerk_id ? 'bg-green-50 text-green-600' : 'bg-brand-stone/10 text-brand-stone/40'}`}>
-                            {p.clerk_id ? '✓' : '👤'}
-                          </div>
-                          <div>
-                            <p className="font-bold">{p.full_name || 'מתאמנת חדשה'}</p>
-                            <p className="text-xs text-brand-dark/40 font-medium">{p.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-4 items-center">
-                            <div className="text-left">
-                                <p className="text-[10px] font-black uppercase text-brand-dark/30">מנוי / כרטיסייה</p>
-                                <p className="text-xs font-bold">{p.membership_type} בשבוע | {p.punch_card_remaining} ניקובים</p>
-                            </div>
-                            <button 
-                                onClick={() => handleDeleteProfile(p.id)}
-                                className="text-red-300 hover:text-red-500 transition-colors mr-4"
-                            >
-                                🗑️
-                            </button>
-                        </div>
-                      </div>
-                    ))}
-                    {profiles.length === 0 && <p className="text-center p-10 text-brand-dark/30 italic">אין מתאמנות במערכת</p>}
+            {/* Form Column */}
+            <div className="lg:col-span-1 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit sticky top-10">
+              <h2 className="text-xl font-bold mb-6 italic">שיעור חדש</h2>
+              <form onSubmit={handleCreateClass} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black opacity-30 uppercase mr-1">שם השיעור</label>
+                  <input type="text" placeholder="למשל: Flow" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-medium border border-brand-stone/10" value={classFormData.name} onChange={e => setClassFormData({...classFormData, name: e.target.value})} />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black opacity-30 uppercase mr-1">זמן</label>
+                  <input type="datetime-local" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-medium border border-brand-stone/10" value={classFormData.start_time} onChange={e => setClassFormData({...classFormData, start_time: e.target.value})} />
+                </div>
+                <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-2xl font-bold shadow-xl hover:opacity-90 transition-all mt-4">
+                  הוספה למערכת
+                </button>
+              </form>
+            </div>
+
+            {/* Time Grid Column */}
+            <div className="lg:col-span-3 flex bg-white rounded-[3rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
+              <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20">
+                {TIME_SLOTS.map((slot, i) => (
+                  <div key={i} className={`flex items-start justify-center text-[9px] font-black opacity-20 ${slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px]'}`}>
+                    {slot !== 'break' && slot}
+                  </div>
+                ))}
+              </div>
+              <div className="flex-1 grid grid-cols-7 relative">
+                {weekDates.map((date, dayIdx) => (
+                  <div key={dayIdx} className="relative border-l border-brand-stone/5 last:border-l-0">
+                    <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10 bg-white sticky top-0 z-20">
+                        <span className="text-[9px] font-black opacity-30 uppercase">{DAYS_HEBREW[dayIdx]}</span>
+                        <span className="font-bold text-lg">{date.getDate()}</span>
+                    </div>
+                    <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
+                      {classes
+                        .filter(c => new Date(c.start_time).toDateString() === date.toDateString())
+                        .map(c => {
+                          const startTime = new Date(c.start_time);
+                          const hour = startTime.getHours();
+                          const mins = startTime.getMinutes();
+                          
+                          let topPos = 0;
+                          if (hour >= MORNING_START && hour <= MORNING_END) {
+                            topPos = (hour - MORNING_START + mins/60) * HOUR_HEIGHT;
+                          } else if (hour >= EVENING_START && hour <= EVENING_END) {
+                            topPos = (hour - EVENING_START + mins/60) * HOUR_HEIGHT + (7 * HOUR_HEIGHT) + 64;
+                          } else return null;
+
+                          return (
+                            <div key={c.id} className="absolute inset-x-1 p-3 bg-brand-bg border border-brand-stone/20 rounded-2xl shadow-sm z-10 hover:shadow-md transition-shadow">
+                              <p className="text-[11px] font-bold leading-tight">{c.name}</p>
+                              <div className="flex justify-between items-end mt-2">
+                                <span className="text-[9px] font-black opacity-40">{c.bookings?.length || 0}/{c.max_capacity}</span>
+                                <button onClick={() => handleDeleteClass(c.id)} className="text-red-300 hover:text-red-500 text-[10px]">🗑️</button>
+                              </div>
+                            </div>
+                          );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          /* Users Management Tab */
+          <div className="grid lg:grid-cols-4 gap-8">
+            
+            {/* Create User Form */}
+            <div className="lg:col-span-1 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit">
+              <h2 className="text-xl font-bold mb-6 italic">מתאמנת חדשה</h2>
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <input type="text" placeholder="שם מלא" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none border border-brand-stone/10" value={userFormData.full_name} onChange={e => setUserFormData({...userFormData, full_name: e.target.value})} />
+                <input type="email" placeholder="אימייל" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none border border-brand-stone/10" value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} />
+                <div className="grid grid-cols-2 gap-3">
+                  <input type="number" placeholder="מנוי שבועי" className="w-full p-4 bg-brand-bg rounded-2xl border border-brand-stone/10 outline-none" value={userFormData.membership_type} onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})} />
+                  <input type="number" placeholder="ניקובים" className="w-full p-4 bg-brand-bg rounded-2xl border border-brand-stone/10 outline-none" value={userFormData.punch_card_remaining} onChange={e => setUserFormData({...userFormData, punch_card_remaining: parseInt(e.target.value)})} />
+                </div>
+                <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-2xl font-bold shadow-xl mt-2">הוספה למערכת</button>
+              </form>
+            </div>
+
+            {/* Users List */}
+            <div className="lg:col-span-3 space-y-4">
+              <div className="flex justify-between items-center px-4 mb-2">
+                 <h2 className="text-xl font-bold italic">רשימת מתאמנות ({profiles.length})</h2>
+                 <button onClick={loadData} className="text-xs font-bold opacity-30 hover:opacity-100 transition-opacity uppercase tracking-widest">רענן ↻</button>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                {profiles.map(p => (
+                  <div key={p.id} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 flex justify-between items-center hover:shadow-md transition-all">
+                    <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${p.clerk_id ? 'bg-green-50 text-green-600' : 'bg-brand-stone/5 text-brand-dark/20'}`}>
+                          {p.clerk_id ? '✓' : '👤'}
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg">{p.full_name}</p>
+                          <p className="text-xs opacity-40 font-medium tracking-tight">{p.email}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <div className="text-left hidden sm:block">
+                            <p className="text-[9px] font-black opacity-30 uppercase">מנוי / כרטיסייה</p>
+                            <p className="font-bold text-sm">{p.membership_type} בשבוע | {p.punch_card_remaining} ניקובים</p>
+                        </div>
+                        <button onClick={() => handleDeleteProfile(p.id)} className="text-red-200 hover:text-red-500 transition-colors">🗑️</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

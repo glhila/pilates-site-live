@@ -30,7 +30,6 @@ export default function UserPortal() {
   const getAuthenticatedSupabase = async () => {
     try {
       const token = await getToken({ template: 'supabase' });
-      console.log("My JWT Token:", token);
       console.log("Full Auth Header:", `Bearer ${token}`);
       if (!token) {
           console.error("Failed to get Supabase token");
@@ -62,7 +61,6 @@ export default function UserPortal() {
     }
 
     try {
-      // --- התיקון הגדול ---
       // קריאה לפונקציה שיצרנו ב-SQL שמבצעת את החיבור בשרת
       const { error: rpcError } = await supabaseClient.rpc('sync_user_profile');
       
@@ -87,7 +85,9 @@ export default function UserPortal() {
 
       // טעינת שאר הנתונים
       if (myProfile) {
-        const { data: cls } = await supabaseClient.from('classes').select('*, bookings(id)').order('start_time');
+        //const { data: cls } = await supabaseClient.from('classes').select('*, bookings(id)').order('start_time');
+        // שינוי זמני לבדיקה:
+        const { data: cls } = await supabaseClient.from('classes').select('*').order('start_time');
         setClasses(cls || []);
 
         const { data: books } = await supabaseClient.from('bookings').select('*').eq('user_id', myProfile.id);
@@ -197,8 +197,7 @@ export default function UserPortal() {
       <div className="max-w-6xl mx-auto">
         
         <header className="bg-white border border-brand-stone/20 p-6 rounded-[2.5rem] shadow-sm mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-center md:text-right">
-            <h1 className="text-2xl font-extrabold italic">היי, {profile?.full_name || user?.firstName || 'מתאמנת'} ✨</h1>
+          <div className="text-center md:text-right">              <h1 className="text-2xl font-extrabold italic">היי, {profile?.full_name || user?.firstName || 'מתאמנת'} ✨</h1>
             
             {!profile ? (
                  <p className="text-red-500 font-bold text-sm mt-1">מנוי לא פעיל - פני לצוות הסטודיו</p>
@@ -206,11 +205,11 @@ export default function UserPortal() {
                 <div className="flex gap-3 mt-2 justify-center md:justify-start">
                     {profile.membership_type > 0 && (
                         <span className="text-[11px] bg-brand-stone/5 px-3 py-1 rounded-full border border-brand-stone/10 font-bold text-brand-dark/70">
-                            מנוי: {profile.membership_type} בשבוע
+                            מנוי: {profile.membership_type} אימונים בשבוע
                         </span>
                     )}
                     <span className={`text-[11px] px-3 py-1 rounded-full border font-bold ${profile.punch_card_remaining > 0 ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
-                        יתרת ניקובים: {profile.punch_card_remaining}
+                        יתרת ניקובים בכרטיסיה: {profile.punch_card_remaining}
                     </span>
                 </div>
             )}

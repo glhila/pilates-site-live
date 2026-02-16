@@ -5,6 +5,12 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useAuth, useUser } from "@clerk/nextjs";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "אדמין | עונג של פילאטיס",
+  description: "דף ניהול מערכת שעות ומתאמנים",
+};
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";

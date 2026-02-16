@@ -366,58 +366,72 @@ export default function AdminPage() {
             <div className="lg:col-span-8 space-y-4">
                 
                 {/* Desktop Users Table */}
-                <div className="hidden md:block bg-white rounded-[3rem] shadow-sm border border-brand-stone/20 overflow-hidden">
-                  <table className="w-full text-right border-collapse">
+                <div className="hidden md:block bg-white rounded-[3rem] shadow-sm border border-brand-stone/20 overflow-hidden w-full">
+                  <table className="w-full text-right border-collapse table-auto">
                       <thead>
-                          <tr className="bg-brand-stone/5 border-b text-[10px] font-black opacity-40 uppercase tracking-widest">
-                              <th className="p-6">שם המתאמנת</th><th className="p-6">אימייל</th><th className="p-6">טלפון</th>
-                              <th className="p-6 text-center">מנוי</th><th className="p-6 text-center">כרטיסיה</th><th className="p-6 text-center">פעולות</th>
+                          <tr className="bg-brand-stone/5 border-b border-brand-stone/10 text-[10px] font-black opacity-40 uppercase tracking-widest">
+                              <th className="p-6 w-[20%]">שם המתאמנת</th>
+                              <th className="p-6 w-[25%]">אימייל</th>
+                              <th className="p-6 w-[15%]">טלפון</th>
+                              <th className="p-6 w-[15%] text-center">מנוי שבועי</th>
+                              <th className="p-6 w-[15%] text-center">כרטיסייה</th>
+                              <th className="p-6 w-[10%] text-center">פעולות</th>
                           </tr>
                       </thead>
                       <tbody className="text-sm font-medium">
                           {profiles.map(p => (
-                              <tr key={p.id} className="border-b border-brand-stone/5 hover:bg-brand-bg/40 transition-colors">
-                                  <td className="p-6 font-bold text-lg">{p.full_name}</td><td className="p-6 text-xs opacity-50 tabular-nums">{p.email}</td>
-                                  {/* תא הטלפון והקישור לווצאפ */}
+                              <tr key={p.id} className="border-b border-brand-stone/5 hover:bg-brand-bg/40 transition-colors group">
+                                  <td className="p-6">
+                                      <p className="font-bold text-lg text-brand-dark leading-tight">{p.full_name}</p>
+                                  </td>
+                                  <td className="p-6">
+                                      <p className="text-xs opacity-50 tabular-nums break-all max-w-[200px]">{p.email}</p>
+                                  </td>
                                   <td className="p-6">
                                       {p.phone ? (
-                                          <div className="flex items-center gap-2">
-                                              <span className="tabular-nums font-bold text-brand-dark/70">{p.phone}</span>
+                                          <div className="flex items-center gap-2 group-hover:scale-105 transition-transform origin-right">
+                                              <span className="tabular-nums font-bold text-brand-dark/70 text-xs">{p.phone}</span>
                                               <a 
                                                   href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} 
                                                   target="_blank" 
                                                   rel="noreferrer"
-                                                  className="w-8 h-8 flex items-center justify-center bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-all text-base shadow-sm border border-green-100"
-                                                  title="שלחי הודעה ב-WhatsApp"
+                                                  className="w-7 h-7 flex items-center justify-center bg-green-50 text-green-600 rounded-full hover:bg-green-100 border border-green-100 shadow-sm"
+                                                  title="שלחי הודעה"
                                               >
-                                                  {/* אייקון טלפון/ווצאפ עדין */}
-                                                  <span className="mb-0.5">📱</span>
+                                                  <span className="text-sm">📱</span>
                                               </a>
                                           </div>
                                       ) : (
-                                          <span className="opacity-20 text-xs italic tracking-tighter">לא הוזן</span>
+                                          <span className="opacity-20 text-[10px] italic">לא הוזן</span>
                                       )}
                                   </td>
-
-                                  <td className="p-6 text-center">{p.membership_type} אימונים</td>
                                   <td className="p-6 text-center">
-                                      <span className={`px-4 py-1.5 rounded-full text-[11px] font-bold ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                      <div className="inline-block px-3 py-1 bg-brand-stone/5 rounded-lg font-bold text-xs text-brand-dark/60">
+                                          {p.membership_type} אימונים
+                                      </div>
+                                  </td>
+                                  <td className="p-6 text-center">
+                                      <span className={`inline-flex px-4 py-1.5 rounded-full text-[11px] font-bold shadow-sm whitespace-nowrap ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
                                           {p.punch_card_remaining} ניקובים
                                       </span>
                                   </td>
-                                  <td className="p-6 flex gap-6 justify-center">
-                                      <button 
-                                          onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} 
-                                          className="font-bold opacity-40 hover:opacity-100 transition-all uppercase text-[10px] tracking-widest"
-                                      >
-                                          ✎ עריכה
-                                      </button>
-                                      <button 
-                                          onClick={() => handleDeleteProfile(p.id)} 
-                                          className="text-red-300 font-bold hover:text-red-500 transition-all uppercase text-[10px] tracking-widest"
-                                      >
-                                          🗑 מחקי
-                                      </button>
+                                  <td className="p-6">
+                                      <div className="flex gap-4 justify-center items-center">
+                                          <button 
+                                              onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} 
+                                              className="font-black opacity-30 hover:opacity-100 hover:text-brand-dark transition-all uppercase text-[10px] tracking-tighter"
+                                              title="עריכה"
+                                          >
+                                              עריכה ✎
+                                          </button>
+                                          <button 
+                                              onClick={() => handleDeleteProfile(p.id)} 
+                                              className="font-black text-red-300 hover:text-red-600 transition-all uppercase text-[10px] tracking-tighter"
+                                              title="מחיקה"
+                                          >
+                                              מחקי 🗑
+                                          </button>
+                                      </div>
                                   </td>
                               </tr>
                           ))}

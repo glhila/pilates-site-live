@@ -208,7 +208,7 @@ export default function AdminPage() {
     if (error) {
         alert("שגיאה בשמירה: " + error.message);
     } else {
-        alert(editingUserId ? "פרטי המתאמנת עודכנו בהצלחה" : "מתאמנת חדשה נוספה עם תוקף לחודשיים");
+        alert(editingUserId ? "פרטי המתאמנת עודכנו בהצלחה" : "מתאמנת חדשה נוספה עם כרטיסיה בתוקף לחודשיים");
         setEditingUserId(null); 
         setUserFormData({full_name:'', email:'', phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); 
         loadData(); 
@@ -309,17 +309,43 @@ export default function AdminPage() {
                             <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
                             <span className="text-xl font-bold mt-0.5">{date.getDate()}</span>
                         </div>
+
                         <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
                           {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
                               const start = new Date(c.start_time);
                               const h = start.getHours(); const m = start.getMinutes();
                               let top = h >= 7 && h <= 13 ? (h-7 + m/60)*100 : (h-16 + m/60)*100 + 700 + 64;
                               return (
-                                <div key={c.id} onClick={() => setDetailsModal(c)} className={`absolute inset-x-1.5 p-4 bg-brand-bg border rounded-[1.8rem] text-[11px] font-bold shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} style={{ top: `${top}px` }}>
-                                  <p className="leading-tight mb-2 tracking-tight">{c.name}</p>
-                                  <div className="flex justify-between items-center">
-                                    <span className="opacity-40 text-[9px] font-black">{c.bookings?.length || 0}/{c.max_capacity}</span>
-                                    <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-300 hover:text-red-500 transition-colors text-[14px]">🗑</button>
+                                <div key={c.id} onClick={() => setDetailsModal(c)} 
+                                  className={`absolute inset-x-1.5 p-3 sm:p-4 bg-brand-bg border rounded-[1.8rem] shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} 
+                                  style={{ top: `${top}px` }}
+                                >
+                                  {/* כותרת השיעור מחולקת לשתי שורות */}
+                                  <div className="flex flex-col mb-3 leading-tight">
+                                    {/* שורה 1: סוג השיעור - קטן ועדין */}
+                                    <span className="text-[9px] font-black opacity-50 uppercase tracking-widest truncate">
+                                      {c.class_type}
+                                    </span>
+                                    {/* שורה 2: הרמה / שם השיעור - גדול ובולט */}
+                                    <span className="text-[13px] font-extrabold text-brand-dark tracking-tighter">
+                                      {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
+                                    </span>
+                                  </div>
+
+                                  {/* שורת סטטוס וכפתור מחיקה */}
+                                  <div className="flex justify-between items-center mt-auto">
+                                    <div className="flex flex-col">
+                                      <span className="opacity-40 text-[9px] font-black uppercase tracking-tighter">
+                                        {c.bookings?.length || 0}/{c.max_capacity} רשומות
+                                      </span>
+                                    </div>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} 
+                                      className="w-7 h-7 flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                                      title="מחיקת שיעור"
+                                    >
+                                      <span className="text-sm">🗑</span>
+                                    </button>
                                   </div>
                                 </div>
                               );
@@ -341,23 +367,54 @@ export default function AdminPage() {
                         ))}
                     </div>
                     <div className="space-y-4 px-1">
-                        {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).length > 0 ? (
+                      {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).length > 0 ? (
                           classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).map(c => (
-                            <div key={c.id} onClick={() => setDetailsModal(c)} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 flex justify-between items-center shadow-sm w-full">
-                                <div>
-                                    <span className="text-[10px] font-black bg-brand-bg px-3 py-1 rounded-full uppercase">{new Date(c.start_time).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}</span>
-                                    <h3 className="font-bold text-xl mt-3 italic tracking-tight">{c.name}</h3>
-                                </div>
-                                <div className="text-left flex flex-col items-end gap-3">
-                                    <span className="text-[10px] font-bold opacity-30 whitespace-nowrap">{c.bookings?.length || 0}/{c.max_capacity} רשומות</span>
-                                    <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-400 text-xs font-bold underline decoration-red-100 underline-offset-4">ביטול שיעור</button>
-                                </div>
-                            </div>
+                              <div 
+                                  key={c.id} 
+                                  onClick={() => setDetailsModal(c)} 
+                                  className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 flex justify-between items-center shadow-sm w-full transition-all active:scale-[0.98]"
+                              >
+                                  <div className="flex-1">
+                                      {/* בועית זמן */}
+                                      <span className="text-[10px] font-black bg-brand-bg px-3 py-1 rounded-full uppercase tracking-widest text-brand-dark/60">
+                                          {new Date(c.start_time).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}
+                                      </span>
+
+                                      {/* פירוט שיעור: סוג ורמה בשתי שורות */}
+                                      <div className="mt-4 flex flex-col leading-tight">
+                                          <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">
+                                              {c.class_type}
+                                          </span>
+                                          <h3 className="font-extrabold text-xl italic tracking-tight text-brand-dark mt-1">
+                                              {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
+                                          </h3>
+                                      </div>
+                                  </div>
+
+                                  <div className="text-left flex flex-col items-end gap-5">
+                                      {/* מונה רשומות */}
+                                      <div className="flex flex-col items-end">
+                                          <span className="text-[10px] font-black opacity-30 whitespace-nowrap uppercase tracking-tighter">
+                                              {c.bookings?.length || 0}/{c.max_capacity} רשומות
+                                          </span>
+                                      </div>
+                                      
+                                      {/* כפתור ביטול מעוצב */}
+                                      <button 
+                                          onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} 
+                                          className="text-red-400 text-[10px] font-black uppercase underline decoration-red-100 underline-offset-8 tracking-widest transition-colors active:text-red-600"
+                                      >
+                                          ביטול שיעור 🗑
+                                      </button>
+                                  </div>
+                              </div>
                           ))
-                        ) : (
-                          <div className="text-center py-20 opacity-30 italic text-sm bg-white/50 rounded-[2.5rem] border border-dashed border-brand-stone/30">אין אימונים מתוכננים ליום זה</div>
-                        )}
-                    </div>
+                      ) : (
+                          <div className="text-center py-20 opacity-30 italic text-sm bg-white/50 rounded-[2.5rem] border border-dashed border-brand-stone/30">
+                              אין אימונים מתוכננים ליום זה 🧘‍♀️
+                          </div>
+                      )}
+                  </div>
                 </div>
             </div>
           </div>

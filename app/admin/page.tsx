@@ -55,7 +55,7 @@ export default function AdminPage() {
 
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userFormData, setUserFormData] = useState({
-    full_name: '', email: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: ''
+    full_name: '', email: '', phone: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: ''
   });
 
   const [manualBookingUserId, setManualBookingUserId] = useState("");
@@ -186,7 +186,7 @@ export default function AdminPage() {
         : await supabase.from('profiles').insert([{ ...payload, is_approved: true }]);
     
     if (error) alert(error.message);
-    else { setEditingUserId(null); setUserFormData({full_name:'', email:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); loadData(); }
+    else { setEditingUserId(null); setUserFormData({full_name:'', email:'',phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); loadData(); }
   };
 
   const handleDeleteProfile = async (id: string) => {
@@ -338,6 +338,7 @@ export default function AdminPage() {
             </div>
           </div>
         ) : (
+          
           /* Users Management Section */
           <div className="grid lg:grid-cols-12 gap-10">
              <div className="lg:col-span-4 bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit lg:sticky lg:top-10 z-20">
@@ -351,53 +352,131 @@ export default function AdminPage() {
                     <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">אימייל</label>
                     <input type="email" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">מספר טלפון</label>
+                  <input type="tel" placeholder="05X-XXXXXXX" className="w-full p-4 bg-brand-bg rounded-2xl outline-none border border-brand-stone/10" value={userFormData.phone} onChange={e => setUserFormData({...userFormData, phone: e.target.value})} />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2"><label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">מנוי שבועי</label><input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.membership_type} onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})} /></div>
                     <div className="space-y-2"><label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">ניקובים</label><input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.punch_card_remaining} onChange={e => setUserFormData({...userFormData, punch_card_remaining: parseInt(e.target.value)})} /></div>
                 </div>
                 <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-2xl transition-all hover:scale-[1.01]">{editingUserId ? 'עדכן פרטים' : 'הוספה למערכת'}</button>
-                {editingUserId && <button type="button" onClick={() => { setEditingUserId(null); setUserFormData({full_name:'', email:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); }} className="w-full text-xs font-bold opacity-30 mt-4 underline underline-offset-4 tracking-widest">ביטול עריכה</button>}
+                {editingUserId && <button type="button" onClick={() => { setEditingUserId(null); setUserFormData({full_name:'', email:'',phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); }} className="w-full text-xs font-bold opacity-30 mt-4 underline underline-offset-4 tracking-widest">ביטול עריכה</button>}
               </form>
             </div>
 
             <div className="lg:col-span-8 space-y-4">
+                
                 {/* Desktop Users Table */}
                 <div className="hidden md:block bg-white rounded-[3rem] shadow-sm border border-brand-stone/20 overflow-hidden">
-                    <table className="w-full text-right border-collapse">
-                        <thead><tr className="bg-brand-stone/5 border-b text-[10px] font-black opacity-40 uppercase tracking-widest"><th className="p-6">שם המתאמנת</th><th className="p-6">אימייל</th><th className="p-6 text-center">מנוי</th><th className="p-6 text-center">ניקובים</th><th className="p-6 text-center">פעולות</th></tr></thead>
-                        <tbody className="text-sm font-medium">
-                            {profiles.map(p => (
-                                <tr key={p.id} className="border-b border-brand-stone/5 hover:bg-brand-bg/40 transition-colors">
-                                    <td className="p-6 font-bold text-lg">{p.full_name}</td><td className="p-6 text-xs opacity-50 tabular-nums">{p.email}</td><td className="p-6 text-center">{p.membership_type} אימונים</td>
-                                    <td className="p-6 text-center"><span className={`px-4 py-1.5 rounded-full text-[11px] font-bold ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{p.punch_card_remaining} ניקובים</span></td>
-                                    <td className="p-6 flex gap-6 justify-center">
-                                        <button onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} className="font-bold opacity-40 hover:opacity-100 transition-all uppercase text-[10px] tracking-widest">✎ עריכה</button>
-                                        <button onClick={() => handleDeleteProfile(p.id)} className="text-red-300 font-bold hover:text-red-500 transition-all uppercase text-[10px] tracking-widest">🗑 מחקי</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                  <table className="w-full text-right border-collapse">
+                      <thead>
+                          <tr className="bg-brand-stone/5 border-b text-[10px] font-black opacity-40 uppercase tracking-widest">
+                              <th className="p-6">שם המתאמנת</th><th className="p-6">אימייל</th><th className="p-6">טלפון</th>
+                              <th className="p-6 text-center">מנוי</th><th className="p-6 text-center">כרטיסיה</th><th className="p-6 text-center">פעולות</th>
+                          </tr>
+                      </thead>
+                      <tbody className="text-sm font-medium">
+                          {profiles.map(p => (
+                              <tr key={p.id} className="border-b border-brand-stone/5 hover:bg-brand-bg/40 transition-colors">
+                                  <td className="p-6 font-bold text-lg">{p.full_name}</td><td className="p-6 text-xs opacity-50 tabular-nums">{p.email}</td>
+                                  {/* תא הטלפון והקישור לווצאפ */}
+                                  <td className="p-6">
+                                      {p.phone ? (
+                                          <div className="flex items-center gap-2">
+                                              <span className="tabular-nums font-bold text-brand-dark/70">{p.phone}</span>
+                                              <a 
+                                                  href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} 
+                                                  target="_blank" 
+                                                  rel="noreferrer"
+                                                  className="w-8 h-8 flex items-center justify-center bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-all text-base shadow-sm border border-green-100"
+                                                  title="שלחי הודעה ב-WhatsApp"
+                                              >
+                                                  {/* אייקון טלפון/ווצאפ עדין */}
+                                                  <span className="mb-0.5">📱</span>
+                                              </a>
+                                          </div>
+                                      ) : (
+                                          <span className="opacity-20 text-xs italic tracking-tighter">לא הוזן</span>
+                                      )}
+                                  </td>
+
+                                  <td className="p-6 text-center">{p.membership_type} אימונים</td>
+                                  <td className="p-6 text-center">
+                                      <span className={`px-4 py-1.5 rounded-full text-[11px] font-bold ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                          {p.punch_card_remaining} ניקובים
+                                      </span>
+                                  </td>
+                                  <td className="p-6 flex gap-6 justify-center">
+                                      <button 
+                                          onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} 
+                                          className="font-bold opacity-40 hover:opacity-100 transition-all uppercase text-[10px] tracking-widest"
+                                      >
+                                          ✎ עריכה
+                                      </button>
+                                      <button 
+                                          onClick={() => handleDeleteProfile(p.id)} 
+                                          className="text-red-300 font-bold hover:text-red-500 transition-all uppercase text-[10px] tracking-widest"
+                                      >
+                                          🗑 מחקי
+                                      </button>
+                                  </td>
+                              </tr>
+                          ))}
+                      </tbody>
+                  </table>
+              </div>
 
                 {/* Mobile Users Cards */}
                 <div className="grid md:hidden gap-4 pb-20">
-                    {profiles.map(p => (
-                        <div key={p.id} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 shadow-sm relative">
-                            <div className="flex justify-between items-start">
-                                <div><p className="font-bold text-xl italic tracking-tight">{p.full_name}</p><p className="text-xs opacity-40 font-medium mt-1">{p.email}</p></div>
-                                <div className={`px-3 py-1 rounded-full text-[10px] font-bold ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{p.punch_card_remaining}</div>
-                            </div>
-                            <div className="mt-6 pt-4 border-t border-brand-stone/5 flex justify-between items-center">
-                                <span className="text-[10px] font-black opacity-30 uppercase">{p.membership_type} בשבוע</span>
-                                <div className="flex gap-4">
-                                    <button onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} className="text-xs font-bold opacity-60 underline">עריכה ✎</button>
-                                    <button onClick={() => handleDeleteProfile(p.id)} className="text-xs font-bold text-red-400 underline">מחיקה 🗑</button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                  {profiles.map(p => (
+                      <div key={p.id} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 shadow-sm relative">
+                          <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                  <p className="font-bold text-xl italic tracking-tight">{p.full_name}</p><p className="text-xs opacity-40 font-medium mt-1">{p.email}</p>
+                                  {/* תצוגת טלפון וכפתור ווצאפ למובייל */}
+                                  {p.phone && (
+                                      <div className="flex items-center gap-2 mt-3">
+                                          <span className="text-xs font-bold tabular-nums opacity-60">{p.phone}</span>
+                                          <a 
+                                              href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} 
+                                              target="_blank" 
+                                              rel="noreferrer"
+                                              className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-100 active:scale-95 transition-all"
+                                          >
+                                              <span>WhatsApp</span>
+                                              <span className="text-xs">📱</span>
+                                          </a>
+                                      </div>
+                                  )}
+                              </div>
+                              
+                              {/* בועית ניקובים מעוצבת */}
+                              <div className={`px-4 py-1.5 rounded-full text-[11px] font-bold shadow-sm ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                  {p.punch_card_remaining} כרטיסיה
+                              </div>
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t border-brand-stone/5 flex justify-between items-center">
+                              <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">{p.membership_type} בשבוע</span>
+                              <div className="flex gap-6">
+                                  <button 
+                                      onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} 
+                                      className="text-xs font-bold opacity-60 underline underline-offset-4"
+                                  >
+                                      עריכה ✎
+                                  </button>
+                                  <button 
+                                      onClick={() => handleDeleteProfile(p.id)} 
+                                      className="text-xs font-bold text-red-400 underline underline-offset-4"
+                                  >
+                                      מחיקה 🗑
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                  ))}
+              </div>
             </div>
           </div>
         )}

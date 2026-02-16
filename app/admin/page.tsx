@@ -167,17 +167,37 @@ export default function AdminPage() {
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) return;
 
-    let expiryDate = userFormData.punch_card_expiry;
-    if (userFormData.punch_card_remaining > 0 && !expiryDate) {
-        const d = new Date();
-        d.setMonth(d.getMonth() + 2);
-        expiryDate = d.toISOString().split('T')[0];
+    // 1. חישוב תאריך של חודשיים מהיום
+    const d = new Date();
+    d.setMonth(d.getMonth() + 2);
+    const twoMonthsFromNow = d.toISOString().split('T')[0];
+
+    let finalExpiryDate = userFormData.punch_card_expiry;
+
+    // 2. לוגיקה חכמה לעדכון תוקף:
+    if (editingUserId) {
+        // אם אנחנו בעריכה - נבדוק אם הוסיפו ניקובים (המספר בטופס גדול ממה שיש בטבלה)
+        const currentProfile = profiles.find(p => p.id === editingUserId);
+        const punchesAdded = userFormData.punch_card_remaining > (currentProfile?.punch_card_remaining || 0);
+        
+        if (punchesAdded) {
+            // אם הוסיפו ניקובים - נגדיר תוקף חדש לחודשיים מהיום
+            finalExpiryDate = twoMonthsFromNow;
+        }
+    } else {
+        // אם זו מתאמנת חדשה לגמרי ויש לה ניקובים
+        if (userFormData.punch_card_remaining > 0) {
+            finalExpiryDate = twoMonthsFromNow;
+        }
     }
 
     const payload = { 
-        ...userFormData, 
-        punch_card_expiry: expiryDate,
-        email: userFormData.email.trim().toLowerCase(), 
+        full_name: userFormData.full_name,
+        email: userFormData.email.trim().toLowerCase(),
+        phone: userFormData.phone,
+        membership_type: userFormData.membership_type,
+        punch_card_remaining: userFormData.punch_card_remaining,
+        punch_card_expiry: finalExpiryDate, // התאריך המעודכן
         updated_at: new Date().toISOString() 
     };
     
@@ -185,8 +205,14 @@ export default function AdminPage() {
         ? await supabase.from('profiles').update(payload).eq('id', editingUserId)
         : await supabase.from('profiles').insert([{ ...payload, is_approved: true }]);
     
-    if (error) alert(error.message);
-    else { setEditingUserId(null); setUserFormData({full_name:'', email:'',phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); loadData(); }
+    if (error) {
+        alert("שגיאה בשמירה: " + error.message);
+    } else {
+        alert(editingUserId ? "פרטי המתאמנת עודכנו בהצלחה" : "מתאמנת חדשה נוספה עם תוקף לחודשיים");
+        setEditingUserId(null); 
+        setUserFormData({full_name:'', email:'', phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); 
+        loadData(); 
+    }
   };
 
   const handleDeleteProfile = async (id: string) => {

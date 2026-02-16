@@ -32,13 +32,17 @@ export default function AdminPage() {
   const [isFetching, setIsFetching] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
 
+  // טופס שיעור
   const [classFormData, setClassFormData] = useState({
     name: '',
     class_type: 'פילאטיס מכשירים',
     start_time: '',
-    max_capacity: 6
+    max_capacity: 6,
+    is_recurring: false // שדה חדש לשיעור קבוע
   });
 
+  // ניהול עריכת משתמשת
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userFormData, setUserFormData] = useState({
     full_name: '',
     email: '',
@@ -54,36 +58,22 @@ export default function AdminPage() {
       return createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: `Bearer ${token}` } },
       });
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   };
 
   const loadData = async () => {
     setIsFetching(true);
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) { setIsFetching(false); return; }
-
     try {
       if (activeTab === 'schedule') {
-        const { data, error } = await supabase
-          .from('classes')
-          .select('*, bookings!class_id(id)')
-          .order('start_time');
-        if (error) throw error;
+        const { data } = await supabase.from('classes').select('*, bookings!class_id(id)').order('start_time');
         setClasses(data || []);
       } else {
-        // תיקון שגיאה 400: מיון לפי updated_at במקום created_at
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('updated_at', { ascending: false });
-        if (error) throw error;
+        const { data } = await supabase.from('profiles').select('*').order('updated_at', { ascending: false });
         setProfiles(data || []);
       }
-    } catch (e) {
-      console.error("Error loading data:", e);
-    }
+    } catch (e) { console.error(e); }
     setIsFetching(false);
   };
 
@@ -95,35 +85,83 @@ export default function AdminPage() {
     e.preventDefault();
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) return;
-    const { error } = await supabase.from('classes').insert([classFormData]);
+
+    const startDate = new Date(classFormData.start_time);
+    const mins = startDate.getMinutes();
+
+    // ולידציה: רק שעה עגולה או חצי
+    if (mins !== 0 && mins !== 30) {
+        return alert("ניתן לקבוע שיעורים רק בשעות עגולות (00) או בחצאים (30) ⏳");
+    }
+
+    const classesToInsert = [];
+    // אם זה שיעור קבוע - ניצור 8 מופעים (חודשיים קדימה)
+    const iterations = classFormData.is_recurring ? 8 : 1;
+
+    for (let i = 0; i < iterations; i++) {
+        const currentStart = new Date(startDate);
+        currentStart.setDate(startDate.getDate() + (i * 7));
+        classesToInsert.push({
+            name: classFormData.name,
+            class_type: classFormData.class_type,
+            start_time: currentStart.toISOString(),
+            max_capacity: classFormData.max_capacity
+        });
+    }
+    
+    const { error } = await supabase.from('classes').insert(classesToInsert);
     if (error) alert(error.message);
     else {
-      alert("השיעור נוסף!");
-      setClassFormData({ ...classFormData, name: '', start_time: '' });
+      alert(iterations > 1 ? "שיעורים קבועים נוספו ל-8 השבועות הקרובים!" : "השיעור נוסף בהצלחה!");
+      setClassFormData({ ...classFormData, name: '', start_time: '', is_recurring: false });
       loadData();
     }
   };
 
-  const handleCreateUser = async (e: React.FormEvent) => {
+  const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) return;
-    const { error } = await supabase.from('profiles').insert([{
-      ...userFormData,
-      email: userFormData.email.trim().toLowerCase(),
-      is_approved: true,
-      updated_at: new Date().toISOString()
-    }]);
+
+    const payload = {
+        ...userFormData,
+        email: userFormData.email.trim().toLowerCase(),
+        updated_at: new Date().toISOString()
+    };
+
+    let error;
+    if (editingUserId) {
+        // עדכון קיימת
+        const { error: err } = await supabase.from('profiles').update(payload).eq('id', editingUserId);
+        error = err;
+    } else {
+        // יצירת חדשה
+        const { error: err } = await supabase.from('profiles').insert([{ ...payload, is_approved: true }]);
+        error = err;
+    }
+
     if (error) alert(error.message);
     else {
-      alert("מתאמנת נוספה!");
+      alert(editingUserId ? "הפרטים עודכנו!" : "מתאמנת נוספה!");
+      setEditingUserId(null);
       setUserFormData({ full_name: '', email: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: '' });
       loadData();
     }
   };
 
+  const startEditUser = (p: any) => {
+      setEditingUserId(p.id);
+      setUserFormData({
+          full_name: p.full_name,
+          email: p.email,
+          membership_type: p.membership_type,
+          punch_card_remaining: p.punch_card_remaining,
+          punch_card_expiry: p.punch_card_expiry || ''
+      });
+  };
+
   const handleDeleteClass = async (id: string) => {
-    if(!confirm("למחוק שיעור?")) return;
+    if(!confirm("למחוק?")) return;
     const supabase = await getAuthenticatedSupabase();
     await supabase?.from('classes').delete().eq('id', id);
     loadData();
@@ -152,69 +190,57 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-brand-bg p-4 sm:p-10 font-sans text-brand-dark" dir="rtl">
-      <div className="max-w-[1400px] mx-auto">
+      <div className="max-w-[1500px] mx-auto">
         
         <header className="flex flex-col lg:flex-row justify-between items-center mb-10 gap-6">
-          <div>
-            <h1 className="text-4xl font-extrabold italic tracking-tight">ניהול הסטודיו</h1>
-            <div className="flex gap-4 mt-6">
-                <button onClick={() => setActiveTab('schedule')} className={`px-8 py-3 rounded-2xl font-bold transition-all ${activeTab === 'schedule' ? 'bg-brand-dark text-white shadow-lg' : 'bg-white border border-brand-stone/20'}`}>מערכת שעות</button>
-                <button onClick={() => setActiveTab('users')} className={`px-8 py-3 rounded-2xl font-bold transition-all ${activeTab === 'users' ? 'bg-brand-dark text-white shadow-lg' : 'bg-white border border-brand-stone/20'}`}>ניהול מתאמנות</button>
-            </div>
+          <h1 className="text-4xl font-extrabold italic">ניהול הסטודיו</h1>
+          <div className="flex bg-white p-2 rounded-3xl border border-brand-stone/20 shadow-sm">
+            <button onClick={() => setActiveTab('schedule')} className={`px-8 py-2 rounded-2xl font-bold transition-all ${activeTab === 'schedule' ? 'bg-brand-dark text-white' : 'text-brand-dark/50'}`}>מערכת שעות</button>
+            <button onClick={() => setActiveTab('users')} className={`px-8 py-2 rounded-2xl font-bold transition-all ${activeTab === 'users' ? 'bg-brand-dark text-white' : 'text-brand-dark/50'}`}>מתאמנות</button>
           </div>
-
-          <div className="flex items-center gap-4 bg-white p-3 rounded-[2rem] border border-brand-stone/20 shadow-sm">
-            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center font-bold">→</button>
-            <span className="font-bold text-sm min-w-[150px] text-center">{weekDates[0].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})} - {weekDates[6].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})}</span>
-            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center font-bold">←</button>
+          <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-brand-stone/20">
+             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }}>←</button>
+             <span className="font-bold text-sm min-w-[140px] text-center">{weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}</span>
+             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }}>→</button>
           </div>
         </header>
 
         {activeTab === 'schedule' ? (
-          <div className="grid lg:grid-cols-12 gap-10">
-            {/* טופס הוספה - תופס 3 עמודות מתוך 12 כדי להיות רחב יותר */}
-            <div className="lg:col-span-3 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit sticky top-10">
-              <h2 className="text-2xl font-bold mb-8 italic">שיעור חדש</h2>
-              <form onSubmit={handleCreateClass} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-black opacity-40 uppercase block mr-1">שם השיעור</label>
-                  <input type="text" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-medium border border-brand-stone/10" value={classFormData.name} onChange={e => setClassFormData({...classFormData, name: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black opacity-40 uppercase block mr-1">זמן (תאריך ושעה)</label>
-                  <input type="datetime-local" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-medium border border-brand-stone/10" value={classFormData.start_time} onChange={e => setClassFormData({...classFormData, start_time: e.target.value})} />
-                </div>
-                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-xl mt-4">הוספה</button>
+          <div className="grid lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-3 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit">
+              <h2 className="text-xl font-bold mb-6 italic">שיעור חדש</h2>
+              <form onSubmit={handleCreateClass} className="space-y-5">
+                <input type="text" placeholder="שם השיעור" required className="w-full p-4 bg-brand-bg rounded-xl outline-none" value={classFormData.name} onChange={e => setClassFormData({...classFormData, name: e.target.value})} />
+                <input type="datetime-local" step="1800" required className="w-full p-4 bg-brand-bg rounded-xl outline-none" value={classFormData.start_time} onChange={e => setClassFormData({...classFormData, start_time: e.target.value})} />
+                <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-brand-bg rounded-xl transition-all">
+                    <input type="checkbox" className="w-5 h-5 accent-brand-dark" checked={classFormData.is_recurring} onChange={e => setClassFormData({...classFormData, is_recurring: e.target.checked})} />
+                    <span className="text-sm font-bold">שיעור קבוע (ל-8 שבועות)</span>
+                </label>
+                <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-xl font-bold shadow-lg">הוספה</button>
               </form>
             </div>
 
-            {/* Time Grid - תופס 9 עמודות */}
-            <div className="lg:col-span-9 flex bg-white rounded-[3rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[900px]">
-              <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20">
-                {TIME_SLOTS.map((slot, i) => (
-                  <div key={i} className={`flex items-start justify-center text-[10px] font-black opacity-20 ${slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px]'}`}>{slot !== 'break' && slot}</div>
-                ))}
+            <div className="lg:col-span-9 flex bg-white rounded-[3rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[850px]">
+              <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[10px] opacity-20 font-black">
+                {TIME_SLOTS.map((s, i) => <div key={i} className={s==='break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center'}>{s!=='break' && s}</div>)}
               </div>
               <div className="flex-1 grid grid-cols-7 relative">
                 {weekDates.map((date, dayIdx) => (
                   <div key={dayIdx} className="relative border-l border-brand-stone/5 last:border-l-0">
-                    <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10">
-                        <span className="text-[10px] font-black opacity-30 uppercase">{DAYS_HEBREW[dayIdx]}</span>
-                        <span className="font-bold text-lg">{date.getDate()}</span>
+                    <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10 font-bold">
+                        <span className="text-[9px] opacity-30 uppercase">{DAYS_HEBREW[dayIdx]}</span>
+                        <span>{date.getDate()}</span>
                     </div>
                     <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
                       {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
-                          const startTime = new Date(c.start_time);
-                          const hour = startTime.getHours();
-                          const mins = startTime.getMinutes();
-                          let topPos = hour >= MORNING_START && hour <= MORNING_END ? (hour - MORNING_START + mins/60) * HOUR_HEIGHT : (hour - EVENING_START + mins/60) * HOUR_HEIGHT + (7 * HOUR_HEIGHT) + 64;
+                          const start = new Date(c.start_time);
+                          const h = start.getHours();
+                          const m = start.getMinutes();
+                          let top = h >= 7 && h <= 13 ? (h-7 + m/60)*100 : (h-16 + m/60)*100 + 700 + 64;
                           return (
-                            <div key={c.id} className="absolute inset-x-1.5 p-3 bg-brand-bg border border-brand-stone/20 rounded-2xl shadow-sm z-10">
-                              <p className="text-[11px] font-bold leading-tight">{c.name}</p>
-                              <div className="flex justify-between items-center mt-2">
-                                <span className="text-[9px] font-black opacity-40">{c.bookings?.length || 0}/{c.max_capacity}</span>
-                                <button onClick={() => handleDeleteClass(c.id)} className="text-red-300 hover:text-red-500 text-[11px]">🗑️</button>
-                              </div>
+                            <div key={c.id} className="absolute inset-x-1 p-2 bg-brand-bg border rounded-2xl text-[10px] font-bold shadow-sm" style={{ top: `${top}px` }}>
+                              {c.name} <button onClick={() => handleDeleteClass(c.id)} className="float-left text-red-300">✕</button>
+                              <div className="opacity-40">{c.bookings?.length || 0}/{c.max_capacity}</div>
                             </div>
                           );
                       })}
@@ -225,50 +251,53 @@ export default function AdminPage() {
             </div>
           </div>
         ) : (
-          /* ניהול מתאמנות */
           <div className="grid lg:grid-cols-12 gap-10">
-            {/* טופס הוספת מתאמנת */}
-            <div className="lg:col-span-4 bg-white p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit">
-              <h2 className="text-2xl font-bold mb-8 italic">מתאמנת חדשה</h2>
-              <form onSubmit={handleCreateUser} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-black opacity-40 uppercase block mr-1">שם מלא</label>
-                  <input type="text" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none border border-brand-stone/10" value={userFormData.full_name} onChange={e => setUserFormData({...userFormData, full_name: e.target.value})} />
+            <div className="lg:col-span-3 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit">
+              <h2 className="text-xl font-bold mb-6 italic">{editingUserId ? 'עריכת מתאמנת' : 'מתאמנת חדשה'}</h2>
+              <form onSubmit={handleSaveUser} className="space-y-4">
+                <input type="text" placeholder="שם מלא" required className="w-full p-3 bg-brand-bg rounded-xl outline-none" value={userFormData.full_name} onChange={e => setUserFormData({...userFormData, full_name: e.target.value})} />
+                <input type="email" placeholder="אימייל" required className="w-full p-3 bg-brand-bg rounded-xl outline-none" value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} />
+                <div className="grid grid-cols-2 gap-3 text-xs font-bold">
+                    <div>
+                        <label>מנוי שבועי</label>
+                        <input type="number" className="w-full p-3 bg-brand-bg rounded-xl mt-1" value={userFormData.membership_type} onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})} />
+                    </div>
+                    <div>
+                        <label>ניקובים</label>
+                        <input type="number" className="w-full p-3 bg-brand-bg rounded-xl mt-1" value={userFormData.punch_card_remaining} onChange={e => setUserFormData({...userFormData, punch_card_remaining: parseInt(e.target.value)})} />
+                    </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black opacity-40 uppercase block mr-1">אימייל</label>
-                  <input type="email" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none border border-brand-stone/10" value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-black opacity-40 uppercase block mr-1">מנוי שבועי</label>
-                    <input type="number" className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={userFormData.membership_type} onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-black opacity-40 uppercase block mr-1">ניקובים</label>
-                    <input type="number" className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={userFormData.punch_card_remaining} onChange={e => setUserFormData({...userFormData, punch_card_remaining: parseInt(e.target.value)})} />
-                  </div>
-                </div>
-                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-xl">הוספה</button>
+                <button type="submit" className="w-full bg-brand-dark text-white p-4 rounded-xl font-bold">{editingUserId ? 'עדכן פרטים' : 'הוספה למערכת'}</button>
+                {editingUserId && <button type="button" onClick={() => { setEditingUserId(null); setUserFormData({full_name:'', email:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); }} className="w-full text-xs font-bold opacity-30 mt-2">ביטול עריכה</button>}
               </form>
             </div>
 
-            {/* רשימה */}
-            <div className="lg:col-span-8 grid md:grid-cols-2 gap-5 h-fit">
-                {profiles.map(p => (
-                  <div key={p.id} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 flex justify-between items-center">
-                    <div>
-                        <p className="font-bold text-lg">{p.full_name}</p>
-                        <p className="text-xs opacity-40">{p.email}</p>
-                    </div>
-                    <div className="flex items-center gap-6">
-                        <div className="text-left text-xs font-bold">
-                            {p.membership_type} בשבוע | {p.punch_card_remaining} ניקובים
-                        </div>
-                        <button onClick={() => handleDeleteProfile(p.id)} className="text-red-200 hover:text-red-500 transition-colors">🗑️</button>
-                    </div>
-                  </div>
-                ))}
+            <div className="lg:col-span-9 bg-white rounded-[2.5rem] shadow-sm border border-brand-stone/20 overflow-hidden">
+                <table className="w-full text-right border-collapse">
+                    <thead>
+                        <tr className="bg-brand-stone/5 border-b border-brand-stone/10 text-[10px] font-black uppercase opacity-40">
+                            <th className="p-4">שם מלא</th>
+                            <th className="p-4">אימייל</th>
+                            <th className="p-4 text-center">מנוי שבועי</th>
+                            <th className="p-4 text-center">ניקובים</th>
+                            <th className="p-4">פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-sm font-medium">
+                        {profiles.map(p => (
+                            <tr key={p.id} className="border-b border-brand-stone/5 hover:bg-brand-bg/30 transition-colors">
+                                <td className="p-4 font-bold">{p.full_name}</td>
+                                <td className="p-4 text-xs opacity-50">{p.email}</td>
+                                <td className="p-4 text-center">{p.membership_type} אימונים</td>
+                                <td className="p-4 text-center">{p.punch_card_remaining}</td>
+                                <td className="p-4 flex gap-4">
+                                    <button onClick={() => startEditUser(p)} className="text-brand-dark/50 hover:text-brand-dark transition-colors">✎ ערוך</button>
+                                    <button onClick={() => handleDeleteProfile(p.id)} className="text-red-300 hover:text-red-500 transition-colors">🗑 מחק</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
           </div>
         )}

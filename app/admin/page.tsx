@@ -320,17 +320,15 @@ export default function AdminPage() {
                                   className={`absolute inset-x-1.5 p-3 sm:p-4 bg-brand-bg border rounded-[1.8rem] shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} 
                                   style={{ top: `${top}px` }}
                                 >
-                                  {/* כותרת השיעור מחולקת לשתי שורות */}
-                                  <div className="flex flex-col mb-3 leading-tight">
-                                    {/* שורה 1: סוג השיעור - קטן ועדין */}
-                                    <span className="text-[9px] font-black opacity-50 uppercase tracking-widest truncate">
-                                      {c.class_type}
-                                    </span>
-                                    {/* שורה 2: הרמה / שם השיעור - גדול ובולט */}
-                                    <span className="text-[13px] font-extrabold text-brand-dark tracking-tighter">
-                                      {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
-                                    </span>
-                                  </div>
+                                  {/* פירוט שיעור: סוג ורמה בשתי שורות */}
+                                  <div className="mt-4 flex flex-col leading-tight">
+                                          <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">
+                                              {c.class_type}
+                                          </span>
+                                          <h3 className="font-extrabold text-xl italic tracking-tight text-brand-dark mt-1">
+                                              {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
+                                          </h3>
+                                      </div>
 
                                   {/* שורת סטטוס וכפתור מחיקה */}
                                   <div className="flex justify-between items-center mt-auto">

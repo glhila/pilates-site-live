@@ -37,28 +37,20 @@ export default function AdminPage() {
   const [isFetching, setIsFetching] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
 
-  // ניהול מודאלים
   const [deleteModal, setDeleteModal] = useState<{show: boolean, classItem: any} | null>(null);
   const [detailsModal, setDetailsModal] = useState<any | null>(null);
 
-  // טופס שיעור
   const [classFormData, setClassFormData] = useState({
     name: CLASS_TEMPLATES[0],
     class_type: 'פילאטיס מכשירים',
-    date: '', 
-    hour: '08', 
-    minute: '00',
-    max_capacity: 6,
-    is_recurring: false
+    date: '', hour: '08', minute: '00', max_capacity: 6, is_recurring: false
   });
 
-  // טופס מתאמנת
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userFormData, setUserFormData] = useState({
     full_name: '', email: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: ''
   });
 
-  // טופס רישום ידני בתוך מודאל
   const [manualBookingUserId, setManualBookingUserId] = useState("");
 
   const getAuthenticatedSupabase = async () => {
@@ -75,42 +67,26 @@ export default function AdminPage() {
     setIsFetching(true);
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) { setIsFetching(false); return; }
-
     try {
-      if (activeTab === 'schedule') {
-        const { data: cls } = await supabase
-          .from('classes')
-          .select('*, bookings!class_id(id, profiles(id, full_name, email))')
-          .order('start_time');
-        setClasses(cls || []);
-      }
-      
-      const { data: profs } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('full_name', { ascending: true });
+      const { data: cls } = await supabase.from('classes').select('*, bookings!class_id(id, profiles(id, full_name, email))').order('start_time');
+      setClasses(cls || []);
+      const { data: profs } = await supabase.from('profiles').select('*').order('full_name', { ascending: true });
       setProfiles(profs || []);
-      
     } catch (e) { console.error(e); }
     setIsFetching(false);
   };
 
-  useEffect(() => {
-    if (isLoaded && user) loadData();
-  }, [activeTab, isLoaded, user]);
+  useEffect(() => { if (isLoaded && user) loadData(); }, [activeTab, isLoaded, user]);
 
-  // לוגיקת הוספת שיעור
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) return;
-
     const fullDateStr = `${classFormData.date}T${classFormData.hour}:${classFormData.minute}:00`;
     const startDate = new Date(fullDateStr);
     const classesToInsert = [];
     const iterations = classFormData.is_recurring ? 52 : 1;
     const recurring_id = classFormData.is_recurring ? crypto.randomUUID() : null;
-
     for (let i = 0; i < iterations; i++) {
         const currentStart = new Date(startDate);
         currentStart.setDate(startDate.getDate() + (i * 7));
@@ -122,21 +98,29 @@ export default function AdminPage() {
             recurring_id: recurring_id
         });
     }
-    
     const { error } = await supabase.from('classes').insert(classesToInsert);
     if (error) alert(error.message);
-    else {
-      alert(iterations > 1 ? "שיעורים קבועים נוספו לכל השנה!" : "השיעור נוסף!");
-      setClassFormData({ ...classFormData, date: '', is_recurring: false });
-      loadData();
-    }
+    else { alert("נוסף בהצלחה!"); loadData(); }
   };
 
-  // רישום ידני של אדמין
   const handleManualBooking = async () => {
     if (!manualBookingUserId || !detailsModal) return;
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) return;
+
+    const selectedUser = profiles.find(p => p.id === manualBookingUserId);
+    
+    // בדיקת מכסה שבועית לצרכי התראה
+    const classWeek = new Date(detailsModal.start_time);
+    const existingBookings = classes.filter(c => {
+        const d = new Date(c.start_time);
+        const isSameW = d.getDate() - d.getDay() === classWeek.getDate() - classWeek.getDay();
+        return isSameW && c.bookings?.some((b: any) => b.profiles?.id === manualBookingUserId);
+    });
+
+    if (selectedUser?.membership_type > 0 && existingBookings.length >= selectedUser.membership_type) {
+        if (!confirm(`למתאמנת זו נגמרה המכסה השבועית (${selectedUser.membership_type} אימונים). לרשום בכל זאת?`)) return;
+    }
 
     const { error } = await supabase.from('bookings').insert({
         user_id: manualBookingUserId,
@@ -144,76 +128,26 @@ export default function AdminPage() {
         payment_source: 'admin_manual'
     });
 
-    if (error) {
-        if (error.code === '23505') alert("המתאמנת כבר רשומה");
-        else alert("שגיאה: " + error.message);
-    } else {
-        alert("נרשמה בהצלחה!");
-        setManualBookingUserId("");
-        setDetailsModal(null);
-        loadData();
-    }
+    if (error) alert("שגיאה: " + error.message);
+    else { alert("נרשמה בהצלחה!"); setManualBookingUserId(""); setDetailsModal(null); loadData(); }
   };
 
-  // מחיקת שיעור חכמה
-  const processDeletion = async (type: 'single' | 'future') => {
-    if (!deleteModal) return;
-    const { classItem } = deleteModal;
-    const supabase = await getAuthenticatedSupabase();
-    if (!supabase) return;
-
-    let query = supabase.from('classes').delete();
-    if (type === 'single' || !classItem.recurring_id) {
-        query = query.eq('id', classItem.id);
-    } else {
-        query = query.eq('recurring_id', classItem.recurring_id).gte('start_time', classItem.start_time);
-    }
-
-    const { error } = await query;
-    if (error) alert(error.message);
-    setDeleteModal(null);
-    loadData();
+  const handleRemoveAttendee = async (bookingId: string) => {
+      if (!confirm("להסיר את המתאמנת מהשיעור?")) return;
+      const supabase = await getAuthenticatedSupabase();
+      if (!supabase) return;
+      const { error } = await supabase.from('bookings').delete().eq('id', bookingId);
+      if (!error) { alert("הוסרה מהשיעור"); setDetailsModal(null); loadData(); }
   };
 
-  // ניהול מתאמנות (שמירה/עריכה)
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) return;
-
-    const payload = {
-        full_name: userFormData.full_name,
-        email: userFormData.email.trim().toLowerCase(),
-        membership_type: userFormData.membership_type,
-        punch_card_remaining: userFormData.punch_card_remaining,
-        updated_at: new Date().toISOString()
-    };
-
-    const { error } = editingUserId 
-        ? await supabase.from('profiles').update(payload).eq('id', editingUserId)
-        : await supabase.from('profiles').insert([{ ...payload, is_approved: true }]);
-    
+    const payload = { ...userFormData, email: userFormData.email.trim().toLowerCase(), updated_at: new Date().toISOString() };
+    const { error } = editingUserId ? await supabase.from('profiles').update(payload).eq('id', editingUserId) : await supabase.from('profiles').insert([{ ...payload, is_approved: true }]);
     if (error) alert(error.message);
-    else {
-      setEditingUserId(null);
-      setUserFormData({ full_name: '', email: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: '' });
-      loadData();
-    }
-  };
-
-  const startEditUser = (p: any) => {
-      setEditingUserId(p.id);
-      setUserFormData({
-          full_name: p.full_name, email: p.email, membership_type: p.membership_type,
-          punch_card_remaining: p.punch_card_remaining, punch_card_expiry: p.punch_card_expiry || ''
-      });
-  };
-
-  const handleDeleteProfile = async (id: string) => {
-      if(!confirm("למחוק מתאמנת לצמיתות?")) return;
-      const supabase = await getAuthenticatedSupabase();
-      await supabase?.from('profiles').delete().eq('id', id);
-      loadData();
+    else { setEditingUserId(null); loadData(); }
   };
 
   const weekDates = useMemo(() => {
@@ -237,45 +171,60 @@ export default function AdminPage() {
         <header className="flex flex-col lg:flex-row justify-between items-center mb-10 gap-6">
           <h1 className="text-4xl font-extrabold italic tracking-tight">ניהול סטודיו ✨</h1>
           <div className="flex bg-white p-2 rounded-3xl border border-brand-stone/20 shadow-sm">
-            <button onClick={() => setActiveTab('schedule')} className={`px-10 py-2.5 rounded-2xl font-bold transition-all ${activeTab === 'schedule' ? 'bg-brand-dark text-white shadow-lg' : 'text-brand-dark/50'}`}>מערכת שעות</button>
-            <button onClick={() => setActiveTab('users')} className={`px-10 py-2.5 rounded-2xl font-bold transition-all ${activeTab === 'users' ? 'bg-brand-dark text-white shadow-lg' : 'text-brand-dark/50'}`}>ניהול מתאמנות</button>
+            <button onClick={() => setActiveTab('schedule')} className={`px-10 py-2.5 rounded-2xl font-bold transition-all ${activeTab === 'schedule' ? 'bg-brand-dark text-white' : 'text-brand-dark/50'}`}>מערכת שעות</button>
+            <button onClick={() => setActiveTab('users')} className={`px-10 py-2.5 rounded-2xl font-bold transition-all ${activeTab === 'users' ? 'bg-brand-dark text-white' : 'text-brand-dark/50'}`}>מתאמנות</button>
           </div>
-          <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-brand-stone/20">
+          <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border">
              <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }}>←</button>
-             <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">{weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}</span>
+             <span className="font-bold text-sm min-w-[150px] text-center">{weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}</span>
              <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }}>→</button>
           </div>
         </header>
 
         {activeTab === 'schedule' ? (
           <div className="grid lg:grid-cols-12 gap-8">
-            {/* טופס הוספה */}
-            <div className="lg:col-span-3 bg-white p-8 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit sticky top-10">
-              <h2 className="text-xl font-bold mb-6 italic">שיעור חדש</h2>
-              <form onSubmit={handleCreateClass} className="space-y-4">
-                <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.name} onChange={e => setClassFormData({...classFormData, name: e.target.value})}>
-                    {CLASS_TEMPLATES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <input type="date" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={classFormData.date} onChange={e => setClassFormData({...classFormData, date: e.target.value})} />
-                <div className="grid grid-cols-2 gap-4">
-                    <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.hour} onChange={e => setClassFormData({...classFormData, hour: e.target.value})}>
-                        {Array.from({length: 16}, (_, i) => (i + 7).toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}
-                    </select>
-                    <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.minute} onChange={e => setClassFormData({...classFormData, minute: e.target.value})}>
-                        <option value="00">00</option><option value="30">30</option>
+            {/* טופס הוספה - הורחב ל-4 עמודות */}
+            <div className="lg:col-span-4 bg-white p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit sticky top-10">
+              <h2 className="text-xl font-bold mb-8 italic">שיעור חדש</h2>
+              <form onSubmit={handleCreateClass} className="space-y-6">
+                <div>
+                    <label className="text-[10px] font-black opacity-40 uppercase block mb-1 mr-1">סוג ורמה</label>
+                    <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold border" value={classFormData.name} onChange={e => setClassFormData({...classFormData, name: e.target.value})}>
+                        {CLASS_TEMPLATES.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                 </div>
-                <input type="number" min="1" className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={classFormData.max_capacity} onChange={e => setClassFormData({...classFormData, max_capacity: parseInt(e.target.value)})} />
-                <label className="flex items-center gap-3 cursor-pointer p-3 hover:bg-brand-bg rounded-2xl border border-dashed border-brand-stone/20">
+                <div>
+                  <label className="text-[10px] font-black opacity-40 uppercase block mb-1 mr-1">תאריך</label>
+                  <input type="date" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={classFormData.date} onChange={e => setClassFormData({...classFormData, date: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-[10px] font-black opacity-40 uppercase block mb-1 mr-1">שעה</label>
+                        <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.hour} onChange={e => setClassFormData({...classFormData, hour: e.target.value})}>
+                            {Array.from({length: 16}, (_, i) => (i + 7).toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-black opacity-40 uppercase block mb-1 mr-1">דקות</label>
+                        <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.minute} onChange={e => setClassFormData({...classFormData, minute: e.target.value})}>
+                            <option value="00">00</option><option value="30">30</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label className="text-[10px] font-black opacity-40 uppercase block mb-1 mr-1">קיבולת</label>
+                    <input type="number" min="1" className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.max_capacity} onChange={e => setClassFormData({...classFormData, max_capacity: parseInt(e.target.value)})} />
+                </div>
+                <label className="flex items-center gap-3 cursor-pointer p-3 hover:bg-brand-bg rounded-2xl transition-all border border-dashed">
                     <input type="checkbox" className="w-5 h-5 accent-brand-dark" checked={classFormData.is_recurring} onChange={e => setClassFormData({...classFormData, is_recurring: e.target.checked})} />
                     <span className="text-sm font-bold">שיעור קבוע לשנה 🗓️</span>
                 </label>
-                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-xl">הוספה</button>
+                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-xl">הוספה למערכת</button>
               </form>
             </div>
 
-            {/* Time Grid */}
-            <div className="lg:col-span-9 flex bg-white rounded-[3rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[900px]">
+            {/* Time Grid - 8 עמודות */}
+            <div className="lg:col-span-8 flex bg-white rounded-[3rem] border overflow-hidden shadow-sm min-h-[900px]">
               <div className="w-20 bg-brand-stone/5 border-l flex flex-col pt-20 text-[10px] opacity-20 font-black">
                 {TIME_SLOTS.map((s, i) => <div key={i} className={s==='break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center'}>{s!=='break' && s}</div>)}
               </div>
@@ -295,7 +244,6 @@ export default function AdminPage() {
                           return (
                             <div key={c.id} onClick={() => setDetailsModal(c)} className="absolute inset-x-1 p-3 bg-brand-bg border rounded-2xl text-[11px] font-bold shadow-sm cursor-pointer z-10" style={{ top: `${top}px` }}>
                               {c.name} {c.recurring_id && "🔄"}
-                              <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="float-left text-red-300">✕</button>
                               <div className="mt-1 opacity-40">{c.bookings?.length || 0}/{c.max_capacity}</div>
                             </div>
                           );
@@ -307,32 +255,31 @@ export default function AdminPage() {
             </div>
           </div>
         ) : (
-          /* ניהול מתאמנות - טבלה מלאה */
+          /* ניהול מתאמנות - הורחב ל-4/8 */
           <div className="grid lg:grid-cols-12 gap-10">
-            <div className="lg:col-span-3 bg-white p-8 rounded-[2.5rem] shadow-sm border h-fit">
-              <h2 className="text-xl font-bold mb-6 italic">{editingUserId ? 'עריכת מתאמנת' : 'מתאמנת חדשה'}</h2>
-              <form onSubmit={handleSaveUser} className="space-y-4">
+            <div className="lg:col-span-4 bg-white p-10 rounded-[2.5rem] shadow-sm border h-fit">
+              <h2 className="text-xl font-bold mb-8 italic">{editingUserId ? 'עריכת מתאמנת' : 'מתאמנת חדשה'}</h2>
+              <form onSubmit={handleSaveUser} className="space-y-6">
                 <input type="text" placeholder="שם מלא" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={userFormData.full_name} onChange={e => setUserFormData({...userFormData, full_name: e.target.value})} />
                 <input type="email" placeholder="אימייל" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} />
-                <div className="grid grid-cols-2 gap-4 text-xs font-bold">
-                    <div className="space-y-1"><label>מנוי שבועי</label><input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.membership_type} onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})} /></div>
-                    <div className="space-y-1"><label>ניקובים</label><input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.punch_card_remaining} onChange={e => setUserFormData({...userFormData, punch_card_remaining: parseInt(e.target.value)})} /></div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1"><label className="text-[10px] uppercase opacity-40 font-bold ml-1">מנוי שבועי</label><input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.membership_type} onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})} /></div>
+                    <div className="space-y-1"><label className="text-[10px] uppercase opacity-40 font-bold ml-1">ניקובים</label><input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.punch_card_remaining} onChange={e => setUserFormData({...userFormData, punch_card_remaining: parseInt(e.target.value)})} /></div>
                 </div>
-                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold">{editingUserId ? 'עדכן' : 'הוספה'}</button>
-                {editingUserId && <button type="button" onClick={() => setEditingUserId(null)} className="w-full text-xs font-bold opacity-30 mt-4 underline">ביטול</button>}
+                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-xl">{editingUserId ? 'עדכן' : 'הוספה'}</button>
+                {editingUserId && <button type="button" onClick={() => setEditingUserId(null)} className="w-full text-xs opacity-30 mt-4 underline">ביטול עריכה</button>}
               </form>
             </div>
 
-            <div className="lg:col-span-9 bg-white rounded-[2.5rem] shadow-sm border overflow-hidden">
+            <div className="lg:col-span-8 bg-white rounded-[2.5rem] shadow-sm border overflow-hidden">
                 <table className="w-full text-right border-collapse">
                     <thead><tr className="bg-brand-stone/5 border-b text-[10px] font-black opacity-40 uppercase"><th className="p-5">שם</th><th className="p-5">אימייל</th><th className="p-5 text-center">מנוי</th><th className="p-5 text-center">ניקובים</th><th className="p-5">פעולות</th></tr></thead>
                     <tbody className="text-sm font-medium">
                         {profiles.map(p => (
                             <tr key={p.id} className="border-b hover:bg-brand-bg/40 transition-colors">
-                                <td className="p-5 font-bold">{p.full_name}</td><td className="p-5 text-xs opacity-50">{p.email}</td><td className="p-5 text-center">{p.membership_type} בשבוע</td>
+                                <td className="p-5 font-bold">{p.full_name}</td><td className="p-5 text-xs opacity-50">{p.email}</td><td className="p-5 text-center">{p.membership_type}</td>
                                 <td className="p-5 text-center">{p.punch_card_remaining}</td><td className="p-5 flex gap-4">
-                                    <button onClick={() => startEditUser(p)} className="font-bold opacity-40 hover:opacity-100">✎ עריכה</button>
-                                    <button onClick={() => handleDeleteProfile(p.id)} className="text-red-300 font-bold">🗑 מחקי</button>
+                                    <button onClick={() => { setEditingUserId(p.id); setUserFormData(p); setActiveTab('users'); }} className="opacity-40 hover:opacity-100 font-bold">✎</button>
                                 </td>
                             </tr>
                         ))}
@@ -342,40 +289,33 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Modal פרטים ורישום ידני */}
+        {/* Modal פרטים + מחיקת מתאמנת ספציפית משיעור */}
         {detailsModal && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-md">
-            <div className="bg-white p-8 rounded-[3rem] max-w-lg w-full shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-white p-10 rounded-[3rem] max-w-lg w-full shadow-2xl">
                 <div className="flex justify-between items-start mb-6">
-                    <div><h3 className="text-2xl font-bold italic">{detailsModal.name}</h3><p className="opacity-40 text-sm">{new Date(detailsModal.start_time).toLocaleString('he-IL', {weekday: 'long', hour:'2-digit', minute:'2-digit'})}</p></div>
+                    <div><h3 className="text-2xl font-bold italic">{detailsModal.name}</h3><p className="opacity-40 text-sm">{new Date(detailsModal.start_time).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}</p></div>
                     <button onClick={() => setDetailsModal(null)} className="text-xl opacity-20">✕</button>
                 </div>
                 <div className="mb-6"><h4 className="text-[10px] font-black uppercase opacity-40 mb-3">רשומות ({detailsModal.bookings?.length || 0})</h4>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">{detailsModal.bookings?.map((b: any) => <div key={b.id} className="bg-brand-bg p-3 rounded-xl flex justify-between text-sm"><span className="font-bold">{b.profiles?.full_name}</span><span className="opacity-40 text-xs">{b.profiles?.email}</span></div>)}</div>
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                        {detailsModal.bookings?.map((b: any) => (
+                            <div key={b.id} className="bg-brand-bg p-3 rounded-xl flex justify-between items-center text-sm">
+                                <span className="font-bold">{b.profiles?.full_name}</span>
+                                <button onClick={() => handleRemoveAttendee(b.id)} className="text-red-300 hover:text-red-500 text-xs">הסרה ✕</button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className="bg-brand-stone/5 p-6 rounded-3xl border border-brand-stone/10"><h4 className="text-[10px] font-black opacity-40 mb-3 uppercase">רישום ידני אדמין</h4>
+                <div className="bg-brand-stone/5 p-6 rounded-3xl border border-brand-stone/10">
+                    <h4 className="text-[10px] font-black opacity-40 mb-3 uppercase">רישום ידני</h4>
                     <div className="flex gap-2">
-                        <select className="flex-1 p-3 bg-white rounded-xl text-sm font-bold border" value={manualBookingUserId} onChange={e => setManualBookingUserId(e.target.value)}>
+                        <select className="flex-1 p-3 bg-white rounded-xl text-sm font-bold" value={manualBookingUserId} onChange={e => setManualBookingUserId(e.target.value)}>
                             <option value="">בחרי מתאמנת...</option>{profiles.map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                         </select>
                         <button onClick={handleManualBooking} disabled={!manualBookingUserId} className="bg-brand-dark text-white px-6 rounded-xl font-bold text-xs disabled:opacity-20">רישום</button>
                     </div>
                 </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal מחיקה חכמה */}
-        {deleteModal && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[110] p-4 backdrop-blur-md">
-            <div className="bg-white p-10 rounded-[3rem] max-w-md w-full shadow-2xl">
-              <h3 className="text-2xl font-bold mb-4 italic text-center">ביטול שיעור</h3>
-              <p className="text-sm text-center mb-8 opacity-60">האם לבטל רק את השיעור הזה או את כל הסדרה העתידית?</p>
-              <div className="space-y-3">
-                <button onClick={() => processDeletion('single')} className="w-full bg-brand-bg p-5 rounded-2xl font-bold hover:bg-brand-stone/10">השיעור הזה בלבד</button>
-                {deleteModal.classItem.recurring_id && <button onClick={() => processDeletion('future')} className="w-full bg-red-50 text-red-600 p-5 rounded-2xl font-bold">כל הסדרה מהיום והלאה</button>}
-                <button onClick={() => setDeleteModal(null)} className="w-full p-2 text-xs font-bold opacity-30 mt-6 underline">חזרה</button>
-              </div>
             </div>
           </div>
         )}

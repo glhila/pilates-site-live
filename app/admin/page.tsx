@@ -287,7 +287,7 @@ export default function AdminPage() {
                               <p className="leading-tight mb-2 tracking-tight">{c.name}</p>
                               <div className="flex justify-between items-center">
                                 <span className="opacity-40 text-[9px] font-black">{c.bookings?.length || 0}/{c.max_capacity}</span>
-                                <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-300 hover:text-red-500 transition-colors">🗑</button>
+                                <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-300 hover:text-red-500 transition-colors">❌</button>
                               </div>
                             </div>
                           );

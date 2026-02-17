@@ -314,7 +314,7 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
   const time = new Date(c.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className={`border rounded-[2rem] p-4 transition-all shadow-sm flex flex-col gap-3 relative overflow-hidden group hover:shadow-md ${isBooked ? 'bg-green-50 border-green-200 ring-1 ring-green-100' : 'bg-white border-brand-stone/10'}`}>
+    <div className={`border rounded-[2rem] p-4 transition-all shadow-sm flex flex-col gap-3 relative overflow-hidden group hover:shadow-md ${isBooked ? 'bg-green-50 border-green-200 ring-1 ring-green-100' : 'bg-brand-stone/20 border-brand-stone/40'}`}>
       
       {isBooked && (
         <div className="absolute top-0 left-0 bg-green-500 text-white text-[9px] font-bold px-3 py-1 rounded-br-2xl uppercase tracking-tighter">

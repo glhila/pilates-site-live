@@ -377,7 +377,7 @@ export default function AdminPage() {
                               >
                                   <div className="flex-1">
                                       {/* בועית זמן */}
-                                      <span className="text-[10px] font-black bg-brand-bg px-3 py-1 rounded-full uppercase tracking-widest text-brand-dark/60">
+                                      <span className="text-[10px] font-black bg-brand-accent px-3 py-1 rounded-full uppercase tracking-widest text-brand-dark/60">
                                           {new Date(c.start_time).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}
                                       </span>
 

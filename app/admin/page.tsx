@@ -328,9 +328,9 @@ export default function AdminPage() {
                                       {c.class_type}
                                     </span>
                                     {/* שורה 2: הרמה / שם השיעור - גדול ובולט */}
-                                    <h3 className=" font-extrabold text-[13px] italic tracking-tight text-brand-dark mt-1">
+                                    <span className="font-['--font-serif'] font-extrabold text-[13px] italic tracking-tight text-brand-dark mt-1">
                                       {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
-                                    </h3>
+                                    </span>
                                   </div>
 
                                   {/* שורת סטטוס וכפתור מחיקה */}

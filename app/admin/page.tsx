@@ -318,7 +318,7 @@ export default function AdminPage() {
                               let top = h >= 7 && h <= 13 ? (h-7 + m/60)*100 : (h-16 + m/60)*100 + 700 + 64;
                               return (
                                 <div key={c.id} onClick={() => setDetailsModal(c)} 
-                                  className={`absolute inset-x-1.5 p-3 sm:p-4 bg-brand-accent border rounded-[1.8rem] shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} 
+                                  className={`absolute inset-x-1.5 p-3 sm:p-4 bg-brand-stone border rounded-[1.8rem] shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} 
                                   style={{ top: `${top}px` }}
                                 >
                                   {/* כותרת השיעור מחולקת לשתי שורות */}

@@ -33,7 +33,6 @@
   --color-brand-stone: var(--brand-stone);
   --color-brand-bg-soft: var(--brand-bg-soft);
 
-  /* כאן התיקון: מקשרים למשתנים שהגדרנו ב-Layout */
   --font-sans: var(--font-assistant);
   --font-serif: var(--font-serif);
 }
@@ -111,7 +110,7 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  opacity: 0.015; /* הופחת מעט כדי להיות סופר עדין */
+  opacity: 0.015; 
   pointer-events: none;
   background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
   z-index: 50;

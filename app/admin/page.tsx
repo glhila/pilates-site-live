@@ -134,7 +134,7 @@ export default function AdminPage() {
     const supabase = await getAuthenticatedSupabase();
     const selectedUser = profiles.find(p => p.id === manualBookingUserId);
     
-    // בדיקת מכסה למנהלת
+    // בדיקת מכסה למנהלת (לצורך התראה בלבד)
     const classWeekStart = new Date(detailsModal.start_time);
     classWeekStart.setDate(classWeekStart.getDate() - classWeekStart.getDay());
     const count = classes.filter(c => {
@@ -144,14 +144,37 @@ export default function AdminPage() {
     }).length;
 
     if (selectedUser?.membership_type > 0 && count >= selectedUser.membership_type) {
-        if (!confirm(`למתאמנת נגמרה המכסה השבועית (${selectedUser.membership_type}). לרשום בכל זאת?`)) return;
+        if (!confirm(`שימי לב: למתאמנת נגמרה המכסה השבועית (${selectedUser.membership_type} אימונים). האם לרשום אותה בכל זאת?`)) return;
     }
 
     const { error } = await supabase!.from('bookings').insert({
-        user_id: manualBookingUserId, class_id: detailsModal.id, payment_source: 'admin_manual'
+        user_id: manualBookingUserId, 
+        class_id: detailsModal.id, 
+        payment_source: 'admin_manual'
     });
-    if (error) alert(error.message);
-    else { setDetailsModal(null); setManualBookingUserId(""); loadData(); }
+
+    if (error) {
+        // מערכת תרגום שגיאות
+        let friendlyMessage = "חלה שגיאה לא צפויה ברישום";
+
+        if (error.code === '23505') {
+            friendlyMessage = "המתאמנת כבר רשומה לשיעור זה ✨";
+        } else if (error.message.includes('מכסת האימונים')) {
+            friendlyMessage = "לא ניתן לרשום: המתאמנת עברה את המכסה השבועית שלה.";
+        } else if (error.code === '42501') {
+            friendlyMessage = "אין לך הרשאה לבצע פעולה זו.";
+        } else {
+            // אם זו שגיאה שאנחנו לא מכירים, נציג את המקורית בסוף למקרה של תקלה טכנית
+            friendlyMessage = `שגיאה טכנית: ${error.message}`;
+        }
+
+        alert(friendlyMessage);
+    } else { 
+        alert("הרישום בוצע בהצלחה! 💪");
+        setDetailsModal(null); 
+        setManualBookingUserId(""); 
+        loadData(); 
+    }
   };
 
   const handleRemoveAttendee = async (bookingId: string) => {

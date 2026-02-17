@@ -324,7 +324,7 @@ export default function AdminPage() {
                                   {/* כותרת השיעור מחולקת לשתי שורות */}
                                   <div className="flex flex-col mb-3 leading-tight">
                                     {/* שורה 1: סוג השיעור - קטן ועדין */}
-                                    <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">
+                                    <span className="text-[9px] font-brand-stone uppercase tracking-widest">
                                       {c.class_type}
                                     </span>
                                     {/* שורה 2: הרמה / שם השיעור - גדול ובולט */}
@@ -336,7 +336,7 @@ export default function AdminPage() {
                                   {/* שורת סטטוס וכפתור מחיקה */}
                                   <div className="flex justify-between items-center mt-auto">
                                     <div className="flex flex-col">
-                                      <span className="opacity-40 text-[9px] font-black uppercase tracking-tighter">
+                                      <span className="text-[9px] font-brand-stone uppercase tracking-tighter">
                                         {c.bookings?.length || 0}/{c.max_capacity} רשומות
                                       </span>
                                     </div>

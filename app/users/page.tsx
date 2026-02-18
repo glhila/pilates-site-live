@@ -190,39 +190,70 @@ export default function UserPortal() {
   );
 
   return (
-    <div className="min-h-screen bg-brand-bg p-4 sm:p-10 font-sans antialiased text-brand-dark" dir="rtl">
-      <div className="max-w-7xl mx-auto">
+    <main
+      id="main-content"
+      className="min-h-screen bg-brand-bg font-sans antialiased text-brand-dark"
+      dir="rtl"
+    >
+      <div className="container mx-auto px-6 py-20 max-w-6xl">
         
         {/* Header Section */}
-        <header className="bg-white border border-brand-stone/20 p-8 rounded-[3rem] shadow-sm mb-10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-center md:text-right">
-            <h1 className="text-3xl font-extrabold italic tracking-tight">היי, {profile?.full_name || user?.firstName} ✨</h1>
-            <div className="flex gap-3 mt-3 justify-center md:justify-start">
-                <span className="text-[11px] bg-brand-stone/5 px-4 py-1.5 rounded-full border border-brand-stone/10 font-bold uppercase tracking-wider">
-                  מנוי: {profile?.membership_type || 0} בשבוע
-                </span>
-                <span className={`text-[11px] px-4 py-1.5 rounded-full border font-bold uppercase tracking-wider ${profile?.punch_card_remaining > 0 ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
-                  יתרת ניקובים: {profile?.punch_card_remaining || 0}
-                </span>
+        <header className="flex flex-col lg:flex-row justify-between items-center mb-12 gap-8 bg-white p-8 rounded-[3rem] shadow-sm border border-brand-stone/20">
+          <div className="space-y-4 text-center lg:text-right">
+            <span className="mb-2 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
+              Your Practice • Member Portal
+            </span>
+            <h1 className="hero-title text-3xl sm:text-4xl text-brand-primary">
+              היי, <span className="luxury-italic text-brand-accent-text">{profile?.full_name || user?.firstName}</span>
+            </h1>
+            <p className="max-w-md text-sm font-light text-brand-primary/70 italic mx-auto lg:mx-0">
+              כאן תוכלי לצפות במערכת, לנהל את ההרשמות שלך ולהרגיש שהכל מסודר ונעים.
+            </p>
+          </div>
+
+          <div className="flex bg-brand-stone/5 p-2 rounded-[2.5rem] border border-brand-stone/10 shadow-inner">
+            <div className="px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest text-brand-dark bg-white shadow-sm">
+              מנוי: {profile?.membership_type || 0} בשבוע
+            </div>
+            <div
+              className={`px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest border ml-2 ${
+                profile?.punch_card_remaining > 0
+                  ? 'bg-green-50 text-green-700 border-green-100'
+                  : 'bg-red-50 text-red-700 border-red-100'
+              }`}
+            >
+              יתרת ניקובים: {profile?.punch_card_remaining || 0}
             </div>
           </div>
           
-          <div className="flex items-center gap-6 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
-            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">→</button>
+          <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
+            <button 
+              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} 
+              className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
+              aria-label="שבוע קודם"
+            >
+              →
+            </button>
             <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">
               {weekDates[0].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})} - {weekDates[6].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})}
             </span>
-            <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">←</button>
+            <button 
+              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} 
+              className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
+              aria-label="שבוע הבא"
+            >
+              ←
+            </button>
           </div>
         </header>
 
         {/* Desktop View: Interactive Time Grid */}
-        <div className="hidden md:flex bg-white rounded-[3rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[900px]">
+        <section className="hidden md:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
           
           {/* Time Sidebar */}
-          <div className="w-24 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20">
+          <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[10px] opacity-20 font-black tabular-nums">
             {TIME_SLOTS.map((slot, i) => (
-              <div key={i} className={`flex items-start justify-center text-[10px] font-black opacity-20 tracking-tighter ${slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px]'}`}>
+              <div key={i} className={slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center items-start tracking-tighter'}>
                 {slot !== 'break' && slot}
               </div>
             ))}
@@ -232,9 +263,9 @@ export default function UserPortal() {
           <div className="flex-1 grid grid-cols-7 relative">
             {weekDates.map((date, dayIdx) => (
               <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
-                <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10">
-                    <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
-                    <span className="font-bold text-xl mt-0.5">{date.getDate()}</span>
+                <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10 bg-white sticky top-0 z-20">
+                  <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
+                  <span className="text-xl font-bold mt-0.5">{date.getDate()}</span>
                 </div>
                 
                 {/* Scrollable/Relative area for classes */}
@@ -264,10 +295,10 @@ export default function UserPortal() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* Mobile View: Selection + List */}
-        <div className="block md:hidden">
+        <section className="block md:hidden">
           <div className="flex overflow-x-auto gap-3 pb-8 no-scrollbar px-1">
             {weekDates.map((date, i) => {
               const isSelected = date.toDateString() === selectedDateMobile.toDateString();
@@ -276,7 +307,7 @@ export default function UserPortal() {
                 <button 
                   key={i} 
                   onClick={() => setSelectedDateMobile(date)} 
-                  className={`flex-shrink-0 w-16 h-24 rounded-3xl flex flex-col items-center justify-center transition-all border ${isSelected ? 'bg-brand-dark text-white border-brand-dark shadow-xl scale-105' : 'bg-white border-brand-stone/10'} ${isToday && !isSelected ? 'ring-2 ring-brand-dark/20' : ''}`}
+                  className={`flex-shrink-0 w-16 h-24 rounded-[2rem] flex flex-col items-center justify-center transition-all border ${isSelected ? 'bg-brand-dark text-white border-brand-dark shadow-xl scale-105' : 'bg-white border-brand-stone/10'} ${isToday && !isSelected ? 'ring-2 ring-brand-dark/20' : ''}`}
                 >
                   <span className={`text-[10px] font-bold uppercase ${isSelected ? 'opacity-70' : 'opacity-40'}`}>{DAYS_HEBREW[i]}</span>
                   <span className="text-2xl font-black mt-1">{date.getDate()}</span>
@@ -300,10 +331,10 @@ export default function UserPortal() {
               </div>
             )}
           </div>
-        </div>
+        </section>
 
       </div>
-    </div>
+    </main>
   );
 }
 

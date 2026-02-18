@@ -286,8 +286,20 @@ export default function UserPortal() {
                       } else return null;
 
                       return (
-                        <div key={c.id} className="absolute inset-x-2 transition-transform hover:scale-[1.02] z-10" style={{ top: `${topPos}px` }}>
-                          <ClassCard c={c} booking={booking} onBook={() => handleBooking(c)} onCancel={() => handleCancel(booking.id, c.start_time, booking.payment_source)} compact />
+                        <div
+                          key={c.id}
+                          className="absolute inset-x-2 h-[88px] z-10 transition-transform hover:scale-[1.02]"
+                          style={{ top: `${topPos}px` }}
+                        >
+                          <ClassCard
+                            c={c}
+                            booking={booking}
+                            onBook={() => handleBooking(c)}
+                            onCancel={() =>
+                              handleCancel(booking.id, c.start_time, booking.payment_source)
+                            }
+                            compact
+                          />
                         </div>
                       );
                     })}
@@ -346,31 +358,35 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
 
   return (
     <div
-      className={`feature-card relative flex flex-col gap-3 overflow-hidden transition-all group ${
+      className={`relative flex h-full flex-col gap-3 rounded-[1.8rem] border transition-all group ${
         isBooked
-          ? 'border-green-200 bg-green-50/80 ring-1 ring-green-100'
-          : 'bg-white/70 border-brand-stone/30 hover:bg-white'
+          ? 'bg-green-50 border-green-200 ring-1 ring-green-100'
+          : 'bg-brand-bg-soft/90 border-brand-stone/30 hover:bg-white'
       }`}
     >
       {isBooked && (
-        <div className="absolute top-0 left-0 bg-green-500 text-white text-[9px] font-bold px-3 py-1 rounded-br-2xl uppercase tracking-[0.18em]">
+        <div className="absolute -top-2 left-4 rounded-full bg-green-600 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white shadow-md">
           רשומה ✓
         </div>
       )}
 
       <div className="mt-1">
-        <div className="flex justify-between items-center gap-3">
-          <span className="text-[10px] font-bold text-brand-primary bg-brand-bg-soft px-3 py-1 rounded-full uppercase tracking-[0.25em]">
+        <div className="flex items-center justify-between gap-3">
+          <span className="rounded-full bg-brand-bg-soft px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-brand-primary">
             {time}
           </span>
           {!isBooked && (
-            <span className={`text-[10px] font-semibold tabular-nums ${isFull ? 'text-red-400' : 'text-brand-stone'}`}>
+            <span
+              className={`tabular-nums text-[10px] font-semibold ${
+                isFull ? 'text-red-400' : 'text-brand-stone'
+              }`}
+            >
               {count}/{c.max_capacity}
             </span>
           )}
         </div>
         <h3
-          className={`mt-3 leading-tight tracking-tight text-brand-primary ${
+          className={`mt-2 leading-tight tracking-tight text-brand-primary ${
             compact ? 'text-[14px] font-semibold' : 'text-lg font-serif'
           }`}
         >

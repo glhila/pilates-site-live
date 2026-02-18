@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata: Metadata = {
-  title: "ראשי | עונג פילאטיס",
+  title: "ראשי | עונג של פילאטיס",
   description: "סטודיו בוטיק לפילאטיס מכשירים באווירה אינטימית ויוקרתית.",
 };
 

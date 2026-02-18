@@ -354,25 +354,28 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
   const isBooked = !!booking;
   const count = c.bookings ? c.bookings.length : 0;
   const isFull = count >= c.max_capacity;
-  const time = new Date(c.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  const time = new Date(c.start_time).toLocaleTimeString('he-IL', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   return (
     <div
-      className={`relative flex h-full flex-col gap-3 rounded-[1.8rem] border transition-all group ${
+      className={`relative flex h-full flex-col justify-between rounded-[1.6rem] border overflow-hidden transition-all group ${
         isBooked
-          ? 'bg-green-50 border-green-200 ring-1 ring-green-100'
+          ? 'bg-brand-accent/8 border-brand-accent/40'
           : 'bg-brand-bg-soft/90 border-brand-stone/30 hover:bg-white'
       }`}
     >
       {isBooked && (
-        <div className="absolute -top-2 left-4 rounded-full bg-green-600 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white shadow-md">
+        <div className="absolute top-2 left-3 rounded-full bg-brand-accent-text px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white shadow-sm">
           רשומה ✓
         </div>
       )}
 
-      <div className="mt-1">
-        <div className="flex items-center justify-between gap-3">
-          <span className="rounded-full bg-brand-bg-soft px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-brand-primary">
+      <div className="px-3 pt-3 pb-1 sm:px-4 sm:pt-3 sm:pb-1">
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <span className="rounded-full bg-brand-bg-soft px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.25em] text-brand-primary">
             {time}
           </span>
           {!isBooked && (
@@ -386,39 +389,39 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
           )}
         </div>
         <h3
-          className={`mt-2 leading-tight tracking-tight text-brand-primary ${
-            compact ? 'text-[14px] font-semibold' : 'text-lg font-serif'
+          className={`leading-tight tracking-tight text-brand-primary line-clamp-2 ${
+            compact ? 'text-[13px] font-semibold' : 'text-[15px] sm:text-base font-serif'
           }`}
         >
           {c.name}
         </h3>
         {!compact && (
-          <p className="mt-1 text-[11px] font-light text-brand-primary/70">
+          <p className="mt-1 text-[11px] font-light text-brand-primary/70 line-clamp-1">
             {c.class_type}
           </p>
         )}
       </div>
-      
-      <div className="mt-auto pt-1">
+
+      <div className="px-3 pb-2 sm:px-4 sm:pb-3">
         {isBooked ? (
-            <button 
-              onClick={onCancel} 
-              className="w-full py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] bg-white border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 transition-all"
-            >
-              ביטול רישום ✕
-            </button>
+          <button
+            onClick={onCancel}
+            className="w-full rounded-2xl border border-brand-accent/30 bg-white/90 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent-text hover:bg-brand-accent/5 transition-all"
+          >
+            ביטול רישום ✕
+          </button>
         ) : (
-            <button 
-              disabled={isFull} 
-              onClick={onBook} 
-              className={`w-full py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all shadow-sm ${
-                isFull
-                  ? 'bg-brand-stone/5 text-brand-stone/40 cursor-not-allowed'
-                  : 'bg-brand-dark text-white hover:bg-brand-dark/90 hover:scale-[1.01]'
-              }`}
-            >
-              {isFull ? 'רשימת המתנה' : 'הרשמה לאימון'}
-            </button>
+          <button
+            disabled={isFull}
+            onClick={onBook}
+            className={`w-full rounded-2xl py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all shadow-sm ${
+              isFull
+                ? 'bg-brand-stone/5 text-brand-stone/40 cursor-not-allowed'
+                : 'bg-brand-dark text-white hover:bg-brand-dark/90 hover:scale-[1.01]'
+            }`}
+          >
+            {isFull ? 'רשימת המתנה' : 'הרשמה לאימון'}
+          </button>
         )}
       </div>
     </div>

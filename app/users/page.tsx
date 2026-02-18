@@ -345,34 +345,49 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
   const time = new Date(c.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className={`border rounded-[2rem] p-4 transition-all shadow-sm flex flex-col gap-3 relative overflow-hidden group hover:shadow-md ${isBooked ? 'bg-green-50 border-green-200 ring-1 ring-green-100' : 'bg-brand-stone/20 border-brand-stone/40'}`}>
-      
+    <div
+      className={`feature-card relative flex flex-col gap-3 overflow-hidden transition-all group ${
+        isBooked
+          ? 'border-green-200 bg-green-50/80 ring-1 ring-green-100'
+          : 'bg-white/70 border-brand-stone/30 hover:bg-white'
+      }`}
+    >
       {isBooked && (
-        <div className="absolute top-0 left-0 bg-green-500 text-white text-[9px] font-bold px-3 py-1 rounded-br-2xl uppercase tracking-tighter">
+        <div className="absolute top-0 left-0 bg-green-500 text-white text-[9px] font-bold px-3 py-1 rounded-br-2xl uppercase tracking-[0.18em]">
           רשומה ✓
         </div>
       )}
 
       <div className="mt-1">
-        <div className="flex justify-between items-center">
-          <span className="text-[10px] font-black text-brand-dark/40 bg-brand-bg px-3 py-1 rounded-full uppercase tracking-widest">{time}</span>
+        <div className="flex justify-between items-center gap-3">
+          <span className="text-[10px] font-bold text-brand-primary bg-brand-bg-soft px-3 py-1 rounded-full uppercase tracking-[0.25em]">
+            {time}
+          </span>
           {!isBooked && (
-            <span className={`text-[10px] font-bold ${isFull ? 'text-red-400' : 'text-brand-dark/20'}`}>
+            <span className={`text-[10px] font-semibold tabular-nums ${isFull ? 'text-red-400' : 'text-brand-stone'}`}>
               {count}/{c.max_capacity}
             </span>
           )}
         </div>
-        <h3 className={`font-bold leading-tight mt-2 tracking-tight ${compact ? 'text-[14px]' : 'text-lg'}`}>
+        <h3
+          className={`mt-3 leading-tight tracking-tight text-brand-primary ${
+            compact ? 'text-[14px] font-semibold' : 'text-lg font-serif'
+          }`}
+        >
           {c.name}
         </h3>
-        {!compact && <p className="text-[11px] text-brand-dark/50 font-medium mt-1">{c.class_type}</p>}
+        {!compact && (
+          <p className="mt-1 text-[11px] font-light text-brand-primary/70">
+            {c.class_type}
+          </p>
+        )}
       </div>
       
       <div className="mt-auto pt-1">
         {isBooked ? (
             <button 
               onClick={onCancel} 
-              className="w-full py-2.5 rounded-2xl font-bold text-[10px] bg-white border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 transition-all uppercase tracking-wider"
+              className="w-full py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] bg-white border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 transition-all"
             >
               ביטול רישום ✕
             </button>
@@ -380,7 +395,11 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
             <button 
               disabled={isFull} 
               onClick={onBook} 
-              className={`w-full py-2.5 rounded-2xl font-bold text-[10px] transition-all uppercase tracking-wider shadow-sm ${isFull ? 'bg-brand-stone/5 text-brand-dark/10 cursor-not-allowed' : 'bg-brand-dark text-white hover:bg-brand-dark/90 hover:scale-[1.01]'}`}
+              className={`w-full py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all shadow-sm ${
+                isFull
+                  ? 'bg-brand-stone/5 text-brand-stone/40 cursor-not-allowed'
+                  : 'bg-brand-dark text-white hover:bg-brand-dark/90 hover:scale-[1.01]'
+              }`}
             >
               {isFull ? 'רשימת המתנה' : 'הרשמה לאימון'}
             </button>

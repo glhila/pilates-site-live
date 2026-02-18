@@ -6,15 +6,18 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 export default clerkMiddleware(async (auth, req) => {
   const { sessionClaims } = await auth();
   
-  // המייל שלך - באותיות קטנות בלבד!
-  const adminEmail = "hilaglazz13@gmail.com".toLowerCase();
+
+  const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'newadmin@gmail.com'];
+  //const adminEmail = "hilaglazz13@gmail.com".toLowerCase();
+  //const adminEmail2 = "newadmin@gmail.com".toLowerCase();
+  
   
   // שליפת המייל מה-session (מבוסס על הגדרות Clerk)
   const userEmail = (sessionClaims?.email as string)?.toLowerCase();
 
   if (isAdminRoute(req)) {
     // אם המייל לא תואם או שאין מייל בכלל - שלח ל-users
-    if (!userEmail || userEmail !== adminEmail) {
+    if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
       console.log("Redirecting to users. User email found:", userEmail);
       return NextResponse.redirect(new URL('/users', req.url));
     }

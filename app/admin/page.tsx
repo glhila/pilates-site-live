@@ -259,20 +259,68 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-bg p-4 sm:p-10 font-sans text-brand-dark" dir="rtl">
-      <div className="max-w-[1600px] mx-auto">
+    <main
+      id="main-content"
+      className="min-h-screen bg-brand-bg font-sans text-brand-dark"
+      dir="rtl"
+    >
+      <div className="container mx-auto px-6 py-20 max-w-6xl">
         
         {/* Navigation Header */}
-        <header className="flex flex-col lg:flex-row justify-between items-center mb-10 gap-6 bg-white p-8 rounded-[3rem] shadow-sm border border-brand-stone/20">
-          <h1 className="text-4xl font-extrabold italic tracking-tight">ניהול הסטודיו ✨</h1>
-          <div className="flex bg-brand-stone/5 p-2 rounded-[2.5rem] border border-brand-stone/10 shadow-inner">
-            <button onClick={() => setActiveTab('schedule')} className={`px-10 py-3 rounded-3xl font-bold transition-all ${activeTab === 'schedule' ? 'bg-brand-dark text-white shadow-xl scale-[1.02]' : 'text-brand-dark/50 hover:text-brand-dark'}`}>מערכת שעות</button>
-            <button onClick={() => setActiveTab('users')} className={`px-10 py-3 rounded-3xl font-bold transition-all ${activeTab === 'users' ? 'bg-brand-dark text-white shadow-xl scale-[1.02]' : 'text-brand-dark/50 hover:text-brand-dark'}`}>ניהול מתאמנות</button>
+        <header className="mb-12 rounded-[3rem] bg-white p-8 shadow-sm border border-brand-stone/20 flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div className="space-y-4 text-center lg:text-right">
+            <span className="mb-2 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
+              Studio Backend • Admin
+            </span>
+            <h1 className="hero-title text-3xl sm:text-4xl text-brand-primary">
+              ניהול <span className="luxury-italic text-brand-accent-text">הסטודיו</span>
+            </h1>
+            <p className="max-w-md text-sm font-light text-brand-primary/70 italic mx-auto lg:mx-0">
+              איזון בין דיוק תפעולי לשקט בראש – כל מה שהסטודיו צריך במקום אחד.
+            </p>
           </div>
-          <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl">
-             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">→</button>
-             <span className="font-bold text-sm min-w-[160px] text-center tabular-nums">{weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}</span>
-             <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold">←</button>
+
+          <div className="flex bg-brand-stone/5 p-2 rounded-[2.5rem] border border-brand-stone/10 shadow-inner">
+            <button
+              onClick={() => setActiveTab('schedule')}
+              className={`px-8 sm:px-10 py-3 rounded-3xl font-bold text-sm sm:text-base transition-all ${
+                activeTab === 'schedule'
+                  ? 'bg-brand-dark text-white shadow-xl scale-[1.02]'
+                  : 'text-brand-dark/50 hover:text-brand-dark'
+              }`}
+            >
+              מערכת שעות
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`px-8 sm:px-10 py-3 rounded-3xl font-bold text-sm sm:text-base transition-all ${
+                activeTab === 'users'
+                  ? 'bg-brand-dark text-white shadow-xl scale-[1.02]'
+                  : 'text-brand-dark/50 hover:text-brand-dark'
+              }`}
+            >
+              ניהול מתאמנות
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
+            <button
+              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }}
+              className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
+              aria-label="שבוע קודם"
+            >
+              →
+            </button>
+            <span className="font-bold text-sm min-w-[160px] text-center tabular-nums">
+              {weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}
+            </span>
+            <button
+              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }}
+              className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
+              aria-label="שבוע הבא"
+            >
+              ←
+            </button>
           </div>
         </header>
 
@@ -647,6 +695,6 @@ export default function AdminPage() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

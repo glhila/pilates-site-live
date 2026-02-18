@@ -400,19 +400,19 @@ export default function AdminPage() {
                                     }`}
                                   >
                                   {/* כותרת השיעור מחולקת לשתי שורות */}
-                                  <div className="flex flex-col mb-2 leading-tight">
+                                  <div className="flex flex-col mb-1 leading-tight">
                                     {/* שורה 1: סוג השיעור - קטן ועדין */}
                                     <span className="text-[9px] font-bold text-brand-stone uppercase tracking-[0.2em]">
                                       {c.class_type}
                                     </span>
-                                    {/* שורה 2: הרמה / שם השיעור - גדול ובולט */}
-                                    <h3 className="font-serif text-lg font-semibold italic tracking-tight text-brand-dark mt-1">
+                                    {/* שורה 2: הרמה / שם השיעור - גדול ובולט (שורה אחת בלבד) */}
+                                    <h3 className="mt-0.5 text-[13px] sm:text-[14px] font-semibold italic tracking-tight text-brand-dark line-clamp-1">
                                       {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
                                     </h3>
                                   </div>
 
                                   {/* שורת סטטוס וכפתור מחיקה */}
-                                  <div className="flex justify-between items-center mt-auto">
+                                  <div className="mt-auto flex items-center justify-between">
                                     <div className="flex flex-col">
                                       <span className="text-[9px] font-semibold text-brand-stone uppercase tracking-[0.16em]">
                                         {c.bookings?.length || 0}/{c.max_capacity} רשומות

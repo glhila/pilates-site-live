@@ -369,7 +369,7 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
     >
       {isBooked && (
         <div className="absolute top-2 left-3 rounded-full bg-brand-accent-text px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white shadow-sm">
-          רשומה ✓
+          ✓
         </div>
       )}
 

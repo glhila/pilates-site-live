@@ -391,14 +391,16 @@ export default function AdminPage() {
                                 <div
                                   key={c.id}
                                   onClick={() => setDetailsModal(c)}
-                                  className={`absolute inset-x-1.5 h-[88px] cursor-pointer z-10 transition-transform hover:scale-[1.02]`}
+                                  className="absolute inset-x-1.5 h-[88px] cursor-pointer z-10 transition-transform hover:scale-[1.02]"
                                   style={{ top: `${top}px` }}
                                 >
                                   <div
-                                    className={`h-full p-3 sm:p-4 rounded-[1.8rem] border flex flex-col justify-between shadow-sm bg-brand-bg-soft/90 ${c.recurring_id ? 'border-brand-dark/25' : 'border-brand-stone/30'}`}
+                                    className={`h-full px-3 py-2 sm:px-4 sm:py-3 rounded-[1.6rem] border flex flex-col justify-between shadow-sm bg-brand-bg-soft/90 overflow-hidden ${
+                                      c.recurring_id ? 'border-brand-dark/25' : 'border-brand-stone/30'
+                                    }`}
                                   >
                                   {/* כותרת השיעור מחולקת לשתי שורות */}
-                                  <div className="flex flex-col mb-3 leading-tight">
+                                  <div className="flex flex-col mb-2 leading-tight">
                                     {/* שורה 1: סוג השיעור - קטן ועדין */}
                                     <span className="text-[9px] font-bold text-brand-stone uppercase tracking-[0.2em]">
                                       {c.class_type}

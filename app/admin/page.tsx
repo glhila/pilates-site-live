@@ -386,7 +386,7 @@ export default function AdminPage() {
                           {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
                               const start = new Date(c.start_time);
                               const hour = start.getHours(); const mins = start.getMinutes();
-                              let top = hour >= MORNING_START && hour <= MORNING_END ? (hour-MORNING_START + mins/60)*100 : (hour-EVENING_START + mins/60)*100 + 700 + 64;
+                              let top = hour >= MORNING_START && hour <= MORNING_END ? (hour-MORNING_START + mins/60)*HOUR_HEIGHT : (hour-EVENING_START + mins/60)*HOUR_HEIGHT + (7 * HOUR_HEIGHT) + 64;
                               return (
                                 <div
                                   key={c.id}

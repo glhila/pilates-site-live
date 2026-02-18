@@ -388,18 +388,23 @@ export default function AdminPage() {
                               const h = start.getHours(); const m = start.getMinutes();
                               let top = h >= 7 && h <= 13 ? (h-7 + m/60)*100 : (h-16 + m/60)*100 + 700 + 64;
                               return (
-                                <div key={c.id} onClick={() => setDetailsModal(c)} 
-                                  className={`absolute inset-x-1.5 p-3 sm:p-4 bg-brand-stone/20 border rounded-[1.8rem] shadow-sm cursor-pointer z-10 transition-all hover:shadow-md hover:scale-[1.02] ${c.recurring_id ? 'border-brand-dark/20' : 'border-brand-stone/10'}`} 
+                                <div
+                                  key={c.id}
+                                  onClick={() => setDetailsModal(c)}
+                                  className={`absolute inset-x-1.5 h-[88px] cursor-pointer z-10 transition-transform hover:scale-[1.02]`}
                                   style={{ top: `${top}px` }}
                                 >
+                                  <div
+                                    className={`h-full p-3 sm:p-4 rounded-[1.8rem] border flex flex-col justify-between shadow-sm bg-brand-bg-soft/90 ${c.recurring_id ? 'border-brand-dark/25' : 'border-brand-stone/30'}`}
+                                  >
                                   {/* כותרת השיעור מחולקת לשתי שורות */}
                                   <div className="flex flex-col mb-3 leading-tight">
                                     {/* שורה 1: סוג השיעור - קטן ועדין */}
-                                    <span className="text-[9px] font-brand-stone uppercase tracking-widest">
+                                    <span className="text-[9px] font-bold text-brand-stone uppercase tracking-[0.2em]">
                                       {c.class_type}
                                     </span>
                                     {/* שורה 2: הרמה / שם השיעור - גדול ובולט */}
-                                    <h3 className="font-extrabold text-xl italic tracking-tight text-brand-dark mt-1">
+                                    <h3 className="font-serif text-lg font-semibold italic tracking-tight text-brand-dark mt-1">
                                       {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
                                     </h3>
                                   </div>
@@ -407,7 +412,7 @@ export default function AdminPage() {
                                   {/* שורת סטטוס וכפתור מחיקה */}
                                   <div className="flex justify-between items-center mt-auto">
                                     <div className="flex flex-col">
-                                      <span className="text-[9px] font-brand-stone uppercase tracking-tighter">
+                                      <span className="text-[9px] font-semibold text-brand-stone uppercase tracking-[0.16em]">
                                         {c.bookings?.length || 0}/{c.max_capacity} רשומות
                                       </span>
                                     </div>
@@ -418,6 +423,7 @@ export default function AdminPage() {
                                     >
                                       <span className="text-sm">🗑</span>
                                     </button>
+                                  </div>
                                   </div>
                                 </div>
                               );

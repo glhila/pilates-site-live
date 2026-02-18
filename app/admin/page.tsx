@@ -580,7 +580,7 @@ export default function AdminPage() {
                                                     className="w-7 h-7 flex items-center justify-center rounded-full border border-green-100 bg-green-50 text-green-600 hover:bg-green-100 shadow-sm"
                                                     title="שלחי הודעה"
                                                 >
-                                                    <span className="text-sm">📱</span>
+                                                    <span className="text-sm">💬</span>
                                                 </a>
                                             </div>
                                         ) : (
@@ -651,7 +651,7 @@ export default function AdminPage() {
                                               className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-100 active:scale-95 transition-all"
                                           >
                                               <span>WhatsApp</span>
-                                              <span className="text-xs">📱</span>
+                                              <span className="text-xs">💬</span>
                                           </a>
                                       </div>
                                   )}

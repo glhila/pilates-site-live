@@ -371,7 +371,7 @@ export default function AdminPage() {
             <div className="w-full lg:col-span-8">
                 {/* תצוגת דסקטופ (Grid) - מוסתרת במובייל */}
                 <div className="hidden lg:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
-                  <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[10px] opacity-20 font-serif italic font-black tabular-nums">
+                  <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[12px] opacity-50 font-serif italic font-black tabular-nums">
                     {TIME_SLOTS.map((s, i) => <div key={i} className={s==='break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center'}>{s!=='break' && s}</div>)}
                   </div>
                   <div className="flex-1 grid grid-cols-7 relative">

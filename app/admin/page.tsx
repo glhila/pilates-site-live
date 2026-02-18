@@ -421,7 +421,7 @@ export default function AdminPage() {
                                     <button 
                                       onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} 
                                       className="w-7 h-7 flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-                                      title="מחיקת שיעור"
+                                      title="ביטול שיעור"
                                     >
                                       <span className="text-sm">🗑</span>
                                     </button>

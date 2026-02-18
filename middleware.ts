@@ -7,7 +7,7 @@ export default clerkMiddleware(async (auth, req) => {
   const { sessionClaims } = await auth();
   
 
-  const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'newadmin@gmail.com'];
+  const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'newadmin@gmail.com'].map(email => email.toLowerCase());;
   //const adminEmail = "hilaglazz13@gmail.com".toLowerCase();
   //const adminEmail2 = "newadmin@gmail.com".toLowerCase();
   

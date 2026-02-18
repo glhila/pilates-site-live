@@ -385,8 +385,8 @@ export default function AdminPage() {
                         <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
                           {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
                               const start = new Date(c.start_time);
-                              const h = start.getHours(); const m = start.getMinutes();
-                              let top = h >= 7 && h <= 13 ? (h-7 + m/60)*100 : (h-16 + m/60)*100 + 700 + 64;
+                              const hour = start.getHours(); const mins = start.getMinutes();
+                              let top = hour >= MORNING_START && hour <= MORNING_END ? (hour-MORNING_START + mins/60)*100 : (hour-EVENING_START + mins/60)*100 + 700 + 64;
                               return (
                                 <div
                                   key={c.id}

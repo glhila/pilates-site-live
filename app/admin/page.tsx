@@ -518,81 +518,112 @@ export default function AdminPage() {
               </form>
             </div>
 
-            <div className="lg:col-span-8 space-y-4">
+            <div className="lg:col-span-8 space-y-6">
                 
                 {/* Desktop Users Table */}
-                <div className="hidden md:block bg-white rounded-[3rem] shadow-sm border border-brand-stone/20 overflow-hidden w-full">
-                  <table className="w-full text-right border-collapse table-auto">
-                      <thead>
-                          <tr className="bg-brand-stone/5 border-b border-brand-stone/10 text-[10px] font-black opacity-40 uppercase tracking-widest">
-                              <th className="p-6 w-[20%]">שם המתאמנת</th>
-                              <th className="p-6 w-[25%]">אימייל</th>
-                              <th className="p-6 w-[15%]">טלפון</th>
-                              <th className="p-6 w-[15%] text-center">מנוי שבועי</th>
-                              <th className="p-6 w-[15%] text-center">כרטיסייה</th>
-                              <th className="p-6 w-[10%] text-center">פעולות</th>
-                          </tr>
-                      </thead>
-                      <tbody className="text-sm font-medium">
-                          {profiles.map(p => (
-                              <tr key={p.id} className="border-b border-brand-stone/5 hover:bg-brand-bg/40 transition-colors group">
-                                  <td className="p-6">
-                                      <p className="font-bold text-lg text-brand-dark leading-tight">{p.full_name}</p>
-                                  </td>
-                                  <td className="p-6">
-                                      <p className="text-xs opacity-50 tabular-nums break-all max-w-[200px]">{p.email}</p>
-                                  </td>
-                                  <td className="p-6">
-                                      {p.phone ? (
-                                          <div className="flex items-center gap-2 group-hover:scale-105 transition-transform origin-right">
-                                              <span className="tabular-nums font-bold text-brand-dark/70 text-xs">{p.phone}</span>
-                                              <a 
-                                                  href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} 
-                                                  target="_blank" 
-                                                  rel="noreferrer"
-                                                  className="w-7 h-7 flex items-center justify-center bg-green-50 text-green-600 rounded-full hover:bg-green-100 border border-green-100 shadow-sm"
-                                                  title="שלחי הודעה"
-                                              >
-                                                  <span className="text-sm">📱</span>
-                                              </a>
-                                          </div>
-                                      ) : (
-                                          <span className="opacity-20 text-[10px] italic">לא הוזן</span>
-                                      )}
-                                  </td>
-                                  <td className="p-6 text-center">
-                                      <div className="inline-block px-3 py-1 bg-brand-stone/5 rounded-lg font-bold text-xs text-brand-dark/60">
-                                          {p.membership_type} אימונים
-                                      </div>
-                                  </td>
-                                  <td className="p-6 text-center">
-                                      <span className={`inline-flex px-4 py-1.5 rounded-full text-[11px] font-bold shadow-sm whitespace-nowrap ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
-                                          {p.punch_card_remaining} ניקובים
-                                      </span>
-                                  </td>
-                                  <td className="p-6">
-                                      <div className="flex gap-4 justify-center items-center">
-                                          <button 
-                                              onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} 
-                                              className="font-black opacity-30 hover:opacity-100 hover:text-brand-dark transition-all uppercase text-[10px] tracking-tighter"
-                                              title="עריכה"
-                                          >
-                                              עריכה ✎
-                                          </button>
-                                          <button 
-                                              onClick={() => handleDeleteProfile(p.id)} 
-                                              className="font-black text-red-300 hover:text-red-600 transition-all uppercase text-[10px] tracking-tighter"
-                                              title="מחיקה"
-                                          >
-                                              מחקי 🗑
-                                          </button>
-                                      </div>
-                                  </td>
-                              </tr>
-                          ))}
-                      </tbody>
-                  </table>
-              </div>
+                <section className="hidden md:block">
+                  <div className="mb-4 flex items-baseline justify-between">
+                    <h2 className="text-2xl font-serif text-brand-primary">
+                      מתאמנות רשומות
+                    </h2>
+                    <p className="text-[11px] tracking-[0.25em] uppercase text-brand-stone">
+                      {profiles.length} פרופילים במערכת
+                    </p>
+                  </div>
+
+                  <div className="relative overflow-hidden rounded-[2.5rem] border border-brand-stone/30 bg-white/30 backdrop-blur-sm shadow-[0_20px_50px_rgba(62,69,55,0.05)] w-full">
+                    <table className="w-full text-right border-collapse table-auto">
+                        <thead>
+                            <tr className="border-b border-brand-stone/20 bg-brand-bg-soft/50 text-[10px] font-bold uppercase tracking-[0.25em] text-brand-primary/80">
+                                <th className="py-5 px-6 w-[22%] text-right">שם המתאמנת</th>
+                                <th className="py-5 px-4 w-[24%] text-right">אימייל</th>
+                                <th className="py-5 px-4 w-[16%] text-right">טלפון</th>
+                                <th className="py-5 px-4 w-[14%] text-center">מנוי שבועי</th>
+                                <th className="py-5 px-4 w-[14%] text-center">כרטיסייה</th>
+                                <th className="py-5 px-4 w-[10%] text-center">פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-sm font-light text-brand-primary/80">
+                            {profiles.map(p => (
+                                <tr
+                                  key={p.id}
+                                  className="border-b border-brand-stone/15 last:border-b-0 hover:bg-white/60 transition-colors group"
+                                >
+                                    <td className="py-5 px-6 align-top">
+                                        <p className="font-serif text-lg text-brand-primary leading-tight">
+                                          {p.full_name}
+                                        </p>
+                                    </td>
+                                    <td className="py-5 px-4 align-top">
+                                        <p className="text-xs tracking-wide text-brand-primary/60 tabular-nums break-all max-w-[220px]">
+                                          {p.email}
+                                        </p>
+                                    </td>
+                                    <td className="py-5 px-4 align-top">
+                                        {p.phone ? (
+                                            <div className="flex items-center gap-2 group-hover:scale-105 transition-transform origin-right">
+                                                <span className="tabular-nums text-xs font-medium text-brand-primary/80">
+                                                  {p.phone}
+                                                </span>
+                                                <a 
+                                                    href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} 
+                                                    target="_blank" 
+                                                    rel="noreferrer"
+                                                    className="w-7 h-7 flex items-center justify-center rounded-full border border-green-100 bg-green-50 text-green-600 hover:bg-green-100 shadow-sm"
+                                                    title="שלחי הודעה"
+                                                >
+                                                    <span className="text-sm">📱</span>
+                                                </a>
+                                            </div>
+                                        ) : (
+                                            <span className="opacity-30 text-[10px] italic">
+                                              לא הוזן
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="py-5 px-4 align-top text-center">
+                                        <div className="inline-flex items-center gap-2 rounded-full bg-brand-bg-soft px-3 py-1 text-[11px] font-semibold text-brand-primary/80">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-brand-accent-text" />
+                                            <span>{p.membership_type} אימונים</span>
+                                        </div>
+                                    </td>
+                                    <td className="py-5 px-4 align-top text-center">
+                                        <span
+                                          className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-semibold whitespace-nowrap border ${
+                                            p.punch_card_remaining > 0
+                                              ? 'bg-green-50 text-green-700 border-green-100'
+                                              : 'bg-red-50 text-red-700 border-red-100'
+                                          }`}
+                                        >
+                                          <span className="tabular-nums">{p.punch_card_remaining}</span>
+                                          <span>ניקובים</span>
+                                        </span>
+                                    </td>
+                                    <td className="py-5 px-4 align-top">
+                                        <div className="flex gap-3 justify-center items-center text-[10px] font-bold tracking-[0.18em] uppercase">
+                                            <button 
+                                                onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} 
+                                                className="text-brand-primary/50 hover:text-brand-primary transition-colors"
+                                                title="עריכה"
+                                            >
+                                                עריכה ✎
+                                            </button>
+                                            <span className="h-3 w-px bg-brand-stone/30" />
+                                            <button 
+                                                onClick={() => handleDeleteProfile(p.id)} 
+                                                className="text-red-300 hover:text-red-600 transition-colors"
+                                                title="מחיקה"
+                                            >
+                                                מחקי 🗑
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                  </div>
+                </section>
 
                 {/* Mobile Users Cards */}
                 <div className="grid md:hidden gap-4 pb-20">
@@ -654,7 +685,7 @@ export default function AdminPage() {
             <div className="bg-white p-10 rounded-[3.5rem] max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-start mb-10">
                     <div><h3 className="text-2xl font-bold italic tracking-tight">{detailsModal.name}</h3><p className="opacity-40 text-sm font-bold uppercase tracking-widest">{new Date(detailsModal.start_time).toLocaleString('he-IL', {weekday: 'long', hour:'2-digit', minute:'2-digit'})}</p></div>
-                    <button onClick={() => setDetailsModal(null)} className="text-2xl opacity-20 hover:opacity-100 transition-all">❌</button>
+                    <button onClick={() => setDetailsModal(null)} className="text-2xl opacity-20 hover:opacity-100 transition-all">⨉</button>
                 </div>
                 <div className="mb-10"><h4 className="text-[10px] font-black uppercase opacity-40 mb-5 tracking-widest">מתאמנות רשומות ({detailsModal.bookings?.length || 0})</h4>
                     <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">

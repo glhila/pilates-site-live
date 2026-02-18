@@ -112,4 +112,4 @@ Run the development server:
 npm run dev
 ```
 
-Then open `https://pilates-site-live-eosin.vercel.app` in your browser.
+Then open [Click here to visit the site](https://pilates-site-live-eosin.vercel.app) in your browser.

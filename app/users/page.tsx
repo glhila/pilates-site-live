@@ -165,20 +165,42 @@ export default function UserPortal() {
     if (!supabaseClient) return;
 
     const hoursDiff = (new Date(classDate).getTime() - new Date().getTime()) / (1000 * 60 * 60);
-    if (hoursDiff < CANCELLATION_WINDOW_HOURS) {
-        return alert(`ניתן לבטל עד ${CANCELLATION_WINDOW_HOURS} שעות לפני תחילת השיעור.`);
+    const isLate = hoursDiff < CANCELLATION_WINDOW_HOURS;
+
+    if (isLate) {
+      // Late cancellation — warn the user that no refund will be given
+      const paymentLabel = paymentSource === 'punch_card' ? 'ניקוב מהכרטיסייה' : 'אימון מהמנוי';
+      const confirmed = confirm(
+        `שים לב — חלון הביטול של ${CANCELLATION_WINDOW_HOURS} שעות עבר.\n\n` +
+        `הביטול יירשם, אך ה${paymentLabel} לא יוחזר.\n\n` +
+        `האם ברצונך לבטל בכל זאת?`
+      );
+      if (!confirmed) return;
+
+      // Delete the booking but do NOT refund anything
+      const { error } = await supabaseClient.from('bookings').delete().eq('id', bookingId);
+      if (!error) {
+        alert("הרישום בוטל. לא בוצע החזר.");
+        syncAndFetchData();
+      }
+      return;
     }
 
+    // On-time cancellation
     if (!confirm("לבטל את הרישום לשיעור?")) return;
     const { error } = await supabaseClient.from('bookings').delete().eq('id', bookingId);
-    
+
     if (!error) {
       if (paymentSource === 'punch_card') {
-         await supabaseClient.from('profiles').update({ 
-           punch_card_remaining: (profile.punch_card_remaining || 0) + 1 
-         }).eq('id', profile.id);
+        // Return the punch but do NOT touch punch_card_expiry
+        await supabaseClient
+          .from('profiles')
+          .update({ punch_card_remaining: (profile.punch_card_remaining || 0) + 1 })
+          .eq('id', profile.id);
       }
-      alert("הרישום בוטל בהצלחה");
+      // If paymentSource === 'membership': no update needed — the booking row is gone,
+      // so the weekly booking count naturally drops by 1, freeing up a slot.
+      alert("הרישום בוטל בהצלחה.");
       syncAndFetchData();
     }
   };
@@ -457,7 +479,6 @@ export default function UserPortal() {
                   const cls = booking.classes;
                   if (!cls) return null;
                   const isPast = new Date(cls.start_time) < new Date();
-                  const canCancel = !isPast && (new Date(cls.start_time).getTime() - Date.now()) / (1000*60*60) >= CANCELLATION_WINDOW_HOURS;
 
                   return (
                     <div
@@ -503,8 +524,8 @@ export default function UserPortal() {
                         <span>{formatTime(cls.start_time)}</span>
                       </div>
 
-                      {/* Cancel button — only if upcoming and within cancellation window */}
-                      {canCancel && (
+                      {/* Cancel button — available for all upcoming classes */}
+                      {!isPast && (
                         <button
                           onClick={() => handleCancel(booking.id, cls.start_time, booking.payment_source)}
                           className="mt-1 w-full rounded-2xl border border-brand-accent/30 bg-white py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent-text hover:bg-brand-accent/5 transition-all"

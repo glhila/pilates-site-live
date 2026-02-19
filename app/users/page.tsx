@@ -45,6 +45,15 @@ const formatTime = (dateStr: string) =>
 type ActiveTab = 'schedule' | 'bookings';
 type BookingsFilter = 'all' | 'upcoming' | 'past';
 
+// Modal system types
+type ModalAction = { label: string; onClick: () => void; style?: 'primary' | 'danger' | 'ghost' };
+type ModalConfig = {
+  title: string;
+  body: string;
+  emoji?: string;
+  actions: ModalAction[];
+};
+
 export default function UserPortal() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
@@ -58,6 +67,12 @@ export default function UserPortal() {
   const [selectedDateMobile, setSelectedDateMobile] = useState(new Date());
   const [activeTab, setActiveTab] = useState<ActiveTab>('schedule');
   const [bookingsFilter, setBookingsFilter] = useState<BookingsFilter>('upcoming');
+  const [modal, setModal] = useState<ModalConfig | null>(null);
+
+  // Helper: show a simple info modal (replaces alert)
+  const showModal = (title: string, body: string, emoji?: string) => {
+    setModal({ title, body, emoji, actions: [{ label: 'הבנתי', onClick: () => setModal(null), style: 'primary' }] });
+  };
 
   const getAuthenticatedSupabase = async () => {
     try {
@@ -118,50 +133,60 @@ export default function UserPortal() {
 
   const handleBooking = async (classItem: any) => {
     const supabaseClient = await getAuthenticatedSupabase();
-    if (!supabaseClient || !profile) return alert("משהו השתבש עם ההתחברות, נסי לרענן את הדף.");
-    if (!profile.is_approved) return alert("החשבון שלך עדיין ממתין לאישור. נחזור אליך בהקדם 🌿");
+    if (!supabaseClient || !profile) return showModal('שגיאת התחברות', 'משהו השתבש, נסי לרענן את הדף.', '🔄');
+    if (!profile.is_approved) return showModal('ממתין לאישור', 'החשבון שלך עדיין ממתין לאישור. נחזור אליך בהקדם 🌿');
 
     if (profile.membership_type > 0) {
       const classDate = new Date(classItem.start_time);
-      // Count only confirmed bookings toward the weekly quota
       const bookingsThisWeek = userBookings.filter(b =>
         b.classes &&
-        b.status === 'confirmed' &&
+        b.status === 'active' &&
         isSameWeek(new Date(b.classes.start_time), classDate)
       );
       if (bookingsThisWeek.length >= profile.membership_type) {
-        return alert(`השבוע כבר השתתפת ב־${profile.membership_type} אימונים — זה המקסימום במנוי שלך לשבוע זה 💛`);
+        return showModal('המכסה השבועית מלאה', `השבוע כבר נרשמת ל־${profile.membership_type} אימונים — זה המקסימום במנוי שלך לשבוע זה.`, '💛');
       }
     }
 
     if (classItem.bookings && classItem.bookings.length >= classItem.max_capacity) {
-      return alert("השיעור הזה מלא כרגע. אפשר לנסות שיעור אחר או להמתין לביטול 🙏");
+      return showModal('השיעור מלא', 'אין מקומות פנויים בשיעור זה כרגע. אפשר לנסות שיעור אחר או להמתין לביטול.', '🙏');
     }
 
     const paymentSource = profile.membership_type > 0 ? 'membership' : 'punch_card';
     if (paymentSource === 'punch_card' && profile.punch_card_remaining <= 0) {
-      return alert("נגמרו הניקובים בכרטיסייה שלך. ניתן לרכוש כרטיסייה חדשה אצל המנהלת 🌸");
+      return showModal('הכרטיסייה ריקה', 'נגמרו הניקובים בכרטיסייה שלך. ניתן לרכוש כרטיסייה חדשה אצל המנהלת.', '🌸');
     }
 
-    if (confirm(`להירשם לשיעור "${classItem.name}"?`)) {
-      const { error } = await supabaseClient.from('bookings').insert({
-        user_id: profile.id,
-        class_id: classItem.id,
-        payment_source: paymentSource,
-        status: 'confirmed',
-      });
-
-      if (error) return alert("לא הצלחנו לרשום אותך הפעם, נסי שוב עוד רגע.");
-
-      if (paymentSource === 'punch_card') {
-        await supabaseClient.from('profiles').update({
-          punch_card_remaining: profile.punch_card_remaining - 1
-        }).eq('id', profile.id);
-      }
-
-      alert("נרשמת בהצלחה! נתראה באימון 💪");
-      syncAndFetchData();
-    }
+    // Confirm booking via modal
+    setModal({
+      title: 'אישור הרשמה',
+      body: `להירשם לשיעור "${classItem.name}"?`,
+      emoji: '💪',
+      actions: [
+        {
+          label: 'כן, לרשום אותי!',
+          style: 'primary',
+          onClick: async () => {
+            setModal(null);
+            const { error } = await supabaseClient.from('bookings').insert({
+              user_id: profile.id,
+              class_id: classItem.id,
+              payment_source: paymentSource,
+              status: 'active',
+            });
+            if (error) return showModal('שגיאה', 'לא הצלחנו לרשום אותך הפעם, נסי שוב עוד רגע.', '😔');
+            if (paymentSource === 'punch_card') {
+              await supabaseClient.from('profiles').update({
+                punch_card_remaining: profile.punch_card_remaining - 1
+              }).eq('id', profile.id);
+            }
+            showModal('נרשמת בהצלחה!', 'נתראה באימון 🙌', '💪');
+            syncAndFetchData();
+          },
+        },
+        { label: 'ביטול', style: 'ghost', onClick: () => setModal(null) },
+      ],
+    });
   };
 
   const handleCancel = async (bookingId: string, classDate: string, paymentSource: string) => {
@@ -175,44 +200,62 @@ export default function UserPortal() {
       const paymentLabel = paymentSource === 'punch_card'
         ? 'הניקוב לא יוחזר לכרטיסייה'
         : 'האימון יחשב כמנוצל השבוע';
-      const confirmed = confirm(
-        `ביטול מאוחר ⚠️\n\n` +
-        `חלון הביטול חלף (${CANCELLATION_WINDOW_HOURS} שעות לפני השיעור).\n` +
-        `אם תבטלי עכשיו — ${paymentLabel}.\n\n` +
-        `רוצה לבטל בכל זאת?`
-      );
-      if (!confirmed) return;
 
-      // Mark as late_cancelled — keep the row so it still counts toward weekly quota
-      const { error } = await supabaseClient
-        .from('bookings')
-        .update({ status: 'late_cancelled' })
-        .eq('id', bookingId);
-
-      if (!error) {
-        alert("הרישום בוטל. לא בוצע החזר של האימון.");
-        syncAndFetchData();
-      }
+      setModal({
+        title: 'ביטול מאוחר',
+        body: `חלון הביטול חלף (${CANCELLATION_WINDOW_HOURS} שעות לפני השיעור).\nאם תבטלי עכשיו — ${paymentLabel}.`,
+        emoji: '⚠️',
+        actions: [
+          {
+            label: 'בטלי בכל זאת',
+            style: 'danger',
+            onClick: async () => {
+              setModal(null);
+              const { error } = await supabaseClient
+                .from('bookings')
+                .update({ status: 'late_cancelled' })
+                .eq('id', bookingId);
+              if (!error) {
+                showModal('הרישום בוטל', 'הביטול נרשם, אך לא בוצע החזר.', '🌿');
+                syncAndFetchData();
+              }
+            },
+          },
+          { label: 'חזרה', style: 'ghost', onClick: () => setModal(null) },
+        ],
+      });
       return;
     }
 
-    // On-time cancellation
-    if (!confirm("לבטל את הרישום לשיעור?")) return;
-    const { error } = await supabaseClient.from('bookings').delete().eq('id', bookingId);
-
-    if (!error) {
-      if (paymentSource === 'punch_card') {
-        // Return the punch but do NOT touch punch_card_expiry
-        await supabaseClient
-          .from('profiles')
-          .update({ punch_card_remaining: (profile.punch_card_remaining || 0) + 1 })
-          .eq('id', profile.id);
-        alert("הרישום בוטל והניקוב הוחזר לכרטיסייה שלך 🌿");
-      } else {
-        alert("הרישום בוטל. האימון פנוי שוב לשבוע זה 🌿");
-      }
-      syncAndFetchData();
-    }
+    // On-time cancellation confirm
+    setModal({
+      title: 'ביטול רישום',
+      body: 'האם לבטל את הרישום לשיעור זה?',
+      emoji: '🧘‍♀️',
+      actions: [
+        {
+          label: 'כן, לבטל',
+          style: 'danger',
+          onClick: async () => {
+            setModal(null);
+            const { error } = await supabaseClient.from('bookings').delete().eq('id', bookingId);
+            if (!error) {
+              if (paymentSource === 'punch_card') {
+                await supabaseClient
+                  .from('profiles')
+                  .update({ punch_card_remaining: (profile.punch_card_remaining || 0) + 1 })
+                  .eq('id', profile.id);
+                showModal('הרישום בוטל', 'הניקוב הוחזר לכרטיסייה שלך.', '🌿');
+              } else {
+                showModal('הרישום בוטל', 'המקום פנוי שוב לשבוע זה.', '🌿');
+              }
+              syncAndFetchData();
+            }
+          },
+        },
+        { label: 'חזרה', style: 'ghost', onClick: () => setModal(null) },
+      ],
+    });
   };
 
   const weekDates = useMemo(() => {
@@ -536,8 +579,8 @@ export default function UserPortal() {
                         <span>{formatTime(cls.start_time)}</span>
                       </div>
 
-                      {/* Cancel button — available for all upcoming confirmed classes */}
-                      {!isPast && booking.status === 'confirmed' && (
+                      {/* Cancel button — available for all upcoming active classes */}
+                      {!isPast && booking.status === 'active' && (
                         <button
                           onClick={() => handleCancel(booking.id, cls.start_time, booking.payment_source)}
                           className="mt-1 w-full rounded-2xl border border-brand-accent/30 bg-white py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent-text hover:bg-brand-accent/5 transition-all"
@@ -554,6 +597,36 @@ export default function UserPortal() {
         )}
 
       </div>
+
+      {/* Modal */}
+      {modal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[110] p-4 backdrop-blur-md" onClick={() => setModal(null)}>
+          <div className="bg-white p-12 rounded-[4rem] max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+            {modal.emoji && (
+              <div className="text-4xl text-center mb-4">{modal.emoji}</div>
+            )}
+            <h3 className="text-2xl font-bold mb-4 italic text-center tracking-tight">{modal.title}</h3>
+            <p className="text-sm text-center mb-10 opacity-60 leading-relaxed font-medium whitespace-pre-line">{modal.body}</p>
+            <div className="space-y-3">
+              {modal.actions.map((action, i) => (
+                <button
+                  key={i}
+                  onClick={action.onClick}
+                  className={`w-full p-5 rounded-3xl font-bold transition-all text-sm tracking-tight ${
+                    action.style === 'danger'
+                      ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                      : action.style === 'ghost'
+                      ? 'p-2 text-[10px] font-black opacity-30 uppercase underline tracking-[0.2em] hover:opacity-100'
+                      : 'bg-brand-bg hover:bg-brand-stone/10'
+                  }`}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

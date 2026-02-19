@@ -269,7 +269,7 @@ export default function UserPortal() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
           <button
             onClick={() => setActiveTab('schedule')}
             className={`px-7 py-3 rounded-2xl text-sm font-bold tracking-wide transition-all ${
@@ -300,7 +300,7 @@ export default function UserPortal() {
 
           {/* Week navigator — left of tabs, only on schedule tab */}
           {activeTab === 'schedule' && (
-            <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10 mr-auto">
+            <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10 sm:mr-auto">
               <button
                 onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() - 7); setViewDate(d); }}
                 className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"

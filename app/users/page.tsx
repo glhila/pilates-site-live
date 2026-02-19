@@ -405,7 +405,7 @@ export default function UserPortal() {
             <section className="hidden md:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
               
               {/* Time Sidebar */}
-              <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[10px] opacity-50 font-serif italic font-black tabular-nums">
+              <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[13px] opacity-50 font-serif italic font-black tabular-nums">
                 {TIME_SLOTS.map((slot, i) => (
                   <div key={i} className={slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center items-start tracking-tighter'}>
                     {slot !== 'break' && slot}

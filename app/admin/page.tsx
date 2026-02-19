@@ -223,9 +223,9 @@ export default function AdminPage() {
   };
 
   const getMailtoUrl = (name: string, email: string) => {
-    const subject = encodeURIComponent(`ברוכה הבאה ל־Your Practice 🌸`);
+    const subject = encodeURIComponent(`ברוכה הבאה ל-עונג של פילאטיס 🧘🏼‍♀️`);
     const body = encodeURIComponent(
-      `היי ${name} 😊\n\nשמחים שהצטרפת אלינו!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה — זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך!\nצוות Your Practice 🤍`
+      `היי ${name} 😊\n\nשמחים שהצטרפת אלינו!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה — זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך!\nצוות עונג של פילאטיס 🤍`
     );
     return `mailto:${email}?subject=${subject}&body=${body}`;
   };
@@ -233,7 +233,7 @@ export default function AdminPage() {
   const getWhatsAppUrl = (phone: string, name: string) => {
     const normalized = phone.replace(/\D/g, '').replace(/^0/, '972');
     const message = encodeURIComponent(
-      `היי ${name} 🌸\n\nברוכה הבאה ל־Your Practice!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה — זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך! 🤍`
+      `היי ${name} 🧘🏼‍♀️\n\nברוכה הבאה ל-עונג של פילאטיס!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה — זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך! 🤍`
     );
     return `https://wa.me/${normalized}?text=${message}`;
   };

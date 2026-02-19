@@ -269,7 +269,7 @@ export default function UserPortal() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
+        <div className="flex flex-row gap-2 sm:flex-row sm:items-center gap-3 mb-8">
           <button
             onClick={() => setActiveTab('schedule')}
             className={`px-7 py-3 rounded-2xl text-sm font-bold tracking-wide transition-all ${

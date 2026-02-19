@@ -154,9 +154,7 @@ export default function AdminPage() {
     });
 
     if (error) {
-        // מערכת תרגום שגיאות
         let friendlyMessage = "חלה שגיאה לא צפויה ברישום";
-
         if (error.code === '23505') {
             friendlyMessage = "המתאמנת כבר רשומה לשיעור זה ✨";
         } else if (error.message.includes('מכסת האימונים')) {
@@ -164,10 +162,8 @@ export default function AdminPage() {
         } else if (error.code === '42501') {
             friendlyMessage = "אין לך הרשאה לבצע פעולה זו.";
         } else {
-            // אם זו שגיאה שאנחנו לא מכירים, נציג את המקורית בסוף למקרה של תקלה טכנית
             friendlyMessage = `שגיאה טכנית: ${error.message}`;
         }
-
         alert(friendlyMessage);
     } else { 
         alert("הרישום בוצע בהצלחה! 💪");
@@ -191,37 +187,14 @@ export default function AdminPage() {
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) return;
 
-    // 1. חישוב תאריך של חודשיים מהיום
-    const d = new Date();
-    d.setMonth(d.getMonth() + 2);
-    const twoMonthsFromNow = d.toISOString().split('T')[0];
-
-    let finalExpiryDate = userFormData.punch_card_expiry;
-
-    // 2. לוגיקה חכמה לעדכון תוקף:
-    if (editingUserId) {
-        // אם אנחנו בעריכה - נבדוק אם הוסיפו ניקובים (המספר בטופס גדול ממה שיש בטבלה)
-        const currentProfile = profiles.find(p => p.id === editingUserId);
-        const punchesAdded = userFormData.punch_card_remaining > (currentProfile?.punch_card_remaining || 0);
-        
-        if (punchesAdded) {
-            // אם הוסיפו ניקובים - נגדיר תוקף חדש לחודשיים מהיום
-            finalExpiryDate = twoMonthsFromNow;
-        }
-    } else {
-        // אם זו מתאמנת חדשה לגמרי ויש לה ניקובים
-        if (userFormData.punch_card_remaining > 0) {
-            finalExpiryDate = twoMonthsFromNow;
-        }
-    }
-
+    // התאריך נקבע ישירות בטופס — אין צורך בחישוב אוטומטי כאן
     const payload = { 
         full_name: userFormData.full_name,
         email: userFormData.email.trim().toLowerCase(),
         phone: userFormData.phone,
         membership_type: userFormData.membership_type,
         punch_card_remaining: userFormData.punch_card_remaining,
-        punch_card_expiry: finalExpiryDate || null, // התאריך המעודכן
+        punch_card_expiry: userFormData.punch_card_expiry || null,
         updated_at: new Date().toISOString() 
     };
     
@@ -327,7 +300,6 @@ export default function AdminPage() {
         {activeTab === 'schedule' ? (
           <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-10">
             
-            {/* עמודת טופס - במובייל היא חלק מהזרימה, במחשב היא נדבקת */}
             <div className="w-full lg:col-span-4 bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit lg:sticky lg:top-10 z-20">
               <h2 className="text-2xl font-bold mb-6 sm:mb-10 italic">הוספת שיעור</h2>
               <form onSubmit={handleCreateClass} className="space-y-6">
@@ -367,9 +339,7 @@ export default function AdminPage() {
               </form>
             </div>
 
-            {/* עמודת התצוגה (לו"ז) */}
             <div className="w-full lg:col-span-8">
-                {/* תצוגת דסקטופ (Grid) - מוסתרת במובייל */}
                 <div className="hidden lg:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
                   <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[12px] opacity-50 font-serif italic font-black tabular-nums">
                     {TIME_SLOTS.map((s, i) => <div key={i} className={s==='break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center'}>{s!=='break' && s}</div>)}
@@ -394,34 +364,20 @@ export default function AdminPage() {
                                   className="absolute inset-x-1.5 h-[88px] cursor-pointer z-10 transition-transform hover:scale-[1.02]"
                                   style={{ top: `${top}px` }}
                                 >
-                                  <div
-                                    className={`h-full px-3 py-2 sm:px-4 sm:py-3 rounded-[1.6rem] border flex flex-col justify-between shadow-sm bg-brand-bg-soft/90 overflow-hidden ${
-                                      c.recurring_id ? 'border-brand-dark/25' : 'border-brand-stone/30'
-                                    }`}
-                                  >
-                                  {/* כותרת השיעור מחולקת לשתי שורות */}
+                                  <div className={`h-full px-3 py-2 sm:px-4 sm:py-3 rounded-[1.6rem] border flex flex-col justify-between shadow-sm bg-brand-bg-soft/90 overflow-hidden ${c.recurring_id ? 'border-brand-dark/25' : 'border-brand-stone/30'}`}>
                                   <div className="flex flex-col mb-1 leading-tight">
-                                    {/* שורה 1: סוג השיעור - קטן ועדין */}
-                                    <span className="text-[9px] font-bold text-brand-stone uppercase tracking-[0.2em]">
-                                      {c.class_type}
-                                    </span>
-                                    {/* שורה 2: הרמה / שם השיעור - גדול ובולט (שורה אחת בלבד) */}
+                                    <span className="text-[9px] font-bold text-brand-stone uppercase tracking-[0.2em]">{c.class_type}</span>
                                     <h3 className="mt-0.5 text-[13px] sm:text-[14px] font-semibold italic tracking-tight text-brand-dark line-clamp-1">
                                       {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
                                     </h3>
                                   </div>
-
-                                  {/* שורת סטטוס וכפתור מחיקה */}
                                   <div className="mt-auto flex items-center justify-between">
                                     <div className="flex flex-col">
-                                      <span className="text-[9px] font-semibold text-brand-stone uppercase tracking-[0.16em]">
-                                        {c.bookings?.length || 0}/{c.max_capacity} רשומות
-                                      </span>
+                                      <span className="text-[9px] font-semibold text-brand-stone uppercase tracking-[0.16em]">{c.bookings?.length || 0}/{c.max_capacity} רשומות</span>
                                     </div>
                                     <button 
                                       onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} 
                                       className="w-7 h-7 flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-                                      title="ביטול שיעור"
                                     >
                                       <span className="text-sm">🗑</span>
                                     </button>
@@ -436,7 +392,6 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* תצוגת מובייל (List) - מוצגת רק בטלפון */}
                 <div className="flex lg:hidden flex-col w-full space-y-8">
                     <div className="flex overflow-x-auto gap-3 pb-4 no-scrollbar px-1">
                         {weekDates.map((date, i) => (
@@ -449,41 +404,21 @@ export default function AdminPage() {
                     <div className="space-y-4 px-1">
                       {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).length > 0 ? (
                           classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).map(c => (
-                              <div 
-                                  key={c.id} 
-                                  onClick={() => setDetailsModal(c)} 
-                                  className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 flex justify-between items-center shadow-sm w-full transition-all active:scale-[0.98]"
-                              >
+                              <div key={c.id} onClick={() => setDetailsModal(c)} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 flex justify-between items-center shadow-sm w-full transition-all active:scale-[0.98]">
                                   <div className="flex-1">
-                                      {/* בועית זמן */}
                                       <span className="text-[10px] font-black bg-brand-bg px-3 py-1 rounded-full uppercase tracking-widest text-brand-dark/60">
                                           {new Date(c.start_time).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}
                                       </span>
-
-                                      {/* פירוט שיעור: סוג ורמה בשתי שורות */}
                                       <div className="mt-4 flex flex-col leading-tight">
-                                          <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">
-                                              {c.class_type}
-                                          </span>
+                                          <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">{c.class_type}</span>
                                           <h3 className="font-extrabold text-xl italic tracking-tight text-brand-dark mt-1">
                                               {c.name.includes(" - ") ? c.name.split(" - ")[1] : c.name}
                                           </h3>
                                       </div>
                                   </div>
-
                                   <div className="text-left flex flex-col items-end gap-5">
-                                      {/* מונה רשומות */}
-                                      <div className="flex flex-col items-end">
-                                          <span className="text-[10px] font-black opacity-30 whitespace-nowrap uppercase tracking-tighter">
-                                              {c.bookings?.length || 0}/{c.max_capacity} רשומות
-                                          </span>
-                                      </div>
-                                      
-                                      {/* כפתור ביטול מעוצב */}
-                                      <button 
-                                          onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} 
-                                          className="text-red-400 text-[10px] font-black uppercase underline decoration-red-100 underline-offset-8 tracking-widest transition-colors active:text-red-600"
-                                      >
+                                      <span className="text-[10px] font-black opacity-30 whitespace-nowrap uppercase tracking-tighter">{c.bookings?.length || 0}/{c.max_capacity} רשומות</span>
+                                      <button onClick={(e) => { e.stopPropagation(); setDeleteModal({show: true, classItem: c}); }} className="text-red-400 text-[10px] font-black uppercase underline decoration-red-100 underline-offset-8 tracking-widest transition-colors active:text-red-600">
                                           ביטול שיעור 🗑
                                       </button>
                                   </div>
@@ -502,27 +437,101 @@ export default function AdminPage() {
           
           /* Users Management Section */
           <div className="grid lg:grid-cols-12 gap-10">
-             <div className="lg:col-span-4 bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit lg:sticky lg:top-10 z-20">
+
+            {/* ── טופס הוספה / עריכת מתאמנת ── */}
+            <div className="lg:col-span-4 bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit lg:sticky lg:top-10 z-20">
               <h2 className="text-2xl font-bold mb-10 italic">{editingUserId ? 'עריכת מתאמנת' : 'מתאמנת חדשה'}</h2>
               <form onSubmit={handleSaveUser} className="space-y-6">
+
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">שם מלא</label>
-                    <input type="text" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={userFormData.full_name} onChange={e => setUserFormData({...userFormData, full_name: e.target.value})} />
+                  <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">שם מלא</label>
+                  <input type="text" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={userFormData.full_name} onChange={e => setUserFormData({...userFormData, full_name: e.target.value})} />
                 </div>
+
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">אימייל</label>
-                    <input type="email" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} />
+                  <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">אימייל</label>
+                  <input type="email" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none" value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} />
                 </div>
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">מספר טלפון</label>
                   <input type="tel" placeholder="05X-XXXXXXX" className="w-full p-4 bg-brand-bg rounded-2xl outline-none border border-brand-stone/10" value={userFormData.phone} onChange={e => setUserFormData({...userFormData, phone: e.target.value})} />
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">מנוי שבועי</label><input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.membership_type} onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})} /></div>
-                    <div className="space-y-2"><label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">ניקובים</label><input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.punch_card_remaining} onChange={e => setUserFormData({...userFormData, punch_card_remaining: parseInt(e.target.value)})} /></div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">מנוי שבועי</label>
+                    <input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.membership_type} onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">ניקובים</label>
+                    <input
+                      type="number"
+                      className="w-full p-4 bg-brand-bg rounded-2xl"
+                      value={userFormData.punch_card_remaining}
+                      onChange={e => {
+                        const newPunches = parseInt(e.target.value) || 0;
+                        const updates: any = { punch_card_remaining: newPunches };
+                        // מתאמנת חדשה: קביעת תוקף אוטומטית לחודשיים כשמוסיפים ניקובים בפעם הראשונה
+                        if (!editingUserId && newPunches > 0 && !userFormData.punch_card_expiry) {
+                          const d = new Date();
+                          d.setMonth(d.getMonth() + 2);
+                          updates.punch_card_expiry = d.toISOString().split('T')[0];
+                        }
+                        // ניקוי תוקף אם הניקובים归零
+                        if (newPunches === 0) updates.punch_card_expiry = '';
+                        setUserFormData({ ...userFormData, ...updates });
+                      }}
+                    />
+                  </div>
                 </div>
-                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-2xl transition-all hover:scale-[1.01]">{editingUserId ? 'עדכן פרטים' : 'הוספה למערכת'}</button>
-                {editingUserId && <button type="button" onClick={() => { setEditingUserId(null); setUserFormData({full_name:'', email:'',phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); }} className="w-full text-xs font-bold opacity-30 mt-4 underline underline-offset-4 tracking-widest">ביטול עריכה</button>}
+
+                {/* שדה תוקף כרטיסייה — מוצג כאשר יש ניקובים או תוקף קיים */}
+                {(userFormData.punch_card_remaining > 0 || userFormData.punch_card_expiry) && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">תוקף כרטיסייה</label>
+                    <input
+                      type="date"
+                      className="w-full p-4 bg-brand-bg rounded-2xl outline-none border border-brand-stone/10 text-brand-dark"
+                      value={userFormData.punch_card_expiry || ''}
+                      onChange={e => setUserFormData({ ...userFormData, punch_card_expiry: e.target.value })}
+                    />
+                    {/* קיצורי דרך לתאריך */}
+                    <div className="flex gap-2 pt-1">
+                      {[
+                        { label: 'חודש', months: 1 },
+                        { label: 'חודשיים', months: 2 },
+                        { label: '3 חודשים', months: 3 },
+                      ].map(({ label, months }) => (
+                        <button
+                          key={months}
+                          type="button"
+                          onClick={() => {
+                            const d = new Date();
+                            d.setMonth(d.getMonth() + months);
+                            setUserFormData({ ...userFormData, punch_card_expiry: d.toISOString().split('T')[0] });
+                          }}
+                          className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl bg-brand-bg hover:bg-brand-stone/10 transition-all opacity-50 hover:opacity-100"
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button type="submit" className="w-full bg-brand-dark text-white p-5 rounded-2xl font-bold shadow-2xl transition-all hover:scale-[1.01]">
+                  {editingUserId ? 'עדכן פרטים' : 'הוספה למערכת'}
+                </button>
+                {editingUserId && (
+                  <button
+                    type="button"
+                    onClick={() => { setEditingUserId(null); setUserFormData({full_name:'', email:'', phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); }}
+                    className="w-full text-xs font-bold opacity-30 mt-4 underline underline-offset-4 tracking-widest"
+                  >
+                    ביטול עריכה
+                  </button>
+                )}
               </form>
             </div>
 
@@ -531,12 +540,8 @@ export default function AdminPage() {
                 {/* Desktop Users Table */}
                 <section className="hidden md:block">
                   <div className="mb-4 flex items-baseline justify-between">
-                    <h2 className="text-2xl font-serif text-brand-primary">
-                      מתאמנות רשומות
-                    </h2>
-                    <p className="text-[11px] tracking-[0.25em] uppercase text-brand-stone">
-                      {profiles.length} פרופילים במערכת
-                    </p>
+                    <h2 className="text-2xl font-serif text-brand-primary">מתאמנות רשומות</h2>
+                    <p className="text-[11px] tracking-[0.25em] uppercase text-brand-stone">{profiles.length} פרופילים במערכת</p>
                   </div>
 
                   <div className="relative overflow-hidden rounded-[2.5rem] border border-brand-stone/30 bg-white/30 backdrop-blur-sm shadow-[0_20px_50px_rgba(62,69,55,0.05)] w-full">
@@ -553,40 +558,28 @@ export default function AdminPage() {
                         </thead>
                         <tbody className="text-sm font-light text-brand-primary/80">
                             {profiles.map(p => (
-                                <tr
-                                  key={p.id}
-                                  className="border-b border-brand-stone/15 last:border-b-0 hover:bg-white/60 transition-colors group"
-                                >
+                                <tr key={p.id} className="border-b border-brand-stone/15 last:border-b-0 hover:bg-white/60 transition-colors group">
                                     <td className="py-5 px-6 align-top">
-                                        <p className="font-serif text-lg text-brand-primary leading-tight">
-                                          {p.full_name}
-                                        </p>
+                                        <p className="font-serif text-lg text-brand-primary leading-tight">{p.full_name}</p>
                                     </td>
                                     <td className="py-5 px-4 align-top">
-                                        <p className="text-xs tracking-wide text-brand-primary/60 tabular-nums break-all max-w-[220px]">
-                                          {p.email}
-                                        </p>
+                                        <p className="text-xs tracking-wide text-brand-primary/60 tabular-nums break-all max-w-[220px]">{p.email}</p>
                                     </td>
                                     <td className="py-5 px-4 align-top">
                                         {p.phone ? (
                                             <div className="flex items-center gap-2 group-hover:scale-105 transition-transform origin-right">
-                                                <span className="tabular-nums text-xs font-medium text-brand-primary/80">
-                                                  {p.phone}
-                                                </span>
+                                                <span className="tabular-nums text-xs font-medium text-brand-primary/80">{p.phone}</span>
                                                 <a 
                                                     href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} 
                                                     target="_blank" 
                                                     rel="noreferrer"
                                                     className="w-7 h-7 flex items-center justify-center rounded-full border border-green-100 bg-green-50 text-green-600 hover:bg-green-100 shadow-sm"
-                                                    title="שלחי הודעה"
                                                 >
                                                     <span className="text-sm">💬</span>
                                                 </a>
                                             </div>
                                         ) : (
-                                            <span className="opacity-30 text-[10px] italic">
-                                              לא הוזן
-                                            </span>
+                                            <span className="opacity-30 text-[10px] italic">לא הוזן</span>
                                         )}
                                     </td>
                                     <td className="py-5 px-4 align-top text-center">
@@ -596,34 +589,23 @@ export default function AdminPage() {
                                         </div>
                                     </td>
                                     <td className="py-5 px-4 align-top text-center">
-                                        <span
-                                          className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-semibold whitespace-nowrap border ${
-                                            p.punch_card_remaining > 0
-                                              ? 'bg-green-50 text-green-700 border-green-100'
-                                              : 'bg-red-50 text-red-700 border-red-100'
-                                          }`}
-                                        >
-                                          <span className="tabular-nums">{p.punch_card_remaining}</span>
-                                          <span>ניקובים</span>
-                                        </span>
+                                        <div className="flex flex-col items-center gap-1">
+                                          <span className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-semibold whitespace-nowrap border ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                                            <span className="tabular-nums">{p.punch_card_remaining}</span>
+                                            <span>ניקובים</span>
+                                          </span>
+                                          {p.punch_card_expiry && (
+                                            <span className="text-[9px] opacity-40 tabular-nums">
+                                              עד {new Date(p.punch_card_expiry).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'numeric'})}
+                                            </span>
+                                          )}
+                                        </div>
                                     </td>
                                     <td className="py-5 px-4 align-top">
                                         <div className="flex gap-3 justify-center items-center text-[10px] font-bold tracking-[0.18em] uppercase">
-                                            <button 
-                                                onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} 
-                                                className="text-brand-primary/50 hover:text-brand-primary transition-colors"
-                                                title="עריכה"
-                                            >
-                                                עריכה ✎
-                                            </button>
+                                            <button onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} className="text-brand-primary/50 hover:text-brand-primary transition-colors">עריכה ✎</button>
                                             <span className="h-3 w-px bg-brand-stone/30" />
-                                            <button 
-                                                onClick={() => handleDeleteProfile(p.id)} 
-                                                className="text-red-300 hover:text-red-600 transition-colors"
-                                                title="מחיקה"
-                                            >
-                                                מחקי 🗑
-                                            </button>
+                                            <button onClick={() => handleDeleteProfile(p.id)} className="text-red-300 hover:text-red-600 transition-colors">מחקי 🗑</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -639,45 +621,34 @@ export default function AdminPage() {
                       <div key={p.id} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 shadow-sm relative">
                           <div className="flex justify-between items-start">
                               <div className="flex-1">
-                                  <p className="font-bold text-xl italic tracking-tight">{p.full_name}</p><p className="text-xs opacity-40 font-medium mt-1">{p.email}</p>
-                                  {/* תצוגת טלפון וכפתור ווצאפ למובייל */}
+                                  <p className="font-bold text-xl italic tracking-tight">{p.full_name}</p>
+                                  <p className="text-xs opacity-40 font-medium mt-1">{p.email}</p>
                                   {p.phone && (
                                       <div className="flex items-center gap-2 mt-3">
                                           <span className="text-xs font-bold tabular-nums opacity-60">{p.phone}</span>
-                                          <a 
-                                              href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} 
-                                              target="_blank" 
-                                              rel="noreferrer"
-                                              className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-100 active:scale-95 transition-all"
-                                          >
-                                              <span>WhatsApp</span>
-                                              <span className="text-xs">💬</span>
+                                          <a href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-100 active:scale-95 transition-all">
+                                              <span>WhatsApp</span><span className="text-xs">💬</span>
                                           </a>
                                       </div>
                                   )}
                               </div>
-                              
-                              {/* בועית ניקובים מעוצבת */}
-                              <div className={`px-4 py-1.5 rounded-full text-[11px] font-bold shadow-sm ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                  {p.punch_card_remaining} כרטיסיה
+                              <div className="flex flex-col items-end gap-1">
+                                <div className={`px-4 py-1.5 rounded-full text-[11px] font-bold shadow-sm ${p.punch_card_remaining > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                    {p.punch_card_remaining} כרטיסיה
+                                </div>
+                                {p.punch_card_expiry && (
+                                  <span className="text-[9px] opacity-40 tabular-nums">
+                                    עד {new Date(p.punch_card_expiry).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'numeric'})}
+                                  </span>
+                                )}
                               </div>
                           </div>
 
                           <div className="mt-6 pt-4 border-t border-brand-stone/5 flex justify-between items-center">
                               <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">{p.membership_type} בשבוע</span>
                               <div className="flex gap-6">
-                                  <button 
-                                      onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} 
-                                      className="text-xs font-bold opacity-60 underline underline-offset-4"
-                                  >
-                                      עריכה ✎
-                                  </button>
-                                  <button 
-                                      onClick={() => handleDeleteProfile(p.id)} 
-                                      className="text-xs font-bold text-red-400 underline underline-offset-4"
-                                  >
-                                      מחיקה 🗑
-                                  </button>
+                                  <button onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} className="text-xs font-bold opacity-60 underline underline-offset-4">עריכה ✎</button>
+                                  <button onClick={() => handleDeleteProfile(p.id)} className="text-xs font-bold text-red-400 underline underline-offset-4">מחיקה 🗑</button>
                               </div>
                           </div>
                       </div>
@@ -692,10 +663,14 @@ export default function AdminPage() {
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-md">
             <div className="bg-white p-10 rounded-[3.5rem] max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-start mb-10">
-                    <div><h3 className="text-2xl font-bold italic tracking-tight">{detailsModal.name}</h3><p className="opacity-40 text-sm font-bold uppercase tracking-widest">{new Date(detailsModal.start_time).toLocaleString('he-IL', {weekday: 'long', hour:'2-digit', minute:'2-digit'})}</p></div>
+                    <div>
+                      <h3 className="text-2xl font-bold italic tracking-tight">{detailsModal.name}</h3>
+                      <p className="opacity-40 text-sm font-bold uppercase tracking-widest">{new Date(detailsModal.start_time).toLocaleString('he-IL', {weekday: 'long', hour:'2-digit', minute:'2-digit'})}</p>
+                    </div>
                     <button onClick={() => setDetailsModal(null)} className="text-2xl opacity-20 hover:opacity-100 transition-all">⨉</button>
                 </div>
-                <div className="mb-10"><h4 className="text-[10px] font-black uppercase opacity-40 mb-5 tracking-widest">מתאמנות רשומות ({detailsModal.bookings?.length || 0})</h4>
+                <div className="mb-10">
+                  <h4 className="text-[10px] font-black uppercase opacity-40 mb-5 tracking-widest">מתאמנות רשומות ({detailsModal.bookings?.length || 0})</h4>
                     <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                         {detailsModal.bookings?.map((b: any) => (
                             <div key={b.id} className="bg-brand-bg p-4 rounded-2xl flex justify-between items-center text-sm shadow-sm transition-transform hover:scale-[1.01]">

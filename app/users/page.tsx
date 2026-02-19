@@ -232,7 +232,8 @@ export default function UserPortal() {
               <div className={`border-t px-6 py-2 text-center ${
                 profile?.punch_card_remaining > 0 ? 'border-green-100' : 'border-red-100'
               }`}>
-                בתוקף עד: {profile?.punch_card_expiry || '—'}
+               בתוקף עד: {profile?.punch_card_expiry ? new Date(profile.punch_card_expiry).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  : '—'}
               </div>
             </div>
           </div>

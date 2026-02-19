@@ -36,6 +36,15 @@ const isSameWeek = (date1: Date, date2: Date) => {
   return week1 === week2;
 };
 
+const formatDate = (dateStr: string) =>
+  new Date(dateStr).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+const formatTime = (dateStr: string) =>
+  new Date(dateStr).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+
+type ActiveTab = 'schedule' | 'bookings';
+type BookingsFilter = 'all' | 'upcoming' | 'past';
+
 export default function UserPortal() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
@@ -45,8 +54,10 @@ export default function UserPortal() {
   const [userBookings, setUserBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [viewDate, setViewDate] = useState(new Date()); // ניווט שבועי
-  const [selectedDateMobile, setSelectedDateMobile] = useState(new Date()); // יום נבחר במובייל
+  const [viewDate, setViewDate] = useState(new Date());
+  const [selectedDateMobile, setSelectedDateMobile] = useState(new Date());
+  const [activeTab, setActiveTab] = useState<ActiveTab>('schedule');
+  const [bookingsFilter, setBookingsFilter] = useState<BookingsFilter>('upcoming');
 
   const getAuthenticatedSupabase = async () => {
     try {
@@ -85,12 +96,13 @@ export default function UserPortal() {
         .single();
       setProfile(myProfile);
 
-      // 3. שליפת הזמנות עם נתוני השיעור לחישוב שבועי
+      // 3. שליפת הזמנות עם נתוני השיעור המלאים
       if (myProfile) {
         const { data: books } = await supabaseClient
           .from('bookings')
-          .select('*, classes!class_id(start_time)')
-          .eq('user_id', myProfile.id);
+          .select('*, classes!class_id(id, name, start_time, class_type, max_capacity)')
+          .eq('user_id', myProfile.id)
+          .order('classes(start_time)', { ascending: false });
         setUserBookings(books || []);
       }
     } catch (err) {
@@ -109,13 +121,11 @@ export default function UserPortal() {
     if (!supabaseClient || !profile) return alert("שגיאת התחברות");
     if (!profile.is_approved) return alert("החשבון ממתין לאישור מנהלת ✨");
 
-    // אכיפת הגבלת מנוי שבועי
     if (profile.membership_type > 0) {
       const classDate = new Date(classItem.start_time);
       const bookingsThisWeek = userBookings.filter(b => 
         b.classes && isSameWeek(new Date(b.classes.start_time), classDate)
       );
-
       if (bookingsThisWeek.length >= profile.membership_type) {
         return alert(`ניצלת כבר את כל ${profile.membership_type} האימונים שלך לשבוע זה! ✨`);
       }
@@ -183,6 +193,25 @@ export default function UserPortal() {
     });
   }, [viewDate]);
 
+  // חישוב הזמנות מסוננות לטאב ההזמנות שלי
+  const filteredBookings = useMemo(() => {
+    const now = new Date();
+    return userBookings
+      .filter(b => {
+        if (!b.classes?.start_time) return false;
+        const classDate = new Date(b.classes.start_time);
+        if (bookingsFilter === 'upcoming') return classDate >= now;
+        if (bookingsFilter === 'past') return classDate < now;
+        return true;
+      })
+      .sort((a, b) => {
+        const aTime = new Date(a.classes.start_time).getTime();
+        const bTime = new Date(b.classes.start_time).getTime();
+        // upcoming: soonest first; past/all: newest first
+        return bookingsFilter === 'upcoming' ? aTime - bTime : bTime - aTime;
+      });
+  }, [userBookings, bookingsFilter]);
+
   if (!isLoaded || loading) return (
     <div className="min-h-screen bg-brand-bg flex items-center justify-center font-bold text-brand-dark/20 italic">
       טוען נתונים...
@@ -197,7 +226,7 @@ export default function UserPortal() {
     >
       <div className="container mx-auto px-6 py-20 max-w-6xl">
         
-       {/* Header Section */}
+        {/* Header Section */}
         <header className="flex flex-col lg:flex-row justify-between items-center mb-12 gap-8 bg-white p-8 rounded-[3rem] shadow-sm border border-brand-stone/20">
           <div className="space-y-4 text-center lg:text-right">
             <span className="mb-2 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
@@ -213,12 +242,9 @@ export default function UserPortal() {
 
           {/* Membership + Punch Card Info */}
           <div className="flex flex-row gap-2 bg-brand-stone/5 p-3 rounded-[2.5rem] border border-brand-stone/10 shadow-inner">
-            {/* Membership type pill */}
             <div className="px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest text-brand-dark bg-white shadow-sm text-center">
               מנוי: {profile?.membership_type || 0} בשבוע
             </div>
-
-            {/* Punch card details — two rows */}
             <div
               className={`flex flex-col rounded-3xl border overflow-hidden text-[11px] font-bold uppercase tracking-widest ${
                 profile?.punch_card_remaining > 0
@@ -232,132 +258,265 @@ export default function UserPortal() {
               <div className={`border-t px-6 py-2 text-center ${
                 profile?.punch_card_remaining > 0 ? 'border-green-100' : 'border-red-100'
               }`}>
-               בתוקף עד: {profile?.punch_card_expiry ? new Date(profile.punch_card_expiry).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  : '—'}
+                בתוקף עד: {profile?.punch_card_expiry
+                  ? new Date(profile.punch_card_expiry).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                  : '—'}
               </div>
             </div>
           </div>
 
-          {/* Week navigator */}
-          <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
-            <button
-              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() - 7); setViewDate(d); }}
-              className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
-              aria-label="שבוע קודם"
-            >
-              →
-            </button>
-            <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">
-              {weekDates[0].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })} -{' '}
-              {weekDates[6].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })}
-            </span>
-            <button
-              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() + 7); setViewDate(d); }}
-              className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
-              aria-label="שבוע הבא"
-            >
-              ←
-            </button>
-          </div>
+          {/* Week navigator — only shown on schedule tab */}
+          {activeTab === 'schedule' && (
+            <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
+              <button
+                onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() - 7); setViewDate(d); }}
+                className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
+                aria-label="שבוע קודם"
+              >
+                →
+              </button>
+              <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">
+                {weekDates[0].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })} -{' '}
+                {weekDates[6].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })}
+              </span>
+              <button
+                onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() + 7); setViewDate(d); }}
+                className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
+                aria-label="שבוע הבא"
+              >
+                ←
+              </button>
+            </div>
+          )}
         </header>
 
-        {/* Desktop View: Interactive Time Grid */}
-        <section className="hidden md:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
-          
-          {/* Time Sidebar */}
-          <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[10px] opacity-50 font-serif italic font-black tabular-nums">
-            {TIME_SLOTS.map((slot, i) => (
-              <div key={i} className={slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center items-start tracking-tighter'}>
-                {slot !== 'break' && slot}
-              </div>
-            ))}
-          </div>
+        {/* Tab Navigation */}
+        <div className="flex gap-3 mb-8">
+          <button
+            onClick={() => setActiveTab('schedule')}
+            className={`px-7 py-3 rounded-2xl text-sm font-bold tracking-wide transition-all ${
+              activeTab === 'schedule'
+                ? 'bg-brand-dark text-white shadow-md'
+                : 'bg-white text-brand-dark/50 border border-brand-stone/20 hover:border-brand-stone/40'
+            }`}
+          >
+            לוח שיעורים
+          </button>
+          <button
+            onClick={() => setActiveTab('bookings')}
+            className={`px-7 py-3 rounded-2xl text-sm font-bold tracking-wide transition-all flex items-center gap-2 ${
+              activeTab === 'bookings'
+                ? 'bg-brand-dark text-white shadow-md'
+                : 'bg-white text-brand-dark/50 border border-brand-stone/20 hover:border-brand-stone/40'
+            }`}
+          >
+            ההרשמות שלי
+            {userBookings.length > 0 && (
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                activeTab === 'bookings' ? 'bg-white/20' : 'bg-brand-stone/10'
+              }`}>
+                {userBookings.length}
+              </span>
+            )}
+          </button>
+        </div>
 
-          {/* Day Columns */}
-          <div className="flex-1 grid grid-cols-7 relative">
-            {weekDates.map((date, dayIdx) => (
-              <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
-                <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10 bg-white sticky top-0 z-20">
-                  <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
-                  <span className="text-xl font-bold mt-0.5">{date.getDate()}</span>
-                </div>
-                
-                {/* Scrollable/Relative area for classes */}
-                <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
-                  {classes
-                    .filter(c => new Date(c.start_time).toDateString() === date.toDateString())
+        {/* ── TAB: Schedule ── */}
+        {activeTab === 'schedule' && (
+          <>
+            {/* Desktop View: Interactive Time Grid */}
+            <section className="hidden md:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
+              
+              {/* Time Sidebar */}
+              <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[10px] opacity-50 font-serif italic font-black tabular-nums">
+                {TIME_SLOTS.map((slot, i) => (
+                  <div key={i} className={slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center items-start tracking-tighter'}>
+                    {slot !== 'break' && slot}
+                  </div>
+                ))}
+              </div>
+
+              {/* Day Columns */}
+              <div className="flex-1 grid grid-cols-7 relative">
+                {weekDates.map((date, dayIdx) => (
+                  <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
+                    <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10 bg-white sticky top-0 z-20">
+                      <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
+                      <span className="text-xl font-bold mt-0.5">{date.getDate()}</span>
+                    </div>
+                    
+                    <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
+                      {classes
+                        .filter(c => new Date(c.start_time).toDateString() === date.toDateString())
+                        .map(c => {
+                          const booking = userBookings.find(b => b.class_id === c.id);
+                          const startTime = new Date(c.start_time);
+                          const hour = startTime.getHours();
+                          const mins = startTime.getMinutes();
+
+                          let topPos = 0;
+                          if (hour >= MORNING_START && hour <= MORNING_END) {
+                            topPos = (hour - MORNING_START + mins/60) * HOUR_HEIGHT;
+                          } else if (hour >= EVENING_START && hour <= EVENING_END) {
+                            topPos = (hour - EVENING_START + mins/60) * HOUR_HEIGHT + (7 * HOUR_HEIGHT) + 64;
+                          } else return null;
+
+                          return (
+                            <div
+                              key={c.id}
+                              className="absolute inset-x-2 h-[88px] z-10 transition-transform hover:scale-[1.02]"
+                              style={{ top: `${topPos}px` }}
+                            >
+                              <ClassCard
+                                c={c}
+                                booking={booking}
+                                onBook={() => handleBooking(c)}
+                                onCancel={() => handleCancel(booking.id, c.start_time, booking.payment_source)}
+                                compact
+                              />
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Mobile View: Selection + List */}
+            <section className="block md:hidden">
+              <div className="flex overflow-x-auto gap-3 pb-8 no-scrollbar px-1">
+                {weekDates.map((date, i) => {
+                  const isSelected = date.toDateString() === selectedDateMobile.toDateString();
+                  const isToday = date.toDateString() === new Date().toDateString();
+                  return (
+                    <button 
+                      key={i} 
+                      onClick={() => setSelectedDateMobile(date)} 
+                      className={`flex-shrink-0 w-16 h-24 rounded-[2rem] flex flex-col items-center justify-center transition-all border ${isSelected ? 'bg-brand-dark text-white border-brand-dark shadow-xl scale-105' : 'bg-white border-brand-stone/10'} ${isToday && !isSelected ? 'ring-2 ring-brand-dark/20' : ''}`}
+                    >
+                      <span className={`text-[10px] font-bold uppercase ${isSelected ? 'opacity-70' : 'opacity-40'}`}>{DAYS_HEBREW[i]}</span>
+                      <span className="text-2xl font-black mt-1">{date.getDate()}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-5 pb-24">
+                <h3 className="font-bold text-xl px-2">שיעורים ליום {selectedDateMobile.toLocaleDateString('he-IL', {weekday: 'long'})}</h3>
+                {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).length > 0 ? (
+                  classes
+                    .filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString())
                     .map(c => {
-                      const booking = userBookings.find(b => b.class_id === c.id);
-                      const startTime = new Date(c.start_time);
-                      const hour = startTime.getHours();
-                      const mins = startTime.getMinutes();
-
-                      let topPos = 0;
-                      if (hour >= MORNING_START && hour <= MORNING_END) {
-                        topPos = (hour - MORNING_START + mins/60) * HOUR_HEIGHT;
-                      } else if (hour >= EVENING_START && hour <= EVENING_END) {
-                        topPos = (hour - EVENING_START + mins/60) * HOUR_HEIGHT + (7 * HOUR_HEIGHT) + 64;
-                      } else return null;
-
-                      return (
-                        <div
-                          key={c.id}
-                          className="absolute inset-x-2 h-[88px] z-10 transition-transform hover:scale-[1.02]"
-                          style={{ top: `${topPos}px` }}
-                        >
-                          <ClassCard
-                            c={c}
-                            booking={booking}
-                            onBook={() => handleBooking(c)}
-                            onCancel={() =>
-                              handleCancel(booking.id, c.start_time, booking.payment_source)
-                            }
-                            compact
-                          />
-                        </div>
-                      );
-                    })}
-                </div>
+                        const booking = userBookings.find(b => b.class_id === c.id);
+                        return <ClassCard key={c.id} c={c} booking={booking} onBook={() => handleBooking(c)} onCancel={() => handleCancel(booking.id, c.start_time, booking.payment_source)} />;
+                    })
+                ) : (
+                  <div className="text-center py-24 opacity-30 italic text-sm bg-white/50 rounded-[2.5rem] border border-dashed border-brand-stone/30">
+                    אין אימונים מתוכננים ליום זה 🧘‍♀️
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
+          </>
+        )}
 
-        {/* Mobile View: Selection + List */}
-        <section className="block md:hidden">
-          <div className="flex overflow-x-auto gap-3 pb-8 no-scrollbar px-1">
-            {weekDates.map((date, i) => {
-              const isSelected = date.toDateString() === selectedDateMobile.toDateString();
-              const isToday = date.toDateString() === new Date().toDateString();
-              return (
-                <button 
-                  key={i} 
-                  onClick={() => setSelectedDateMobile(date)} 
-                  className={`flex-shrink-0 w-16 h-24 rounded-[2rem] flex flex-col items-center justify-center transition-all border ${isSelected ? 'bg-brand-dark text-white border-brand-dark shadow-xl scale-105' : 'bg-white border-brand-stone/10'} ${isToday && !isSelected ? 'ring-2 ring-brand-dark/20' : ''}`}
+        {/* ── TAB: My Bookings ── */}
+        {activeTab === 'bookings' && (
+          <section>
+            {/* Filter pills */}
+            <div className="flex gap-2 mb-6">
+              {([
+                { key: 'upcoming', label: 'קרובים' },
+                { key: 'past',     label: 'עבר' },
+                { key: 'all',      label: 'הכל' },
+              ] as { key: BookingsFilter; label: string }[]).map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setBookingsFilter(key)}
+                  className={`px-5 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${
+                    bookingsFilter === key
+                      ? 'bg-brand-dark text-white'
+                      : 'bg-white text-brand-dark/40 border border-brand-stone/20 hover:border-brand-stone/40'
+                  }`}
                 >
-                  <span className={`text-[10px] font-bold uppercase ${isSelected ? 'opacity-70' : 'opacity-40'}`}>{DAYS_HEBREW[i]}</span>
-                  <span className="text-2xl font-black mt-1">{date.getDate()}</span>
+                  {label}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
 
-          <div className="space-y-5 pb-24">
-            <h3 className="font-bold text-xl px-2">שיעורים ליום {selectedDateMobile.toLocaleDateString('he-IL', {weekday: 'long'})}</h3>
-            {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).length > 0 ? (
-              classes
-                .filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString())
-                .map(c => {
-                    const booking = userBookings.find(b => b.class_id === c.id);
-                    return <ClassCard key={c.id} c={c} booking={booking} onBook={() => handleBooking(c)} onCancel={() => handleCancel(booking.id, c.start_time, booking.payment_source)} />;
-                })
+            {filteredBookings.length === 0 ? (
+              <div className="text-center py-32 opacity-30 italic text-sm bg-white/50 rounded-[2.5rem] border border-dashed border-brand-stone/30">
+                {bookingsFilter === 'upcoming' ? 'אין הרשמות קרובות 🌿' : 'אין הרשמות להצגה'}
+              </div>
             ) : (
-              <div className="text-center py-24 opacity-30 italic text-sm bg-white/50 rounded-[2.5rem] border border-dashed border-brand-stone/30">
-                אין אימונים מתוכננים ליום זה 🧘‍♀️
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredBookings.map(booking => {
+                  const cls = booking.classes;
+                  if (!cls) return null;
+                  const isPast = new Date(cls.start_time) < new Date();
+                  const canCancel = !isPast && (new Date(cls.start_time).getTime() - Date.now()) / (1000*60*60) >= CANCELLATION_WINDOW_HOURS;
+
+                  return (
+                    <div
+                      key={booking.id}
+                      className={`relative flex flex-col gap-3 rounded-[2rem] border p-5 transition-all ${
+                        isPast
+                          ? 'bg-brand-stone/5 border-brand-stone/10 opacity-60'
+                          : 'bg-white border-brand-stone/20 shadow-sm hover:shadow-md'
+                      }`}
+                    >
+                      {/* Status badge */}
+                      <div className="flex items-start justify-between gap-2">
+                        <span className={`text-[9px] font-black uppercase tracking-[0.25em] px-3 py-1 rounded-full ${
+                          isPast
+                            ? 'bg-brand-stone/10 text-brand-stone'
+                            : 'bg-green-50 text-green-600'
+                        }`}>
+                          {isPast ? 'הושלם ✓' : 'קרוב ✦'}
+                        </span>
+                        <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
+                          booking.payment_source === 'membership'
+                            ? 'bg-blue-50 text-blue-500'
+                            : 'bg-amber-50 text-amber-600'
+                        }`}>
+                          {booking.payment_source === 'membership' ? 'מנוי' : 'כרטיסייה'}
+                        </span>
+                      </div>
+
+                      {/* Class info */}
+                      <div>
+                        <h3 className="font-bold text-base text-brand-primary leading-tight">
+                          {cls.name}
+                        </h3>
+                        {cls.class_type && (
+                          <p className="text-[11px] text-brand-primary/50 mt-0.5">{cls.class_type}</p>
+                        )}
+                      </div>
+
+                      {/* Date & time */}
+                      <div className="flex items-center gap-3 text-[11px] font-semibold text-brand-dark/60">
+                        <span>{formatDate(cls.start_time)}</span>
+                        <span className="w-1 h-1 rounded-full bg-brand-stone/40" />
+                        <span>{formatTime(cls.start_time)}</span>
+                      </div>
+
+                      {/* Cancel button — only if upcoming and within cancellation window */}
+                      {canCancel && (
+                        <button
+                          onClick={() => handleCancel(booking.id, cls.start_time, booking.payment_source)}
+                          className="mt-1 w-full rounded-2xl border border-brand-accent/30 bg-white py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent-text hover:bg-brand-accent/5 transition-all"
+                        >
+                          ביטול רישום ✕
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
-          </div>
-        </section>
+          </section>
+        )}
 
       </div>
     </main>

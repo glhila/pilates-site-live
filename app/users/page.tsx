@@ -317,7 +317,7 @@ export default function UserPortal() {
 
           {/* Membership + Punch Card Info */}
           <div className="flex flex-row gap-2 bg-brand-stone/5 p-3 rounded-[2.5rem] border border-brand-stone/10 shadow-inner">
-            <div className="px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest text-brand-dark bg-white shadow-sm text-center items-center">
+            <div className="px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest text-brand-dark bg-white shadow-sm text-center">
               מנוי: {profile?.membership_type || 0} בשבוע
             </div>
             <div

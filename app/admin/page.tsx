@@ -30,6 +30,7 @@ const CLASS_TEMPLATES = [
 ];
 
 const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'oneg3gri@gmail.com'];
+const HEALTH_FORM_URL = process.env.NEXT_PUBLIC_HEALTH_FORM_URL || 'https://YOUR_HEALTH_FORM_LINK_HERE';
 
 
 export default function AdminPage() {
@@ -48,6 +49,7 @@ export default function AdminPage() {
   // מודאלים
   const [deleteModal, setDeleteModal] = useState<{show: boolean, classItem: any} | null>(null);
   const [detailsModal, setDetailsModal] = useState<any | null>(null);
+  const [welcomeModal, setWelcomeModal] = useState<{name: string, email: string, phone: string} | null>(null);
 
   // טפסי הוספה
   const [classFormData, setClassFormData] = useState({
@@ -205,11 +207,35 @@ export default function AdminPage() {
     if (error) {
         alert("שגיאה בשמירה: " + error.message);
     } else {
-        alert(editingUserId ? "פרטי המתאמנת עודכנו בהצלחה" : "מתאמנת חדשה נוספה");
+        const isNew = !editingUserId;
+        const savedName = userFormData.full_name;
+        const savedEmail = userFormData.email.trim().toLowerCase();
+        const savedPhone = userFormData.phone;
         setEditingUserId(null); 
         setUserFormData({full_name:'', email:'', phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); 
-        loadData(); 
+        loadData();
+        if (isNew) {
+          setWelcomeModal({ name: savedName, email: savedEmail, phone: savedPhone });
+        } else {
+          alert("פרטי המתאמנת עודכנו בהצלחה");
+        }
     }
+  };
+
+  const getMailtoUrl = (name: string, email: string) => {
+    const subject = encodeURIComponent(`ברוכה הבאה ל־Your Practice 🌸`);
+    const body = encodeURIComponent(
+      `היי ${name} 😊\n\nשמחים שהצטרפת אלינו!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה — זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך!\nצוות Your Practice 🤍`
+    );
+    return `mailto:${email}?subject=${subject}&body=${body}`;
+  };
+
+  const getWhatsAppUrl = (phone: string, name: string) => {
+    const normalized = phone.replace(/\D/g, '').replace(/^0/, '972');
+    const message = encodeURIComponent(
+      `היי ${name} 🌸\n\nברוכה הבאה ל־Your Practice!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה — זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך! 🤍`
+    );
+    return `https://wa.me/${normalized}?text=${message}`;
   };
 
   const handleDeleteProfile = async (id: string) => {
@@ -704,6 +730,54 @@ export default function AdminPage() {
                 <button onClick={() => processDeletion('single')} className="w-full bg-brand-bg p-6 rounded-3xl font-bold hover:bg-brand-stone/10 transition-all text-sm tracking-tight">ביטול השיעור הזה בלבד</button>
                 {deleteModal.classItem.recurring_id && <button onClick={() => processDeletion('future')} className="w-full bg-red-50 text-red-600 p-6 rounded-3xl font-bold hover:bg-red-100 transition-all text-sm tracking-tight">ביטול כל הסדרה מהיום והלאה</button>}
                 <button onClick={() => setDeleteModal(null)} className="w-full p-2 text-[10px] font-black opacity-30 mt-10 uppercase underline tracking-[0.2em] transition-opacity hover:opacity-100">חזרה לניהול</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Welcome — שליחת הצהרת בריאות למתאמנת חדשה */}
+        {welcomeModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[120] p-4 backdrop-blur-md">
+            <div className="bg-white p-12 rounded-[4rem] max-w-md w-full shadow-2xl">
+
+              <div className="text-center mb-8">
+                <div className="text-5xl mb-4">🌸</div>
+                <h3 className="text-2xl font-bold italic tracking-tight">
+                  {welcomeModal.name} נוספה בהצלחה!
+                </h3>
+                <p className="text-sm opacity-50 mt-3 font-medium leading-relaxed">
+                  לשלוח לה את טופס הצהרת הבריאות<br/>לפני האימון הראשון?
+                </p>
+              </div>
+
+              <div className="space-y-4">
+
+                {/* מייל */}
+                <a
+                  href={getMailtoUrl(welcomeModal.name, welcomeModal.email)}
+                  className="w-full p-6 rounded-3xl font-bold bg-brand-bg hover:bg-brand-stone/10 transition-all text-sm tracking-tight flex items-center justify-center gap-3"
+                >
+                  ✉️ שליחה במייל
+                </a>
+
+                {/* וואטסאפ */}
+                {welcomeModal.phone && (
+                  <a
+                    href={getWhatsAppUrl(welcomeModal.phone, welcomeModal.name)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full p-6 rounded-3xl font-bold bg-green-50 text-green-700 hover:bg-green-100 transition-all text-sm tracking-tight flex items-center justify-center gap-3"
+                  >
+                    💬 שליחה בוואטסאפ
+                  </a>
+                )}
+
+                <button
+                  onClick={() => setWelcomeModal(null)}
+                  className="w-full p-2 text-[10px] font-black opacity-30 uppercase underline tracking-[0.2em] transition-opacity hover:opacity-100"
+                >
+                  דילוג — אשלח מאוחר יותר
+                </button>
               </div>
             </div>
           </div>

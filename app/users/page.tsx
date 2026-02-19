@@ -222,7 +222,8 @@ export default function UserPortal() {
                   : 'bg-red-50 text-red-700 border-red-100'
               }`}
             >
-              יתרת ניקובים בכטיסיה: {profile?.punch_card_remaining || 0} בתוקף עד: {profile?.punch_card_expiry|| 0}
+              יתרת ניקובים בכרטיסיה: {profile?.punch_card_remaining || 0} 
+              בתוקף עד: {profile?.punch_card_expiry|| 0}
             </div>
           </div>
           

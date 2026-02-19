@@ -118,45 +118,49 @@ export default function UserPortal() {
 
   const handleBooking = async (classItem: any) => {
     const supabaseClient = await getAuthenticatedSupabase();
-    if (!supabaseClient || !profile) return alert("שגיאת התחברות");
-    if (!profile.is_approved) return alert("החשבון ממתין לאישור מנהלת ✨");
+    if (!supabaseClient || !profile) return alert("משהו השתבש עם ההתחברות, נסי לרענן את הדף.");
+    if (!profile.is_approved) return alert("החשבון שלך עדיין ממתין לאישור. נחזור אליך בהקדם 🌿");
 
     if (profile.membership_type > 0) {
       const classDate = new Date(classItem.start_time);
-      const bookingsThisWeek = userBookings.filter(b => 
-        b.classes && isSameWeek(new Date(b.classes.start_time), classDate)
+      // Count only confirmed bookings toward the weekly quota
+      const bookingsThisWeek = userBookings.filter(b =>
+        b.classes &&
+        b.status === 'confirmed' &&
+        isSameWeek(new Date(b.classes.start_time), classDate)
       );
       if (bookingsThisWeek.length >= profile.membership_type) {
-        return alert(`ניצלת כבר את כל ${profile.membership_type} האימונים שלך לשבוע זה! ✨`);
+        return alert(`השבוע כבר השתתפת ב־${profile.membership_type} אימונים — זה המקסימום במנוי שלך לשבוע זה 💛`);
       }
     }
 
     if (classItem.bookings && classItem.bookings.length >= classItem.max_capacity) {
-        return alert("השיעור מלא 😔");
+      return alert("השיעור הזה מלא כרגע. אפשר לנסות שיעור אחר או להמתין לביטול 🙏");
     }
 
     const paymentSource = profile.membership_type > 0 ? 'membership' : 'punch_card';
     if (paymentSource === 'punch_card' && profile.punch_card_remaining <= 0) {
-        return alert("נגמרו הניקובים בכרטיסייה!");
+      return alert("נגמרו הניקובים בכרטיסייה שלך. ניתן לרכוש כרטיסייה חדשה אצל המנהלת 🌸");
     }
 
-    if (confirm(`להירשם לשיעור ${classItem.name}?`)) {
-        const { error } = await supabaseClient.from('bookings').insert({
-            user_id: profile.id,
-            class_id: classItem.id,
-            payment_source: paymentSource
-        });
+    if (confirm(`להירשם לשיעור "${classItem.name}"?`)) {
+      const { error } = await supabaseClient.from('bookings').insert({
+        user_id: profile.id,
+        class_id: classItem.id,
+        payment_source: paymentSource,
+        status: 'confirmed',
+      });
 
-        if (error) return alert("שגיאה ברישום: " + error.message);
+      if (error) return alert("לא הצלחנו לרשום אותך הפעם, נסי שוב עוד רגע.");
 
-        if (paymentSource === 'punch_card') {
-            await supabaseClient.from('profiles').update({
-                punch_card_remaining: profile.punch_card_remaining - 1
-            }).eq('id', profile.id);
-        }
+      if (paymentSource === 'punch_card') {
+        await supabaseClient.from('profiles').update({
+          punch_card_remaining: profile.punch_card_remaining - 1
+        }).eq('id', profile.id);
+      }
 
-        alert("נרשמת בהצלחה! 💪");
-        syncAndFetchData();
+      alert("נרשמת בהצלחה! נתראה באימון 💪");
+      syncAndFetchData();
     }
   };
 
@@ -168,19 +172,25 @@ export default function UserPortal() {
     const isLate = hoursDiff < CANCELLATION_WINDOW_HOURS;
 
     if (isLate) {
-      // Late cancellation — warn the user that no refund will be given
-      const paymentLabel = paymentSource === 'punch_card' ? 'ניקוב מהכרטיסייה' : 'אימון מהמנוי';
+      const paymentLabel = paymentSource === 'punch_card'
+        ? 'הניקוב לא יוחזר לכרטיסייה'
+        : 'האימון יחשב כמנוצל השבוע';
       const confirmed = confirm(
-        `שים לב — חלון הביטול של ${CANCELLATION_WINDOW_HOURS} שעות עבר.\n\n` +
-        `הביטול יירשם, אך ה${paymentLabel} לא יוחזר.\n\n` +
-        `האם ברצונך לבטל בכל זאת?`
+        `ביטול מאוחר ⚠️\n\n` +
+        `חלון הביטול חלף (${CANCELLATION_WINDOW_HOURS} שעות לפני השיעור).\n` +
+        `אם תבטלי עכשיו — ${paymentLabel}.\n\n` +
+        `רוצה לבטל בכל זאת?`
       );
       if (!confirmed) return;
 
-      // Delete the booking but do NOT refund anything
-      const { error } = await supabaseClient.from('bookings').delete().eq('id', bookingId);
+      // Mark as late_cancelled — keep the row so it still counts toward weekly quota
+      const { error } = await supabaseClient
+        .from('bookings')
+        .update({ status: 'late_cancelled' })
+        .eq('id', bookingId);
+
       if (!error) {
-        alert("הרישום בוטל. לא בוצע החזר.");
+        alert("הרישום בוטל. לא בוצע החזר של האימון.");
         syncAndFetchData();
       }
       return;
@@ -197,10 +207,10 @@ export default function UserPortal() {
           .from('profiles')
           .update({ punch_card_remaining: (profile.punch_card_remaining || 0) + 1 })
           .eq('id', profile.id);
+        alert("הרישום בוטל והניקוב הוחזר לכרטיסייה שלך 🌿");
+      } else {
+        alert("הרישום בוטל. האימון פנוי שוב לשבוע זה 🌿");
       }
-      // If paymentSource === 'membership': no update needed — the booking row is gone,
-      // so the weekly booking count naturally drops by 1, freeing up a slot.
-      alert("הרישום בוטל בהצלחה.");
       syncAndFetchData();
     }
   };
@@ -478,7 +488,7 @@ export default function UserPortal() {
                 {filteredBookings.map(booking => {
                   const cls = booking.classes;
                   if (!cls) return null;
-                  const isPast = new Date(cls.start_time) < new Date();
+                  const isPast = new Date(cls.start_time) < new Date() || booking.status === 'late_cancelled';
 
                   return (
                     <div
@@ -492,11 +502,13 @@ export default function UserPortal() {
                       {/* Status badge */}
                       <div className="flex items-start justify-between gap-2">
                         <span className={`text-[9px] font-black uppercase tracking-[0.25em] px-3 py-1 rounded-full ${
-                          isPast
+                          booking.status === 'late_cancelled'
+                            ? 'bg-orange-50 text-orange-500'
+                            : isPast
                             ? 'bg-brand-stone/10 text-brand-stone'
                             : 'bg-green-50 text-green-600'
                         }`}>
-                          {isPast ? 'הושלם ✓' : 'קרוב ✦'}
+                          {booking.status === 'late_cancelled' ? 'בוטל באיחור' : isPast ? 'הושלם ✓' : 'קרוב ✦'}
                         </span>
                         <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
                           booking.payment_source === 'membership'
@@ -524,8 +536,8 @@ export default function UserPortal() {
                         <span>{formatTime(cls.start_time)}</span>
                       </div>
 
-                      {/* Cancel button — available for all upcoming classes */}
-                      {!isPast && (
+                      {/* Cancel button — available for all upcoming confirmed classes */}
+                      {!isPast && booking.status === 'confirmed' && (
                         <button
                           onClick={() => handleCancel(booking.id, cls.start_time, booking.payment_source)}
                           className="mt-1 w-full rounded-2xl border border-brand-accent/30 bg-white py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent-text hover:bg-brand-accent/5 transition-all"

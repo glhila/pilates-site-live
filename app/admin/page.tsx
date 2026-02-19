@@ -232,7 +232,7 @@ export default function AdminPage() {
     if (error) {
         alert("שגיאה בשמירה: " + error.message);
     } else {
-        alert(editingUserId ? "פרטי המתאמנת עודכנו בהצלחה" : "מתאמנת חדשה נוספה עם כרטיסיה בתוקף לחודשיים");
+        alert(editingUserId ? "פרטי המתאמנת עודכנו בהצלחה" : "מתאמנת חדשה נוספה");
         setEditingUserId(null); 
         setUserFormData({full_name:'', email:'', phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); 
         loadData(); 

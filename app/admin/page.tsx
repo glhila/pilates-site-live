@@ -221,7 +221,7 @@ export default function AdminPage() {
         phone: userFormData.phone,
         membership_type: userFormData.membership_type,
         punch_card_remaining: userFormData.punch_card_remaining,
-        punch_card_expiry: finalExpiryDate, // התאריך המעודכן
+        punch_card_expiry: finalExpiryDate || null, // התאריך המעודכן
         updated_at: new Date().toISOString() 
     };
     

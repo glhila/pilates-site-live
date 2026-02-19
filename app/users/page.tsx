@@ -197,7 +197,7 @@ export default function UserPortal() {
     >
       <div className="container mx-auto px-6 py-20 max-w-6xl">
         
-        {/* Header Section */}
+       {/* Header Section */}
         <header className="flex flex-col lg:flex-row justify-between items-center mb-12 gap-8 bg-white p-8 rounded-[3rem] shadow-sm border border-brand-stone/20">
           <div className="space-y-4 text-center lg:text-right">
             <span className="mb-2 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
@@ -211,35 +211,47 @@ export default function UserPortal() {
             </p>
           </div>
 
-          <div className="flex bg-brand-stone/5 p-2 rounded-[2.5rem] border border-brand-stone/10 shadow-inner">
-            <div className="px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest text-brand-dark bg-white shadow-sm">
+          {/* Membership + Punch Card Info */}
+          <div className="flex flex-col gap-2 bg-brand-stone/5 p-3 rounded-[2.5rem] border border-brand-stone/10 shadow-inner min-w-[200px]">
+            {/* Membership type pill */}
+            <div className="px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest text-brand-dark bg-white shadow-sm text-center">
               מנוי: {profile?.membership_type || 0} בשבוע
             </div>
+
+            {/* Punch card details — two rows */}
             <div
-              className={`px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest border ml-2 ${
+              className={`flex flex-col rounded-3xl border overflow-hidden text-[11px] font-bold uppercase tracking-widest ${
                 profile?.punch_card_remaining > 0
                   ? 'bg-green-50 text-green-700 border-green-100'
                   : 'bg-red-50 text-red-700 border-red-100'
               }`}
             >
-              יתרת ניקובים בכרטיסיה: {profile?.punch_card_remaining || 0} 
-              בתוקף עד: {profile?.punch_card_expiry|| 0}
+              <div className="px-6 py-2 text-center">
+                יתרת ניקובים: {profile?.punch_card_remaining || 0}
+              </div>
+              <div className={`border-t px-6 py-2 text-center ${
+                profile?.punch_card_remaining > 0 ? 'border-green-100' : 'border-red-100'
+              }`}>
+                בתוקף עד: {profile?.punch_card_expiry || '—'}
+              </div>
             </div>
           </div>
-          
+
+          {/* Week navigator */}
           <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
-            <button 
-              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} 
+            <button
+              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() - 7); setViewDate(d); }}
               className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
               aria-label="שבוע קודם"
             >
               →
             </button>
             <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">
-              {weekDates[0].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})} - {weekDates[6].toLocaleDateString('he-IL', {day:'numeric', month:'numeric'})}
+              {weekDates[0].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })} -{' '}
+              {weekDates[6].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })}
             </span>
-            <button 
-              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} 
+            <button
+              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() + 7); setViewDate(d); }}
               className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
               aria-label="שבוע הבא"
             >

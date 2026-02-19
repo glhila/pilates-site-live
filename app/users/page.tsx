@@ -265,33 +265,11 @@ export default function UserPortal() {
             </div>
           </div>
 
-          {/* Week navigator — only shown on schedule tab */}
-          {activeTab === 'schedule' && (
-            <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
-              <button
-                onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() - 7); setViewDate(d); }}
-                className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
-                aria-label="שבוע קודם"
-              >
-                →
-              </button>
-              <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">
-                {weekDates[0].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })} -{' '}
-                {weekDates[6].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })}
-              </span>
-              <button
-                onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() + 7); setViewDate(d); }}
-                className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
-                aria-label="שבוע הבא"
-              >
-                ←
-              </button>
-            </div>
-          )}
+
         </header>
 
         {/* Tab Navigation */}
-        <div className="flex gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-8">
           <button
             onClick={() => setActiveTab('schedule')}
             className={`px-7 py-3 rounded-2xl text-sm font-bold tracking-wide transition-all ${
@@ -319,6 +297,30 @@ export default function UserPortal() {
               </span>
             )}
           </button>
+
+          {/* Week navigator — left of tabs, only on schedule tab */}
+          {activeTab === 'schedule' && (
+            <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10 mr-auto">
+              <button
+                onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() - 7); setViewDate(d); }}
+                className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
+                aria-label="שבוע קודם"
+              >
+                →
+              </button>
+              <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">
+                {weekDates[0].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })} -{' '}
+                {weekDates[6].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })}
+              </span>
+              <button
+                onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() + 7); setViewDate(d); }}
+                className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
+                aria-label="שבוע הבא"
+              >
+                ←
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── TAB: Schedule ── */}

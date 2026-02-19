@@ -317,7 +317,7 @@ export default function UserPortal() {
 
           {/* Membership + Punch Card Info */}
           <div className="flex flex-row gap-2 bg-brand-stone/5 p-3 rounded-[2.5rem] border border-brand-stone/10 shadow-inner">
-            <div className="px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest text-brand-dark bg-white shadow-sm text-center justify-center">
+            <div className="px-6 py-2 rounded-3xl text-[11px] font-bold uppercase tracking-widest text-brand-dark bg-white shadow-sm text-center items-center">
               מנוי: {profile?.membership_type || 0} בשבוע
             </div>
             <div
@@ -375,7 +375,7 @@ export default function UserPortal() {
 
           {/* Week navigator — left of tabs, only on schedule tab */}
           {activeTab === 'schedule' && (
-            <div className="flex items-center justify-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10 sm:mr-auto sm:justify-start">
+            <div className="flex items-center justify-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/30 sm:mr-auto sm:justify-start">
               <button
                 onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() - 7); setViewDate(d); }}
                 className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"

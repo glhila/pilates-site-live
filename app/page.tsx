@@ -86,7 +86,7 @@ export default function Home() {
           <div className="h-10 w-px bg-brand-stone/30 hidden md:block" />
           <div className="space-y-1">
             <div className="font-serif text-2xl text-brand-primary italic">Organic</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-brand-accent-text font-bold">חומרי גלם ואווירה טבעית</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-brand-accent-text font-bold">מכשור מגוון ואווירה משפחתית</div>
           </div>
         </div>
       </section>

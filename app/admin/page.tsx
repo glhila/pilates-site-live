@@ -29,7 +29,7 @@ const CLASS_TEMPLATES = [
   "מזרן - Level 1", "מזרן - Level 2", "מזרן - Level 3"
 ];
 
-const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'newadmin@gmail.com'];
+const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'oneg3gri@gmail.com'];
 
 
 export default function AdminPage() {

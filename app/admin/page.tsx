@@ -78,7 +78,7 @@ export default function AdminPage() {
     const supabase = await getAuthenticatedSupabase();
     if (!supabase) { setIsFetching(false); return; }
     try {
-      const { data: cls } = await supabase.from('classes').select('*, bookings!class_id(id, profiles(id, full_name, email))').order('start_time');
+      const { data: cls } = await supabase.from('classes').select('*, bookings!class_id(id, profiles(id, full_name, email, phone))').order('start_time');
       setClasses(cls || []);
       const { data: profs } = await supabase.from('profiles').select('*').order('full_name', { ascending: true });
       setProfiles(profs || []);
@@ -223,9 +223,9 @@ export default function AdminPage() {
   };
 
   const getMailtoUrl = (name: string, email: string) => {
-    const subject = encodeURIComponent(`ברוכה הבאה ל-עונג של פילאטיס 🧘🏼‍♀️`);
+    const subject = encodeURIComponent(`ברוכה הבאה ל-עונג של פילאטיס 🌸`);
     const body = encodeURIComponent(
-      `היי ${name} 😊\n\nשמחים שהצטרפת אלינו!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה — זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך!\nצוות עונג של פילאטיס 🤍`
+      `היי ${name} 😊\n\nשמחים שהצטרפת אלינו!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה - זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך!\nצוות עונג של פילאטיס 🤍`
     );
     return `mailto:${email}?subject=${subject}&body=${body}`;
   };
@@ -233,7 +233,7 @@ export default function AdminPage() {
   const getWhatsAppUrl = (phone: string, name: string) => {
     const normalized = phone.replace(/\D/g, '').replace(/^0/, '972');
     const message = encodeURIComponent(
-      `היי ${name} 🧘🏼‍♀️\n\nברוכה הבאה ל-עונג של פילאטיס!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה — זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך! 🤍`
+      `היי ${name} 🌸\n\nברוכה הבאה ל-עונג של פילאטיס!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה - זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך! 🤍`
     );
     return `https://wa.me/${normalized}?text=${message}`;
   };
@@ -698,12 +698,37 @@ export default function AdminPage() {
                 <div className="mb-10">
                   <h4 className="text-[10px] font-black uppercase opacity-40 mb-5 tracking-widest">מתאמנות רשומות ({detailsModal.bookings?.length || 0})</h4>
                     <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                        {detailsModal.bookings?.map((b: any) => (
-                            <div key={b.id} className="bg-brand-bg p-4 rounded-2xl flex justify-between items-center text-sm shadow-sm transition-transform hover:scale-[1.01]">
-                                <span className="font-bold">{b.profiles?.full_name}</span>
-                                <button onClick={() => handleRemoveAttendee(b.id)} className="text-red-300 hover:text-red-500 font-bold text-[10px] transition-all uppercase">הסרה 🗑</button>
-                            </div>
-                        ))}
+                        {detailsModal.bookings?.map((b: any) => {
+                            const phone = b.profiles?.phone;
+                            const name = b.profiles?.full_name;
+                            const classDate = new Date(detailsModal.start_time).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric' });
+                            const classTime = new Date(detailsModal.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                            const reminderMsg = encodeURIComponent(
+                              `היי ${name} 🌸\n\nתזכורת לאימון שלך:\n📅 ${classDate} בשעה ${classTime}\n🧘‍♀️ ${detailsModal.name}\n\nאם בסופו של דבר לא תוכלי להגיע - נשמח אם תבטלי את הרישום באתר כדי לפנות את המקום למתאמנת אחרת 🙏\n\nנתראה! 💪`
+                            );
+                            const waUrl = phone
+                              ? `https://wa.me/${phone.replace(/\D/g, '').replace(/^0/, '972')}?text=${reminderMsg}`
+                              : null;
+                            return (
+                              <div key={b.id} className="bg-brand-bg p-4 rounded-2xl flex justify-between items-center text-sm shadow-sm transition-transform hover:scale-[1.01]">
+                                  <span className="font-bold">{name}</span>
+                                  <div className="flex items-center gap-3">
+                                      {waUrl && (
+                                          <a
+                                              href={waUrl}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              title="שליחת תזכורת בוואטסאפ"
+                                              className="text-green-500 hover:text-green-700 font-bold text-[10px] transition-all uppercase"
+                                          >
+                                              תזכורת 💬
+                                          </a>
+                                      )}
+                                      <button onClick={() => handleRemoveAttendee(b.id)} className="text-red-300 hover:text-red-500 font-bold text-[10px] transition-all uppercase">הסרה 🗑</button>
+                                  </div>
+                              </div>
+                            );
+                        })}
                         {!detailsModal.bookings?.length && <p className="text-center py-6 opacity-30 italic text-sm">אין עדיין רשומות לשיעור זה</p>}
                     </div>
                 </div>

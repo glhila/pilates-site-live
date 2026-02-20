@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { getWhatsAppLink } from "@/src/lib/constants";
 
 export const metadata: Metadata = {
   title: "ראשי | עונג של פילאטיס",
@@ -8,11 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  const SERVICE_PHONE = "0526409993"; 
-  const introMessage = encodeURIComponent(
-    "היי! אשמח לקבוע שיעור היכרות בסטודיו 🧘‍♀️✨"
-  );
-  const whatsappLink = `https://wa.me/${SERVICE_PHONE.replace(/\D/g, '').replace(/^0/, '972')}?text=${introMessage}`;
+  const whatsappLink = getWhatsAppLink( "היי! אשמח לקבוע שיעור היכרות בסטודיו 🧘‍♀️✨");
+
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg">
       {/* Editorial hero */}

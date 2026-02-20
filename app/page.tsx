@@ -8,6 +8,11 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
+  const SERVICE_PHONE = "0526409993"; 
+  const introMessage = encodeURIComponent(
+    "היי! אשמח לקבוע שיעור היכרות בסטודיו 🧘‍♀️✨"
+  );
+  const whatsappLink = `https://wa.me/${SERVICE_PHONE.replace(/\D/g, '').replace(/^0/, '972')}?text=${introMessage}`;
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg">
       {/* Editorial hero */}
@@ -56,9 +61,14 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row-reverse gap-6">
-              <Link href="/contact" className="btn-luxury">
+              <a 
+                href={whatsappLink} 
+                target="_blank" 
+                rel="noreferrer" 
+                className="btn-luxury text-center"
+              >
                 קביעת שיעור היכרות
-              </Link>
+              </a>
               <Link
                 href="/classes"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-brand-primary hover:text-brand-accent-text transition-all duration-300"

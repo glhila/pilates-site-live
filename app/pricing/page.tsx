@@ -26,6 +26,7 @@ export default function PricingPage() {
       ],
     },
   ];
+  const SERVICE_PHONE = "0526409993"; 
 
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg text-right" dir="rtl">
@@ -44,11 +45,9 @@ export default function PricingPage() {
           </p>
         </header>
 
-        {/* Pricing Categories */}
         <div className="space-y-32">
           {categories.map((category, idx) => (
             <section key={idx} className="reveal text-right">
-              {/* כותרת קטגוריה - גדולה וברורה בימין */}
               <div className="mb-12">
                 <h2 className="text-3xl md:text-4xl font-serif text-brand-primary mb-2 leading-none">
                   {category.title}
@@ -59,27 +58,47 @@ export default function PricingPage() {
               </div>
 
               <div className="space-y-2">
-                {category.items.map((item, itemIdx) => (
-                  <div
-                    key={itemIdx}
-                    className="group flex items-center justify-between border-b border-brand-stone/40 py-8 transition-all hover:bg-white/20"
-                  >
-                    {/* צד ימין: שם המנוי ופירוט */}
-                    <div className="text-right">
-                      <h3 className="text-xl md:text-2xl font-light tracking-wide text-brand-dark group-hover:text-brand-accent-text transition-colors">
-                        {item.name}
-                      </h3>
-                      <p className="text-xs text-brand-primary/50 uppercase tracking-widest mt-1">
-                        {item.detail}
-                      </p>
-                    </div>
+                {category.items.map((item, itemIdx) => {
+                  // יצירת הודעה מותאמת אישית לכל מסלול
+                  const waMsg = encodeURIComponent(
+                    `היי! אני מתעניינת במסלול "${item.name}" שראיתי באתר, אשמח לפרטים נוספים ✨`
+                  );
+                  const waLink = `https://wa.me/${SERVICE_PHONE.replace(/\D/g, '').replace(/^0/, '972')}?text=${waMsg}`;
 
-                    {/* צד שמאל: מחיר */}
-                    <div className="text-left font-serif text-2xl md:text-3xl text-brand-primary">
-                      {item.price}
+                  return (
+                    <div
+                      key={itemIdx}
+                      className="group flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-brand-stone/40 py-8 transition-all hover:bg-white/20 gap-4 sm:gap-0"
+                    >
+                      {/* צד ימין: שם המנוי ופירוט */}
+                      <div className="text-right">
+                        <h3 className="text-xl md:text-2xl font-light tracking-wide text-brand-dark group-hover:text-brand-accent-text transition-colors">
+                          {item.name}
+                        </h3>
+                        <p className="text-xs text-brand-primary/50 uppercase tracking-widest mt-1">
+                          {item.detail}
+                        </p>
+                      </div>
+
+                      {/* צד שמאל: מחיר וכפתור וואטסאפ */}
+                      <div className="flex items-center gap-6 mr-auto sm:mr-0 w-full sm:w-auto justify-between sm:justify-end">
+                        <div className="text-left font-serif text-2xl md:text-3xl text-brand-primary">
+                          {item.price}
+                        </div>
+                        
+                        <a 
+                          href={waLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-center w-10 h-10 rounded-full border border-brand-stone/30 text-brand-dark hover:bg-brand-dark hover:text-white hover:border-brand-dark transition-all duration-300 shadow-sm"
+                          title="הצטרפות דרך הWhatsApp"
+                        >
+                          <span className="text-lg">💬</span>
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           ))}

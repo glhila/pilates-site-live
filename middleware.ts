@@ -1,14 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { ADMIN_EMAILS } from "@/src/lib/constants";
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   const { sessionClaims } = await auth();
-  
-
-  const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'oneg3gri@gmail.com'].map(email => email.toLowerCase());;
-
   
   
   // שליפת המייל מה-session (מבוסס על הגדרות Clerk)

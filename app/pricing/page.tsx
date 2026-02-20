@@ -59,7 +59,6 @@ export default function PricingPage() {
 
               <div className="space-y-2">
                 {category.items.map((item, itemIdx) => {
-                  // יצירת הודעה מותאמת אישית לכל מסלול
                   const waMsg = encodeURIComponent(
                     `היי! אני מתעניינת במסלול "${item.name}" שראיתי באתר, אשמח לפרטים נוספים ✨`
                   );
@@ -68,10 +67,10 @@ export default function PricingPage() {
                   return (
                     <div
                       key={itemIdx}
-                      className="group flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-brand-stone/40 py-8 transition-all hover:bg-white/20 gap-4 sm:gap-0"
+                      className="group flex items-center justify-between border-b border-brand-stone/40 py-8 transition-all hover:bg-white/20 gap-4"
                     >
                       {/* צד ימין: שם המנוי ופירוט */}
-                      <div className="text-right">
+                      <div className="text-right flex-1">
                         <h3 className="text-xl md:text-2xl font-light tracking-wide text-brand-dark group-hover:text-brand-accent-text transition-colors">
                           {item.name}
                         </h3>
@@ -81,20 +80,22 @@ export default function PricingPage() {
                       </div>
 
                       {/* צד שמאל: מחיר וכפתור וואטסאפ */}
-                      <div className="flex items-center gap-6 mr-auto sm:mr-0 w-full sm:w-auto justify-between sm:justify-end">
-                        <div className="text-left font-serif text-2xl md:text-3xl text-brand-primary">
-                          {item.price}
-                        </div>
-                        
+                      <div className="flex items-center gap-3 md:gap-6 shrink-0">
+                        {/* כפתור וואטסאפ - מוסתר בדסקטופ עד להובר, גלוי תמיד במובייל */}
                         <a 
                           href={waLink}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center justify-center w-10 h-10 rounded-full border border-brand-stone/30 text-brand-dark hover:bg-brand-dark hover:text-white hover:border-brand-dark transition-all duration-300 shadow-sm"
-                          title="הצטרפות דרך הWhatsApp"
+                          className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-100 active:scale-95 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                         >
-                          <span className="text-lg">💬</span>
+                          <span>הצטרפות</span>
+                          <span className="text-xs">💬</span>
                         </a>
+
+                        {/* מחיר */}
+                        <div className="text-left font-serif text-2xl md:text-3xl text-brand-primary min-w-[80px]">
+                          {item.price}
+                        </div>
                       </div>
                     </div>
                   );

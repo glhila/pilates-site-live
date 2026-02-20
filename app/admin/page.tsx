@@ -301,26 +301,6 @@ export default function AdminPage() {
               ניהול מתאמנות
             </button>
           </div>
-
-          <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
-            <button
-              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }}
-              className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
-              aria-label="שבוע קודם"
-            >
-              →
-            </button>
-            <span className="font-bold text-sm min-w-[160px] text-center tabular-nums">
-              {weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}
-            </span>
-            <button
-              onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }}
-              className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold"
-              aria-label="שבוע הבא"
-            >
-              ←
-            </button>
-          </div>
         </header>
 
         {activeTab === 'schedule' ? (
@@ -366,6 +346,17 @@ export default function AdminPage() {
             </div>
 
             <div className="w-full lg:col-span-8">
+                {/* Week navigator — desktop only, above the grid */}
+                <div className="hidden lg:flex justify-center mb-6">
+                  <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
+                    <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע קודם">→</button>
+                    <span className="font-bold text-sm min-w-[200px] text-center tabular-nums">
+                      {weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}
+                    </span>
+                    <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע הבא">←</button>
+                  </div>
+                </div>
+
                 <div className="hidden lg:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
                   <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[12px] opacity-50 font-serif italic font-black tabular-nums">
                     {TIME_SLOTS.map((s, i) => <div key={i} className={s==='break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center'}>{s!=='break' && s}</div>)}
@@ -419,6 +410,17 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex lg:hidden flex-col w-full space-y-8">
+                    {/* Week navigator — mobile, above the date grid */}
+                    <div className="flex justify-center">
+                      <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10 w-full justify-center">
+                        <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע קודם">→</button>
+                        <span className="font-bold text-sm min-w-[160px] text-center tabular-nums">
+                          {weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}
+                        </span>
+                        <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע הבא">←</button>
+                      </div>
+                    </div>
+
                     <div className="flex overflow-x-auto gap-3 pb-4 no-scrollbar px-1">
                         {weekDates.map((date, i) => (
                             <button key={i} onClick={() => setSelectedDateMobile(date)} className={`flex-shrink-0 w-16 h-24 rounded-[2rem] flex flex-col items-center justify-center border transition-all ${date.toDateString() === selectedDateMobile.toDateString() ? 'bg-brand-dark text-white border-brand-dark shadow-xl scale-105' : 'bg-white border-brand-stone/10'}`}>
@@ -704,7 +706,7 @@ export default function AdminPage() {
                             const classDate = new Date(detailsModal.start_time).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric' });
                             const classTime = new Date(detailsModal.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
                             const reminderMsg = encodeURIComponent(
-                              `היי ${name} 🌸\n\nתזכורת לאימון שלך:\n📅 ${classDate} בשעה ${classTime}\n🧘‍♀️ ${detailsModal.name}\n\nאם בסופו של דבר לא תוכלי להגיע - נשמח אם תבטלי את הרישום באתר כדי לפנות את המקום למתאמנת אחרת 🙏\n\nנתראה! 💪`
+                              `היי ${name} 🌸\n\nתזכורת לאימון שלך:\n📅 ${classDate} בשעה ${classTime}\n🧘‍♀️ ${detailsModal.name}\n\nאם בסופו של דבר לא תוכלי להגיע — נשמח אם תבטלי את הרישום באתר כדי לפנות את המקום למתאמנת אחרת 🙏\n\nנתראה! 💪`
                             );
                             const waUrl = phone
                               ? `https://wa.me/${phone.replace(/\D/g, '').replace(/^0/, '972')}?text=${reminderMsg}`

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useAuth, useUser } from "@clerk/nextjs";
-
+import { ADMIN_EMAILS } from "@/src/lib/constants";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -29,7 +29,6 @@ const CLASS_TEMPLATES = [
   "מזרן - Level 1", "מזרן - Level 2", "מזרן - Level 3"
 ];
 
-const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'oneg3gri@gmail.com'];
 const HEALTH_FORM_URL = process.env.NEXT_PUBLIC_HEALTH_FORM_URL || 'https://YOUR_HEALTH_FORM_LINK_HERE';
 
 

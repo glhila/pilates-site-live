@@ -29,7 +29,7 @@ export default function ContactPage() {
           {/* Contact Details Card */}
           <div className="feature-card space-y-12">
             <section>
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-accent-text mb-6">פרטי התקשרות</h2>
+              <h2 className="text-[13px] font-bold uppercase tracking-[0.3em] text-brand-accent-text mb-6">פרטי התקשרות</h2>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <span className="text-xl">📍</span>
@@ -53,8 +53,8 @@ export default function ContactPage() {
                   <span className="text-xl">📧</span>
                   <div>
                     <p className="font-serif text-lg text-brand-primary">כתבי לנו</p>
-                    <a href="mailto:oneg@studio.com" className="font-light text-brand-primary/70 hover:text-brand-accent-text transition-colors">
-                      oneg@studio.com
+                    <a href="mailto:oneg3gri@gmail.com" className="font-light text-brand-primary/70 hover:text-brand-accent-text transition-colors">
+                      oneg3gri@gmail.com
                     </a>
                   </div>
                 </div>
@@ -62,7 +62,7 @@ export default function ContactPage() {
             </section>
 
             <section className="pt-8 border-t border-brand-stone/30">
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-accent-text mb-6">שעות פעילות</h2>
+              <h2 className="text-[13px] font-bold uppercase tracking-[0.3em] text-brand-accent-text mb-6">שעות פעילות</h2>
               <div className="grid grid-cols-2 gap-4 text-sm font-light text-brand-primary/80">
                 <div>
                   <p className="font-bold mb-1">א׳ - ה׳</p>

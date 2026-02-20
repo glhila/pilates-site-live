@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { getWhatsAppLink } from "@/src/lib/constants";
+
 
 export const metadata: Metadata = {
   title: "מחירון ומסלולים | עונג פילאטיס",
@@ -26,7 +28,6 @@ export default function PricingPage() {
       ],
     },
   ];
-  const SERVICE_PHONE = "0526409993"; 
 
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg text-right" dir="rtl">
@@ -59,10 +60,7 @@ export default function PricingPage() {
 
               <div className="space-y-2">
                 {category.items.map((item, itemIdx) => {
-                  const waMsg = encodeURIComponent(
-                    `היי! אני מתעניינת במסלול "${item.name}" שראיתי באתר, אשמח לפרטים נוספים ✨`
-                  );
-                  const waLink = `https://wa.me/${SERVICE_PHONE.replace(/\D/g, '').replace(/^0/, '972')}?text=${waMsg}`;
+                  const waLink = getWhatsAppLink( `היי! אני מתעניינת במסלול "${item.name}" שראיתי באתר, אשמח לפרטים נוספים ✨`);
 
                   return (
                     <div

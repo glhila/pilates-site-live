@@ -3,15 +3,14 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useMemo } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { useAuth, useUser } from "@clerk/nextjs";
-import { ADMIN_EMAILS, DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, EVENING_START, EVENING_END, 
-  CLASS_TEMPLATES, HEALTH_FORM_URL } from "@/src/lib/constants";
-
-// ─── Supabase ─────────────────────────────────────────────────────────────
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-
+import {
+  ADMIN_EMAILS,
+  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, EVENING_START, EVENING_END,
+  CLASS_TEMPLATES,
+  HEALTH_FORM_URL,
+  getAuthenticatedSupabase, getWhatsAppUrlForPhone,
+} from "@/src/lib/constants";
 
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
@@ -47,19 +46,9 @@ export default function AdminPage() {
   const [manualBookingUserId, setManualBookingUserId] = useState("");
 
   // ─── Supabase & data loading ─────────────────────────────────────────────
-  const getAuthenticatedSupabase = async () => {
-    try {
-      const token = await getToken({ template: 'supabase' });
-      if (!token) return null;
-      return createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: `Bearer ${token}` } },
-      });
-    } catch (e) { return null; }
-  };
-
   const loadData = async () => {
     setIsFetching(true);
-    const supabase = await getAuthenticatedSupabase();
+    const supabase = await getAuthenticatedSupabase(getToken);
     if (!supabase) { setIsFetching(false); return; }
     try {
       const { data: cls } = await supabase.from('classes').select('*, bookings!class_id(id, profiles(id, full_name, email, phone))').order('start_time');
@@ -75,7 +64,7 @@ export default function AdminPage() {
   // ─── Handlers: classes / schedule ─────────────────────────────────────────
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = await getAuthenticatedSupabase();
+    const supabase = await getAuthenticatedSupabase(getToken);
     if (!supabase) return;
 
     const fullDateStr = `${classFormData.date}T${classFormData.hour}:${classFormData.minute}:00`;
@@ -103,7 +92,7 @@ export default function AdminPage() {
   const processDeletion = async (type: 'single' | 'future') => {
     if (!deleteModal) return;
     const { classItem } = deleteModal;
-    const supabase = await getAuthenticatedSupabase();
+    const supabase = await getAuthenticatedSupabase(getToken);
     let query = supabase!.from('classes').delete();
     if (type === 'single' || !classItem.recurring_id) {
         query = query.eq('id', classItem.id);
@@ -117,7 +106,7 @@ export default function AdminPage() {
 
   const handleManualBooking = async () => {
     if (!manualBookingUserId || !detailsModal) return;
-    const supabase = await getAuthenticatedSupabase();
+    const supabase = await getAuthenticatedSupabase(getToken);
     const selectedUser = profiles.find(p => p.id === manualBookingUserId);
     
     // בדיקת מכסה למנהלת (לצורך התראה בלבד)
@@ -161,7 +150,7 @@ export default function AdminPage() {
 
   const handleRemoveAttendee = async (bookingId: string) => {
     if (!confirm("להסיר מהשיעור?")) return;
-    const supabase = await getAuthenticatedSupabase();
+    const supabase = await getAuthenticatedSupabase(getToken);
     await supabase?.from('bookings').delete().eq('id', bookingId);
     setDetailsModal(null);
     loadData();
@@ -170,7 +159,7 @@ export default function AdminPage() {
   // ─── Handlers: users / trainees ──────────────────────────────────────────
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = await getAuthenticatedSupabase();
+    const supabase = await getAuthenticatedSupabase(getToken);
     if (!supabase) return;
 
     // התאריך נקבע ישירות בטופס — אין צורך בחישוב אוטומטי כאן
@@ -214,17 +203,15 @@ export default function AdminPage() {
     return `mailto:${email}?subject=${subject}&body=${body}`;
   };
 
-  const getWhatsAppUrl = (phone: string, name: string) => {
-    const normalized = phone.replace(/\D/g, '').replace(/^0/, '972');
-    const message = encodeURIComponent(
+  const getWhatsAppUrl = (phone: string, name: string) =>
+    getWhatsAppUrlForPhone(
+      phone,
       `היי ${name} 🌸\n\nברוכה הבאה ל-עונג של פילאטיס!\n\nלפני האימון הראשון, נבקש ממך למלא הצהרת בריאות קצרה - זה לוקח רק דקה ✨\n\n👉 ${HEALTH_FORM_URL}\n\nמחכים לראותך! 🤍`
     );
-    return `https://wa.me/${normalized}?text=${message}`;
-  };
 
   const handleDeleteProfile = async (id: string) => {
     if (!confirm("למחוק מתאמנת לצמיתות?")) return;
-    const supabase = await getAuthenticatedSupabase();
+    const supabase = await getAuthenticatedSupabase(getToken);
     await supabase?.from('profiles').delete().eq('id', id);
     loadData();
   };
@@ -589,7 +576,7 @@ export default function AdminPage() {
                                             <div className="flex items-center gap-2 group-hover:scale-105 transition-transform origin-right">
                                                 <span className="tabular-nums text-xs font-medium text-brand-primary/80">{p.phone}</span>
                                                 <a 
-                                                    href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} 
+                                                    href={getWhatsAppUrlForPhone(p.phone, '')} 
                                                     target="_blank" 
                                                     rel="noreferrer"
                                                     className="w-7 h-7 flex items-center justify-center rounded-full border border-green-100 bg-green-50 text-green-600 hover:bg-green-100 shadow-sm"
@@ -645,7 +632,7 @@ export default function AdminPage() {
                                   {p.phone && (
                                       <div className="flex items-center gap-2 mt-3">
                                           <span className="text-xs font-bold tabular-nums opacity-60">{p.phone}</span>
-                                          <a href={`https://wa.me/${p.phone.replace(/\D/g, '').replace(/^0/, '972')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-100 active:scale-95 transition-all">
+                                          <a href={getWhatsAppUrlForPhone(p.phone, '')} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-100 active:scale-95 transition-all">
                                               <span>WhatsApp</span><span className="text-xs">💬</span>
                                           </a>
                                       </div>
@@ -697,12 +684,7 @@ export default function AdminPage() {
                             const name = b.profiles?.full_name;
                             const classDate = new Date(detailsModal.start_time).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric' });
                             const classTime = new Date(detailsModal.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-                            const reminderMsg = encodeURIComponent(
-                              `היי ${name} 🌸\n\nתזכורת לאימון שלך:\n📅 ${classDate} בשעה ${classTime}\n🧘‍♀️ ${detailsModal.name}\n\nאם בסופו של דבר לא תוכלי להגיע — נשמח אם תבטלי את הרישום באתר כדי לפנות את המקום למתאמנת אחרת 🙏\n\nנתראה! 💪`
-                            );
-                            const waUrl = phone
-                              ? `https://wa.me/${phone.replace(/\D/g, '').replace(/^0/, '972')}?text=${reminderMsg}`
-                              : null;
+                            const waUrl = phone ? getWhatsAppUrlForPhone(phone, `היי ${name} 🌸\n\nתזכורת לאימון שלך:\n📅 ${classDate} בשעה ${classTime}\n🧘‍♀️ ${detailsModal.name}\n\nאם בסופו של דבר לא תוכלי להגיע — נשמח אם תבטלי את הרישום באתר כדי לפנות את המקום למתאמנת אחרת 🙏\n\nנתראה! 💪`) : null;
                             return (
                               <div key={b.id} className="bg-brand-bg p-4 rounded-2xl flex justify-between items-center text-sm shadow-sm transition-transform hover:scale-[1.01]">
                                   <span className="font-bold">{name}</span>

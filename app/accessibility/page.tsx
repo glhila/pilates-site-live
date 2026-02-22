@@ -1,24 +1,28 @@
 import { Metadata } from "next";
 
+// ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: "הצהרת נגישות | עונג של פילאטיס",
   description: "הצהרת הנגישות של סטודיו עונג של פילאטיס - פירוט התאמות הנגישות שבוצעו באתר לטובת גלישה נוחה לכלל האוכלוסייה.",
 };
 
 export default function AccessibilityPage() {
-  const lastUpdated = "פברואר 2026"; // עדכני לתאריך הנוכחי
+  // ─── Derived ────────────────────────────────────────────────────────────
+  const lastUpdated = "פברואר 2026";
 
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg pb-20">
       <div className="container mx-auto px-6 py-16 max-w-4xl">
-        
+
+        {/* ─── Header ─────────────────────────────────────────────────────── */}
         <header className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-brand-dark mb-4">הצהרת נגישות</h1>
           <p className="text-brand-taupe italic">אנחנו מאמינים בשוויון הזדמנויות ובנגישות דיגיטלית לכולן</p>
         </header>
 
+        {/* ─── Content: intro, status, adjustments, contact, last updated ─── */}
         <article className="prose prose-stone lg:prose-lg mx-auto text-brand-dark leading-relaxed space-y-8 text-right">
-          
+
           <section>
             <h2 className="text-2xl font-bold mb-4 border-b border-brand-stone pb-2">מבוא</h2>
             <p>

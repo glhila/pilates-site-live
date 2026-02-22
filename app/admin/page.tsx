@@ -7,61 +7,63 @@ import { createClient } from "@supabase/supabase-js";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { ADMIN_EMAILS } from "@/src/lib/constants";
 
+// ─── Supabase ─────────────────────────────────────────────────────────────
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-// הגדרות עיצוב ולוח שעות
+// ─── Schedule / calendar layout ───────────────────────────────────────────
 const HOUR_HEIGHT = 100;
 const MORNING_START = 7;
 const MORNING_END = 13;
 const EVENING_START = 16;
 const EVENING_END = 22;
 const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
-
 const TIME_SLOTS = [
   '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
   'break',
   '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
 ];
 
+// ─── Class types & external links ──────────────────────────────────────────
 const CLASS_TEMPLATES = [
   "מכשירים - Level 1", "מכשירים - Level 2", "מכשירים - Level 3",
   "מזרן - Level 1", "מזרן - Level 2", "מזרן - Level 3"
 ];
-
 const HEALTH_FORM_URL = process.env.NEXT_PUBLIC_HEALTH_FORM_URL || 'https://docs.google.com/forms/d/e/1FAIpQLSfyhdYaC3Sw4afJU-IXjoEbhgNr62w3yeW5seL31i9md8YPrg/viewform?pli=1';
 
 
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
-  
+
+  // ─── State: tab & data ──────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<'schedule' | 'users'>('schedule');
   const [classes, setClasses] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
-  
-  // ניהול תאריכים
+
+  // ─── State: date navigation (schedule view) ───────────────────────────────
   const [viewDate, setViewDate] = useState(new Date());
   const [selectedDateMobile, setSelectedDateMobile] = useState(new Date());
 
-  // מודאלים
-  const [deleteModal, setDeleteModal] = useState<{show: boolean, classItem: any} | null>(null);
+  // ─── State: modals ───────────────────────────────────────────────────────
+  const [deleteModal, setDeleteModal] = useState<{ show: boolean; classItem: any } | null>(null);
   const [detailsModal, setDetailsModal] = useState<any | null>(null);
-  const [welcomeModal, setWelcomeModal] = useState<{name: string, email: string, phone: string} | null>(null);
+  const [welcomeModal, setWelcomeModal] = useState<{ name: string; email: string; phone: string } | null>(null);
 
-  // טפסי הוספה
+  // ─── State: add-class form ────────────────────────────────────────────────
   const [classFormData, setClassFormData] = useState({
     name: CLASS_TEMPLATES[0], date: '', hour: '08', minute: '00', max_capacity: 6, is_recurring: false
   });
 
+  // ─── State: user/trainee form & manual booking ────────────────────────────
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userFormData, setUserFormData] = useState({
     full_name: '', email: '', phone: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: ''
   });
-
   const [manualBookingUserId, setManualBookingUserId] = useState("");
 
+  // ─── Supabase & data loading ─────────────────────────────────────────────
   const getAuthenticatedSupabase = async () => {
     try {
       const token = await getToken({ template: 'supabase' });
@@ -87,7 +89,7 @@ export default function AdminPage() {
 
   useEffect(() => { if (isLoaded && user) loadData(); }, [activeTab, isLoaded, user]);
 
-  // --- לוגיקת שיעורים ---
+  // ─── Handlers: classes / schedule ─────────────────────────────────────────
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = await getAuthenticatedSupabase();
@@ -182,7 +184,7 @@ export default function AdminPage() {
     loadData();
   };
 
-  // --- לוגיקת מתאמנות ---
+  // ─── Handlers: users / trainees ──────────────────────────────────────────
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = await getAuthenticatedSupabase();
@@ -244,6 +246,7 @@ export default function AdminPage() {
     loadData();
   };
 
+  // ─── Computed: week dates for calendar ────────────────────────────────────
   const weekDates = useMemo(() => {
     const start = new Date(viewDate);
     start.setDate(viewDate.getDate() - viewDate.getDay());
@@ -252,6 +255,7 @@ export default function AdminPage() {
     });
   }, [viewDate]);
 
+  // ─── Guard: admin-only access ─────────────────────────────────────────────
   if (isLoaded && !ADMIN_EMAILS.includes(user?.primaryEmailAddress?.emailAddress || '')) {
     return <div className="min-h-screen bg-brand-bg flex items-center justify-center font-bold text-red-500">אין לך הרשאת גישה לדף זה.</div>;
   }
@@ -263,8 +267,8 @@ export default function AdminPage() {
       dir="rtl"
     >
       <div className="container mx-auto px-6 py-20 max-w-6xl">
-        
-        {/* Navigation Header */}
+
+        {/* ─── Header: title + tab switcher (Schedule / Users) ─────────────── */}
         <header className="mb-12 rounded-[3rem] bg-white p-8 shadow-sm border border-brand-stone/20 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-4 text-center lg:text-right">
             <span className="mb-2 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
@@ -302,9 +306,11 @@ export default function AdminPage() {
           </div>
         </header>
 
+        {/* ─── Tab: Schedule ───────────────────────────────────────────────── */}
         {activeTab === 'schedule' ? (
           <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-10">
-            
+
+            {/* Schedule sidebar: add-class form */}
             <div className="w-full lg:col-span-4 bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit lg:sticky lg:top-10 z-20">
               <h2 className="text-2xl font-bold mb-6 sm:mb-10 italic">הוספת שיעור</h2>
               <form onSubmit={handleCreateClass} className="space-y-6">
@@ -344,8 +350,9 @@ export default function AdminPage() {
               </form>
             </div>
 
+            {/* Schedule main: week navigator + desktop grid + mobile list */}
             <div className="w-full lg:col-span-8">
-                {/* Week navigator — desktop only, above the grid */}
+                {/* Week navigator — desktop */}
                 <div className="hidden lg:flex justify-center mb-6">
                   <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
                     <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע קודם">→</button>
@@ -356,6 +363,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* Desktop: 7-day grid with time slots */}
                 <div className="hidden lg:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
                   <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[12px] opacity-50 font-serif italic font-black tabular-nums">
                     {TIME_SLOTS.map((s, i) => <div key={i} className={s==='break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center'}>{s!=='break' && s}</div>)}
@@ -408,8 +416,9 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* Mobile: week nav + date pills + class list by day */}
                 <div className="flex lg:hidden flex-col w-full space-y-8">
-                    {/* Week navigator — mobile, above the date grid */}
+                    {/* Week navigator — mobile */}
                     <div className="flex justify-center">
                       <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10 w-full justify-center">
                         <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע קודם">→</button>
@@ -461,11 +470,10 @@ export default function AdminPage() {
             </div>
           </div>
         ) : (
-          
-          /* Users Management Section */
+          /* ─── Tab: Users (trainees) ──────────────────────────────────────── */
           <div className="grid lg:grid-cols-12 gap-10">
 
-            {/* ── טופס הוספה / עריכת מתאמנת ── */}
+            {/* Users sidebar: add/edit trainee form */}
             <div className="lg:col-span-4 bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-brand-stone/20 h-fit lg:sticky lg:top-10 z-20">
               <h2 className="text-2xl font-bold mb-10 italic">{editingUserId ? 'עריכת מתאמנת' : 'מתאמנת חדשה'}</h2>
               <form onSubmit={handleSaveUser} className="space-y-6">
@@ -562,9 +570,10 @@ export default function AdminPage() {
               </form>
             </div>
 
+            {/* Users main: desktop table + mobile cards */}
             <div className="lg:col-span-8 space-y-6">
-                
-                {/* Desktop Users Table */}
+
+                {/* Desktop: users table */}
                 <section className="hidden md:block">
                   <div className="mb-4 flex items-baseline justify-between">
                     <h2 className="text-2xl font-serif text-brand-primary">מתאמנות רשומות</h2>
@@ -642,7 +651,7 @@ export default function AdminPage() {
                   </div>
                 </section>
 
-                {/* Mobile Users Cards */}
+                {/* Mobile: user cards */}
                 <div className="grid md:hidden gap-4 pb-20">
                   {profiles.map(p => (
                       <div key={p.id} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 shadow-sm relative">
@@ -685,7 +694,8 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Modal: Class Details & Manual Booking */}
+        {/* ─── Modals ─────────────────────────────────────────────────────── */}
+        {/* Modal: class details + attendees + manual booking */}
         {detailsModal && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-md">
             <div className="bg-white p-10 rounded-[3.5rem] max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200">
@@ -746,7 +756,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Modal: Smart Deletion */}
+        {/* Modal: delete class (single vs future) */}
         {deleteModal && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[110] p-4 backdrop-blur-md">
             <div className="bg-white p-12 rounded-[4rem] max-w-md w-full shadow-2xl">
@@ -761,7 +771,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Modal: Welcome — שליחת הצהרת בריאות למתאמנת חדשה */}
+        {/* Modal: welcome new trainee — send health form (email/WhatsApp) */}
         {welcomeModal && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[120] p-4 backdrop-blur-md">
             <div className="bg-white p-12 rounded-[4rem] max-w-md w-full shadow-2xl">

@@ -6,26 +6,25 @@ import { useUser, useAuth } from "@clerk/nextjs";
 import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// קבועים להגדרות הלוח
+// ─── Supabase ─────────────────────────────────────────────────────────────
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
+// ─── Schedule / calendar layout ───────────────────────────────────────────
 const CANCELLATION_WINDOW_HOURS = 4;
 const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
-
-// הגדרות לוח השעות
-const HOUR_HEIGHT = 100; // גובה שעה בפיקסלים
+const HOUR_HEIGHT = 100;
 const MORNING_START = 7;
 const MORNING_END = 13;
 const EVENING_START = 16;
 const EVENING_END = 22;
-
 const TIME_SLOTS = [
   '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-  'break', // הפסקת צהריים
+  'break',
   '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
 ];
 
-// פונקציית עזר לבדיקה אם שני תאריכים הם באותו שבוע (ראשון-שבת)
+// ─── Helpers ──────────────────────────────────────────────────────────────
 const isSameWeek = (date1: Date, date2: Date) => {
   const d1 = new Date(date1);
   const d2 = new Date(date2);
@@ -35,45 +34,40 @@ const isSameWeek = (date1: Date, date2: Date) => {
   const week2 = new Date(d2.setDate(diff2)).toDateString();
   return week1 === week2;
 };
-
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
 const formatTime = (dateStr: string) =>
   new Date(dateStr).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
+// ─── Types ───────────────────────────────────────────────────────────────
 type ActiveTab = 'schedule' | 'bookings';
 type BookingsFilter = 'all' | 'upcoming' | 'past';
-
-// Modal system types
 type ModalAction = { label: string; onClick: () => void; style?: 'primary' | 'danger' | 'ghost' };
-type ModalConfig = {
-  title: string;
-  body: string;
-  emoji?: string;
-  actions: ModalAction[];
-};
+type ModalConfig = { title: string; body: string; emoji?: string; actions: ModalAction[] };
 
 export default function UserPortal() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
-  
+
+  // ─── State: data ────────────────────────────────────────────────────────
   const [profile, setProfile] = useState<any>(null);
   const [classes, setClasses] = useState<any[]>([]);
   const [userBookings, setUserBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
+  // ─── State: UI (dates, tabs, modal) ─────────────────────────────────────
   const [viewDate, setViewDate] = useState(new Date());
   const [selectedDateMobile, setSelectedDateMobile] = useState(new Date());
   const [activeTab, setActiveTab] = useState<ActiveTab>('schedule');
   const [bookingsFilter, setBookingsFilter] = useState<BookingsFilter>('upcoming');
   const [modal, setModal] = useState<ModalConfig | null>(null);
 
-  // Helper: show a simple info modal (replaces alert)
+  // ─── Helpers: modal ─────────────────────────────────────────────────────
   const showModal = (title: string, body: string, emoji?: string) => {
     setModal({ title, body, emoji, actions: [{ label: 'הבנתי', onClick: () => setModal(null), style: 'primary' }] });
   };
 
+  // ─── Supabase & data loading ─────────────────────────────────────────────
   const getAuthenticatedSupabase = async () => {
     try {
       const token = await getToken({ template: 'supabase' });
@@ -127,10 +121,9 @@ export default function UserPortal() {
     }
   };
 
-  useEffect(() => {
-    if (isLoaded && user) syncAndFetchData();
-  }, [isLoaded, user]);
+  useEffect(() => { if (isLoaded && user) syncAndFetchData(); }, [isLoaded, user]);
 
+  // ─── Handlers: booking & cancel ─────────────────────────────────────────
   const handleBooking = async (classItem: any) => {
     const supabaseClient = await getAuthenticatedSupabase();
     if (!supabaseClient || !profile) return showModal('שגיאת התחברות', 'משהו השתבש, נסי לרענן את הדף.', '🔄');
@@ -258,6 +251,7 @@ export default function UserPortal() {
     });
   };
 
+  // ─── Computed: week dates & filtered bookings ────────────────────────────
   const weekDates = useMemo(() => {
     const start = new Date(viewDate);
     start.setDate(viewDate.getDate() - viewDate.getDay());
@@ -287,6 +281,7 @@ export default function UserPortal() {
       });
   }, [userBookings, bookingsFilter]);
 
+  // ─── Guard: loading ─────────────────────────────────────────────────────
   if (!isLoaded || loading) return (
     <div className="min-h-screen bg-brand-bg flex items-center justify-center font-bold text-brand-dark/20 italic">
       טוען נתונים...
@@ -300,8 +295,8 @@ export default function UserPortal() {
       dir="rtl"
     >
       <div className="container mx-auto px-6 py-20 max-w-6xl">
-        
-        {/* Header Section */}
+
+        {/* ─── Header: greeting + membership & punch card info ─────────────── */}
         <header className="flex flex-col lg:flex-row justify-between items-center mb-12 gap-8 bg-white p-8 rounded-[3rem] shadow-sm border border-brand-stone/20">
           <div className="space-y-4 text-center lg:text-right">
             <span className="mb-2 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
@@ -343,7 +338,7 @@ export default function UserPortal() {
 
         </header>
 
-        {/* Tab Navigation */}
+        {/* ─── Tab nav: Schedule | My Bookings + week navigator ───────────── */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
           <button
             onClick={() => setActiveTab('schedule')}
@@ -398,10 +393,10 @@ export default function UserPortal() {
           )}
         </div>
 
-        {/* ── TAB: Schedule ── */}
+        {/* ─── Tab: Schedule (desktop grid + mobile list) ─────────────────── */}
         {activeTab === 'schedule' && (
           <>
-            {/* Desktop View: Interactive Time Grid */}
+            {/* Desktop: time grid */}
             <section className="hidden md:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
               
               {/* Time Sidebar */}
@@ -460,7 +455,7 @@ export default function UserPortal() {
               </div>
             </section>
 
-            {/* Mobile View: Selection + List */}
+            {/* Mobile: date pills + class list for selected day */}
             <section className="block md:hidden">
               <div className="flex overflow-x-auto gap-3 pb-8 no-scrollbar px-1">
                 {weekDates.map((date, i) => {
@@ -498,10 +493,10 @@ export default function UserPortal() {
           </>
         )}
 
-        {/* ── TAB: My Bookings ── */}
+        {/* ─── Tab: My Bookings (filter + list) ────────────────────────────── */}
         {activeTab === 'bookings' && (
           <section>
-            {/* Filter pills */}
+            {/* Filter: upcoming | past | all */}
             <div className="flex gap-2 mb-6">
               {([
                 { key: 'upcoming', label: 'קרובים' },
@@ -598,7 +593,7 @@ export default function UserPortal() {
 
       </div>
 
-      {/* Modal */}
+      {/* ─── Modal: confirmations & messages ─────────────────────────────── */}
       {modal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[110] p-4 backdrop-blur-md" onClick={() => setModal(null)}>
           <div className="bg-white p-12 rounded-[4rem] max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -631,6 +626,7 @@ export default function UserPortal() {
   );
 }
 
+// ─── Sub-component: class card (schedule cell / mobile row) ─────────────────
 function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
   const isBooked = !!booking;
   const count = c.bookings ? c.bookings.length : 0;

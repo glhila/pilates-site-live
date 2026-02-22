@@ -29,7 +29,7 @@ const CLASS_TEMPLATES = [
   "מזרן - Level 1", "מזרן - Level 2", "מזרן - Level 3"
 ];
 
-const HEALTH_FORM_URL = process.env.NEXT_PUBLIC_HEALTH_FORM_URL || 'https://YOUR_HEALTH_FORM_LINK_HERE';
+const HEALTH_FORM_URL = process.env.NEXT_PUBLIC_HEALTH_FORM_URL || 'https://docs.google.com/forms/d/e/1FAIpQLSfyhdYaC3Sw4afJU-IXjoEbhgNr62w3yeW5seL31i9md8YPrg/viewform?pli=1';
 
 
 export default function AdminPage() {

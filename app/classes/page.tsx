@@ -1,13 +1,14 @@
 import { Metadata } from "next";
 import Link from "next/link";
 
+// ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: "מערכת שעות ושיעורים | עונג פילאטיס",
   description: "מערכת שבועית ומגוון שיעורי פילאטיס מכשירים: רפורמר, קדילאק, שיעורי שיקום ופילאטיס לנשים בהריון.",
 };
 
+// ─── Data: weekly schedule (static) ────────────────────────────────────────
 const WEEKDAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי"];
-
 const SCHEDULE = [
   { day: "ראשון", slots: [{ time: "09:00", name: "רפורמר" }, { time: "10:30", name: "קדילאק" }, { time: "18:00", name: "רפורמר" }] },
   { day: "שני", slots: [{ time: "07:30", name: "רפורמר" }, { time: "19:00", name: "שיקומי" }] },
@@ -17,6 +18,7 @@ const SCHEDULE = [
   { day: "שישי", slots: [{ time: "08:00", name: "רפורמר" }, { time: "09:30", name: "שיקומי" }] },
 ];
 
+// ─── Helper: build schedule lookup for table ───────────────────────────────
 function buildScheduleTable() {
   const byDay: Record<string, Record<string, string>> = {};
   const timeSet = new Set<string>();
@@ -31,6 +33,7 @@ function buildScheduleTable() {
   return { byDay, times };
 }
 
+// ─── Data: lesson types (for cards) ───────────────────────────────────────
 const LESSONS = [
   { title: "פילאטיס רפורמר", desc: "השיעור הקלאסי על המכשיר הפופולרי ביותר. עבודה על כוח, גמישות ויציבה.", id: "reformer" },
   { title: "שיעורי קדילאק (Tower)", desc: "עבודה אינטנסיבית יותר עם קפיצים גבוהים לשיפור טווחי תנועה.", id: "cadillac" },
@@ -44,8 +47,8 @@ export default function ClassesPage() {
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg">
       <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
-        
-        {/* Header Section */}
+
+        {/* ─── Header ─────────────────────────────────────────────────────── */}
         <header className="mb-20 text-center">
           <span className="mb-4 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
             Our Schedule • Time for You
@@ -58,7 +61,7 @@ export default function ClassesPage() {
           </p>
         </header>
 
-        {/* Schedule Table Section */}
+        {/* ─── Schedule table (by day × time) ─────────────────────────────── */}
         <section className="mb-32">
           <div className="relative overflow-hidden rounded-[2.5rem] border border-brand-stone/30 bg-white/30 backdrop-blur-sm shadow-[0_20px_50px_rgba(62,69,55,0.05)]">
             <div className="overflow-x-auto">
@@ -104,7 +107,7 @@ export default function ClassesPage() {
           </p>
         </section>
 
-        {/* Lesson Types Section */}
+        {/* ─── Lesson types (cards + link to contact) ───────────────────────── */}
         <section id="lesson-types">
           <div className="mb-16 text-center">
             <h2 className="text-4xl font-serif text-brand-primary mb-4">סוגי השיעורים</h2>

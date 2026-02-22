@@ -4,27 +4,11 @@ export const dynamic = 'force-dynamic';
 
 import { useUser, useAuth } from "@clerk/nextjs";
 import { useEffect, useState, useMemo } from "react";
-import { createClient } from "@supabase/supabase-js";
-import { DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, EVENING_START, EVENING_END, CANCELLATION_WINDOW_HOURS } from "@/src/lib/constants";
-
-// ─── Supabase ─────────────────────────────────────────────────────────────
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────
-const isSameWeek = (date1: Date, date2: Date) => {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
-  const diff1 = d1.getDate() - d1.getDay();
-  const diff2 = d2.getDate() - d2.getDay();
-  const week1 = new Date(d1.setDate(diff1)).toDateString();
-  const week2 = new Date(d2.setDate(diff2)).toDateString();
-  return week1 === week2;
-};
-const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-const formatTime = (dateStr: string) =>
-  new Date(dateStr).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+import {
+  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, EVENING_START, EVENING_END, CANCELLATION_WINDOW_HOURS,
+  getAuthenticatedSupabase,
+  formatDate, formatTime, isSameWeek,
+} from "@/src/lib/constants";
 
 // ─── Types ───────────────────────────────────────────────────────────────
 type ActiveTab = 'schedule' | 'bookings';
@@ -55,21 +39,8 @@ export default function UserPortal() {
   };
 
   // ─── Supabase & data loading ─────────────────────────────────────────────
-  const getAuthenticatedSupabase = async () => {
-    try {
-      const token = await getToken({ template: 'supabase' });
-      if (!token) return null;
-      return createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: `Bearer ${token}` } },
-      });
-    } catch (e) {
-      console.error("Auth error:", e);
-      return null;
-    }
-  };
-
   const syncAndFetchData = async () => {
-    const supabaseClient = await getAuthenticatedSupabase();
+    const supabaseClient = await getAuthenticatedSupabase(getToken);
     if (!supabaseClient || !user) {
         setLoading(false);
         return;
@@ -112,7 +83,7 @@ export default function UserPortal() {
 
   // ─── Handlers: booking & cancel ─────────────────────────────────────────
   const handleBooking = async (classItem: any) => {
-    const supabaseClient = await getAuthenticatedSupabase();
+    const supabaseClient = await getAuthenticatedSupabase(getToken);
     if (!supabaseClient || !profile) return showModal('שגיאת התחברות', 'משהו השתבש, נסי לרענן את הדף.', '🔄');
     if (!profile.is_approved) return showModal('ממתין לאישור', 'החשבון שלך עדיין ממתין לאישור. נחזור אליך בהקדם 🌿');
 
@@ -170,7 +141,7 @@ export default function UserPortal() {
   };
 
   const handleCancel = async (bookingId: string, classDate: string, paymentSource: string) => {
-    const supabaseClient = await getAuthenticatedSupabase();
+    const supabaseClient = await getAuthenticatedSupabase(getToken);
     if (!supabaseClient) return;
 
     const hoursDiff = (new Date(classDate).getTime() - new Date().getTime()) / (1000 * 60 * 60);

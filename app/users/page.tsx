@@ -5,24 +5,11 @@ export const dynamic = 'force-dynamic';
 import { useUser, useAuth } from "@clerk/nextjs";
 import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, EVENING_START, EVENING_END, CANCELLATION_WINDOW_HOURS } from "@/src/lib/constants";
 
 // ─── Supabase ─────────────────────────────────────────────────────────────
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-
-// ─── Schedule / calendar layout ───────────────────────────────────────────
-const CANCELLATION_WINDOW_HOURS = 4;
-const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
-const HOUR_HEIGHT = 100;
-const MORNING_START = 7;
-const MORNING_END = 13;
-const EVENING_START = 16;
-const EVENING_END = 22;
-const TIME_SLOTS = [
-  '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-  'break',
-  '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 const isSameWeek = (date1: Date, date2: Date) => {

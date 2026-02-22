@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 
+// ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: "אודות הסטודיו | עונג של פילאטיס",
   description: "הכירו את הצוות והחזון של סטודיו פילאטיס מכשירים המקצועי ביותר בכפר סבא.",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <main id="main-content" className="container mx-auto px-4 py-16">
+      {/* ─── Story + about ─────────────────────────────────────────────────── */}
       <h1 className="text-4xl font-bold mb-8 text-brand-dark">הסיפור שלנו</h1>
       <div className="prose lg:prose-xl text-brand-dark/80 leading-relaxed">
         <p className="mb-6">

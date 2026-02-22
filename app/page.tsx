@@ -3,17 +3,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { getWhatsAppLink } from "@/src/lib/constants";
 
+// ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: "ראשי | עונג של פילאטיס",
   description: "סטודיו בוטיק לפילאטיס מכשירים באווירה אינטימית ויוקרתית.",
 };
 
 export default function Home() {
-  const whatsappLink = getWhatsAppLink( "היי! אשמח לקבוע שיעור היכרות בסטודיו 🧘‍♀️✨");
+  // ─── Derived ────────────────────────────────────────────────────────────
+  const whatsappLink = getWhatsAppLink("היי! אשמח לקבוע שיעור היכרות בסטודיו 🧘‍♀️✨");
 
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg">
-      {/* Editorial hero */}
+      {/* ─── Hero: image + CTA ───────────────────────────────────────────── */}
       <section className="relative min-h-[90vh] flex items-center px-6 py-20 overflow-hidden">
         <div className="container mx-auto grid lg:grid-cols-2 gap-16 items-center">
           
@@ -79,7 +81,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Social proof strip - מעוצב כפס מגזיני נקי */}
+      {/* ─── Social proof strip ───────────────────────────────────────────── */}
       <section className="border-y border-brand-stone/30 bg-white/20 backdrop-blur-sm px-6 py-10">
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-around gap-8 text-center">
           <div className="space-y-1">
@@ -99,7 +101,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Intro section with card */}
+      {/* ─── Intro + link to About ────────────────────────────────────────── */}
       <section className="py-24 px-6 bg-brand-bg-soft/30">
         <div className="container mx-auto max-w-4xl">
           <div className="feature-card text-center space-y-8">

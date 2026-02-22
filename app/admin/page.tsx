@@ -5,31 +5,12 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useAuth, useUser } from "@clerk/nextjs";
-import { ADMIN_EMAILS } from "@/src/lib/constants";
+import { ADMIN_EMAILS, DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, EVENING_START, EVENING_END, 
+  CLASS_TEMPLATES, HEALTH_FORM_URL } from "@/src/lib/constants";
 
 // ─── Supabase ─────────────────────────────────────────────────────────────
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-
-// ─── Schedule / calendar layout ───────────────────────────────────────────
-const HOUR_HEIGHT = 100;
-const MORNING_START = 7;
-const MORNING_END = 13;
-const EVENING_START = 16;
-const EVENING_END = 22;
-const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
-const TIME_SLOTS = [
-  '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-  'break',
-  '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
-];
-
-// ─── Class types & external links ──────────────────────────────────────────
-const CLASS_TEMPLATES = [
-  "מכשירים - Level 1", "מכשירים - Level 2", "מכשירים - Level 3",
-  "מזרן - Level 1", "מזרן - Level 2", "מזרן - Level 3"
-];
-const HEALTH_FORM_URL = process.env.NEXT_PUBLIC_HEALTH_FORM_URL || 'https://docs.google.com/forms/d/e/1FAIpQLSfyhdYaC3Sw4afJU-IXjoEbhgNr62w3yeW5seL31i9md8YPrg/viewform?pli=1';
 
 
 export default function AdminPage() {
@@ -52,7 +33,9 @@ export default function AdminPage() {
   const [welcomeModal, setWelcomeModal] = useState<{ name: string; email: string; phone: string } | null>(null);
 
   // ─── State: add-class form ────────────────────────────────────────────────
-  const [classFormData, setClassFormData] = useState({
+  const [classFormData, setClassFormData] = useState<{
+    name: string; date: string; hour: string; minute: string; max_capacity: number; is_recurring: boolean;
+  }>({
     name: CLASS_TEMPLATES[0], date: '', hour: '08', minute: '00', max_capacity: 6, is_recurring: false
   });
 
@@ -513,7 +496,7 @@ export default function AdminPage() {
                           d.setMonth(d.getMonth() + 2);
                           updates.punch_card_expiry = d.toISOString().split('T')[0];
                         }
-                        // ניקוי תוקף אם הניקובים归零
+                        // ניקוי תוקף אם הניקובים
                         if (newPunches === 0) updates.punch_card_expiry = '';
                         setUserFormData({ ...userFormData, ...updates });
                       }}

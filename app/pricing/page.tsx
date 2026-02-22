@@ -2,14 +2,14 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { getWhatsAppLink } from "@/src/lib/constants";
 
-
+// ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: "מחירון ומסלולים | עונג פילאטיס",
   description: "מגוון אפשרויות למנויים וכרטיסיות בסטודיו עונג פילאטיס. השקעה בגוף ובנפש באווירה יוקרתית.",
 };
 
-export default function PricingPage() {
-  const categories = [
+// ─── Data: pricing categories ─────────────────────────────────────────────
+const PRICING_CATEGORIES = [
     {
       title: "מנויים חודשיים",
       subtitle: "התמדה היא המפתח לשינוי אמיתי",
@@ -29,11 +29,12 @@ export default function PricingPage() {
     },
   ];
 
+export default function PricingPage() {
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg text-right" dir="rtl">
       <div className="container mx-auto px-6 py-20 max-w-3xl">
-        
-        {/* Header - מרכוז רק כאן למעלה */}
+
+        {/* ─── Header ─────────────────────────────────────────────────────── */}
         <header className="mb-24 text-center">
           <span className="mb-4 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
             Invest in Yourself • Balance & Flow
@@ -46,8 +47,9 @@ export default function PricingPage() {
           </p>
         </header>
 
+        {/* ─── Pricing categories (monthly + punch cards) ───────────────────── */}
         <div className="space-y-32">
-          {categories.map((category, idx) => (
+          {PRICING_CATEGORIES.map((category, idx) => (
             <section key={idx} className="reveal text-right">
               <div className="mb-12">
                 <h2 className="text-3xl md:text-4xl font-serif text-brand-primary mb-2 leading-none">
@@ -103,7 +105,7 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* תיבת דגשים - יישור ימין מוחלט */}
+        {/* ─── Important notes + CTA ──────────────────────────────────────── */}
         <footer className="mt-32 p-8 md:p-12 rounded-[3rem] bg-brand-bg-soft/60 border border-brand-stone/30">
           <div className="max-w-md mr-0 ml-auto"> {/* מבטיח שהתוכן בתוך התיבה ייצמד לימין */}
             <h4 className="font-serif italic text-brand-primary mb-8 text-2xl text-right">דגשים חשובים</h4>
@@ -130,7 +132,7 @@ export default function PricingPage() {
           </div>
         </footer>
 
-        {/* Brand Sign-off */}
+        {/* ─── Brand sign-off ───────────────────────────────────────────────── */}
         <div className="mt-24 text-center opacity-20">
            <p className="text-[9px] uppercase tracking-[0.6em] text-brand-primary">
              Handcrafted Wellness • Pilates Studio

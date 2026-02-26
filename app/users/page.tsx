@@ -84,31 +84,20 @@ export default function UserPortal() {
   // ─── Handlers: booking & cancel ─────────────────────────────────────────
   const handleBooking = async (classItem: any) => {
     const supabaseClient = await getAuthenticatedSupabase(getToken);
-    if (!supabaseClient || !profile) return showModal('שגיאת התחברות', 'משהו השתבש, נסי לרענן את הדף.', '🔄');
-    if (!profile.is_approved) return showModal('ממתין לאישור', 'החשבון שלך עדיין ממתין לאישור. נחזור אליך בהקדם 🌿');
-
-    if (profile.membership_type > 0) {
-      const classDate = new Date(classItem.start_time);
-      const bookingsThisWeek = userBookings.filter(b =>
-        b.classes &&
-        b.status === 'active' &&
-        isSameWeek(new Date(b.classes.start_time), classDate)
-      );
-      if (bookingsThisWeek.length >= profile.membership_type) {
-        return showModal('המכסה השבועית מלאה', `השבוע כבר נרשמת ל־${profile.membership_type} אימונים — זה המקסימום במנוי שלך לשבוע זה.`, '💛');
-      }
+    
+    // בדיקות בסיסיות בצד לקוח (חוויית משתמש)
+    if (!supabaseClient || !profile) {
+      return showModal('שגיאת התחברות', 'משהו השתבש, נסי לרענן את הדף.', '🔄');
     }
-
-    if (classItem.bookings && classItem.bookings.length >= classItem.max_capacity) {
-      return showModal('השיעור מלא', 'אין מקומות פנויים בשיעור זה כרגע. אפשר לנסות שיעור אחר או להמתין לביטול.', '🙏');
+    
+    if (!profile.is_approved) {
+      return showModal('ממתין לאישור', 'החשבון שלך עדיין ממתין לאישור. נחזור אליך בהקדם 🌿');
     }
-
+  
+    // קביעת מקור התשלום (מנוי או כרטיסייה)
     const paymentSource = profile.membership_type > 0 ? 'membership' : 'punch_card';
-    if (paymentSource === 'punch_card' && profile.punch_card_remaining <= 0) {
-      return showModal('הכרטיסייה ריקה', 'נגמרו הניקובים בכרטיסייה שלך. ניתן לרכוש כרטיסייה חדשה אצל המנהלת.', '🌸');
-    }
-
-    // Confirm booking via modal
+  
+    // הצגת מודאל אישור לפני הרצה
     setModal({
       title: 'אישור הרשמה',
       body: `להירשם לשיעור "${classItem.name}"?`,
@@ -118,21 +107,34 @@ export default function UserPortal() {
           label: 'כן, לרשום אותי!',
           style: 'primary',
           onClick: async () => {
-            setModal(null);
-            const { error } = await supabaseClient.from('bookings').insert({
-              user_id: profile.id,
-              class_id: classItem.id,
-              payment_source: paymentSource,
-              status: 'active',
+            setModal(null); // סגירת המודאל לפני תחילת הפעולה
+  
+            // ─── קריאה לפונקציית ה-RPC המאובטחת ───
+            const { data: result, error } = await supabaseClient.rpc('book_class_safely', {
+              p_user_id: profile.id,
+              p_class_id: classItem.id,
+              p_payment_source: paymentSource
             });
-            if (error) return showModal('שגיאה', 'לא הצלחנו לרשום אותך הפעם, נסי שוב עוד רגע.', '😔');
-            if (paymentSource === 'punch_card') {
-              await supabaseClient.from('profiles').update({
-                punch_card_remaining: profile.punch_card_remaining - 1
-              }).eq('id', profile.id);
+  
+            // טיפול בשגיאות תקשורת או שגיאות לוגיות מה-DB
+            if (error || result !== 'success') {
+              const errorMessages: Record<string, string> = {
+                'class_full': 'השיעור מלא! מישהי בדיוק הקדימה אותך ותפסה את המקום האחרון.',
+                'weekly_limit_reached': `ניצלת כבר את ${profile.membership_type} האימונים שבמנוי שלך לשבוע זה.`,
+                'no_punches_left': 'נגמרו הניקובים בכרטיסייה שלך. ניתן לרכוש חדשה אצל המנהלת.',
+                'already_booked': 'את כבר רשומה לשיעור זה!'
+              };
+  
+              return showModal(
+                'לא ניתן להירשם',
+                errorMessages[result as string] || 'משהו השתבש ברישום, נסי שוב עוד רגע.',
+                '😔'
+              );
             }
+  
+            // אם הגענו לכאן, הרישום הצליח (והניקוב ירד אוטומטית אם צריך)
             showModal('נרשמת בהצלחה!', 'נתראה באימון 🙌', '💪');
-            syncAndFetchData();
+            syncAndFetchData(); // רענון הנתונים במסך
           },
         },
         { label: 'ביטול', style: 'ghost', onClick: () => setModal(null) },

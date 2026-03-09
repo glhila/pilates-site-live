@@ -5,26 +5,26 @@ import { ADMIN_EMAILS } from "@/src/lib/constants";
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { sessionClaims } = await auth();
+  const authObject = await auth();
 
-  // Clerk stores the primary email under different possible paths.
-  // Check multiple fallbacks to cover different Clerk JWT configurations:
-  const userEmail = (
-    (sessionClaims?.email as string) ||
-    (sessionClaims?.primary_email_address as string) ||
-    ((sessionClaims as Record<string, unknown>)?.emailAddress as string)
-  )?.toLowerCase()?.trim();
+  // שליפת ה-token מה-Supabase template שמכיל את המייל
+  const token = await authObject.getToken({ template: 'supabase' });
 
-  console.log("Session claims keys:", sessionClaims ? Object.keys(sessionClaims) : "none");
-  console.log("Resolved user email:", userEmail);
-  console.log("Admin emails list:", ADMIN_EMAILS);
+  // פענוח ה-JWT payload (החלק האמצעי)
+  let userEmail: string | undefined;
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userEmail = (payload?.email as string)?.toLowerCase()?.trim();
+    } catch {
+      userEmail = undefined;
+    }
+  }
 
   if (isAdminRoute(req)) {
     if (!userEmail || !ADMIN_EMAILS.map(e => e.toLowerCase().trim()).includes(userEmail)) {
-      console.log("Redirecting to /users — email not in admin list:", userEmail);
       return NextResponse.redirect(new URL('/users', req.url));
     }
-    console.log("Admin access granted for:", userEmail);
   }
 
   return NextResponse.next();

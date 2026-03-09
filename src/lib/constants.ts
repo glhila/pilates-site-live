@@ -4,10 +4,7 @@ export const SERVICE_PHONE = "052-6409993";
 export const STUDIO_NAME = "עונג של פילאטיס";
 export const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'oneg3gri@gmail.com'].map(email => email.toLowerCase());
 export const SERVICE_EMAIL = "oneg3gri@gmail.com";
-export const ADMIN_USER_IDS = [
-  'user_39ZJOPgIZl8KYsqq1RXsS0pBTcS',  // הילה
-  'user_3AiMT1daRJrgbyjfUCmNTmHcqq9',  // עונג
-];
+export const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') ?? [];
 
 // ─── Schedule / calendar layout (shared by admin + user portal) ─────────────
 export const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''] as const;

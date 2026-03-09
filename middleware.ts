@@ -6,19 +6,27 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   const { sessionClaims } = await auth();
-  
-  
-  // שליפת המייל מה-session (מבוסס על הגדרות Clerk)
-  const userEmail = (sessionClaims?.email as string)?.toLowerCase();
+
+  // Clerk stores the primary email under different possible paths.
+  // Check multiple fallbacks to cover different Clerk JWT configurations:
+  const userEmail = (
+    (sessionClaims?.email as string) ||
+    (sessionClaims?.primary_email_address as string) ||
+    ((sessionClaims as Record<string, unknown>)?.emailAddress as string)
+  )?.toLowerCase()?.trim();
+
+  console.log("Session claims keys:", sessionClaims ? Object.keys(sessionClaims) : "none");
+  console.log("Resolved user email:", userEmail);
+  console.log("Admin emails list:", ADMIN_EMAILS);
 
   if (isAdminRoute(req)) {
-    // אם המייל לא תואם או שאין מייל בכלל - שלח ל-users
-    if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-      console.log("Redirecting to users. User email found:", userEmail);
+    if (!userEmail || !ADMIN_EMAILS.map(e => e.toLowerCase().trim()).includes(userEmail)) {
+      console.log("Redirecting to /users — email not in admin list:", userEmail);
       return NextResponse.redirect(new URL('/users', req.url));
     }
+    console.log("Admin access granted for:", userEmail);
   }
-  
+
   return NextResponse.next();
 });
 

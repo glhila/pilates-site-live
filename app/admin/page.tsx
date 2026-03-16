@@ -53,7 +53,7 @@ export default function AdminPage() {
     try {
       const { data: cls } = await supabase.from('classes').select('*, bookings!class_id(id, profiles(id, full_name, email, phone))').order('start_time');
       setClasses(cls || []);
-      const { data: profs } = await supabase.from('profiles').select('*').order('full_name', { ascending: true });
+      const { data: profs } = await supabase.from('profiles').select('*').neq('role', 'admin').order('full_name', { ascending: true });
       setProfiles(profs || []);
     } catch (e) { console.error(e); }
     setIsFetching(false);
@@ -563,7 +563,7 @@ export default function AdminPage() {
                             </tr>
                         </thead>
                         <tbody className="text-sm font-light text-brand-primary/80">
-                            {profiles.map(p => (
+                            {profiles.filter(p => p.role !== 'admin').map(p => (
                                 <tr key={p.id} className="border-b border-brand-stone/15 last:border-b-0 hover:bg-white/60 transition-colors group">
                                     <td className="py-5 px-6 align-top">
                                         <p className="font-serif text-lg text-brand-primary leading-tight">{p.full_name}</p>
@@ -712,7 +712,7 @@ export default function AdminPage() {
                     <h4 className="text-[10px] font-black opacity-40 mb-5 uppercase tracking-widest">רישום ידני (עקיפת מכסה)</h4>
                     <div className="flex gap-2">
                         <select className="flex-1 p-4 bg-white rounded-2xl text-sm font-bold border outline-none shadow-sm" value={manualBookingUserId} onChange={e => setManualBookingUserId(e.target.value)}>
-                            <option value="">בחרי מתאמנת...</option>{profiles.map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+                            <option value="">בחרי מתאמנת...</option>{profiles.filter(p => p.role !== 'admin').map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                         </select>
                         <button onClick={handleManualBooking} disabled={!manualBookingUserId} className="bg-brand-dark text-white px-8 rounded-2xl font-bold text-xs disabled:opacity-20 transition-all shadow-md active:scale-95">רישום</button>
                     </div>

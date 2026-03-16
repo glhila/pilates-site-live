@@ -712,7 +712,7 @@ export default function AdminPage() {
                     <h4 className="text-[10px] font-black opacity-40 mb-5 uppercase tracking-widest">רישום ידני (עקיפת מכסה)</h4>
                     <div className="flex gap-2">
                         <select className="flex-1 p-4 bg-white rounded-2xl text-sm font-bold border outline-none shadow-sm" value={manualBookingUserId} onChange={e => setManualBookingUserId(e.target.value)}>
-                            <option value="">בחרי מתאמנת...</option>{profiles.filter(p => p.role !== 'admin').map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+                            <option value="">בחרי מתאמנת...</option>{profiles.filter(p => p.role !== 'admin').filter(p => !detailsModal.bookings?.some((b: any) => b.profiles?.id === p.id)).map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                         </select>
                         <button onClick={handleManualBooking} disabled={!manualBookingUserId} className="bg-brand-dark text-white px-8 rounded-2xl font-bold text-xs disabled:opacity-20 transition-all shadow-md active:scale-95">רישום</button>
                     </div>

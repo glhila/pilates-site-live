@@ -22,6 +22,13 @@ const toLocalDateTimeString = (date: Date): string => {
   const min = String(date.getMinutes()).padStart(2, "0");
   return `${y}-${m}-${d}T${h}:${min}:00`;
 };
+const getSlotKeyFromStartTime = (startTime: string): string | null => {
+  const fromIso = String(startTime).match(/T(\d{2}:\d{2})/);
+  if (fromIso?.[1]) return fromIso[1];
+  const d = new Date(startTime);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
 
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
@@ -480,14 +487,11 @@ export default function AdminPage() {
 
                         <div className="relative" style={{ height: `${TIME_SLOTS.length * HOUR_HEIGHT}px` }}>
                           {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
-                              const start = new Date(c.start_time);
-                              const hour = start.getHours(); const mins = start.getMinutes();
-                              if (hour < MORNING_START || hour > MORNING_END) return null;
-                              const slotTime = `${String(hour).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+                              const slotTime = getSlotKeyFromStartTime(c.start_time);
+                              if (!slotTime) return null;
                               const slotIndex = TIME_SLOTS.indexOf(slotTime as (typeof TIME_SLOTS)[number]);
-                              const top = slotIndex >= 0
-                                ? slotIndex * HOUR_HEIGHT
-                                : (hour - MORNING_START + mins / 60) * HOUR_HEIGHT;
+                              if (slotIndex < 0) return null;
+                              const top = slotIndex * HOUR_HEIGHT;
                               return (
                                 <div
                                   key={c.id}

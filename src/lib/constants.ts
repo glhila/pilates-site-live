@@ -7,6 +7,7 @@ export const SERVICE_EMAIL = "oneg3gri@gmail.com";
 export const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') ?? [];
 export const STUDIO_ADDRESS = "רחוב איינשטיין 3, כפר סבא";
 export const GOOGLE_MAPS_URL = `https://www.google.com/maps?q=${encodeURIComponent(STUDIO_ADDRESS)}`;
+export const GOOGLE_MAPS_EMBED_URL = `https://maps.google.com/maps?q=${encodeURIComponent(STUDIO_ADDRESS)}&output=embed&hl=iw&z=16`;
 export const WAZE_NAVIGATION_URL = `https://waze.com/ul?q=${encodeURIComponent(STUDIO_ADDRESS)}&navigate=yes`;
 
 // ─── Schedule / calendar layout (shared by admin + user portal) ─────────────

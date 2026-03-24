@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useUser, useAuth } from "@clerk/nextjs";
 import { useEffect, useState, useMemo } from "react";
 import {
-  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, EVENING_START, EVENING_END, CANCELLATION_WINDOW_HOURS,
+  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, CANCELLATION_WINDOW_HOURS,
   getAuthenticatedSupabase,
   formatDate, formatTime, isSameWeek,
 } from "@/src/lib/constants";
@@ -362,8 +362,8 @@ export default function UserPortal() {
               {/* Time Sidebar */}
               <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[13px] opacity-50 font-serif italic font-black tabular-nums">
                 {TIME_SLOTS.map((slot, i) => (
-                  <div key={i} className={slot === 'break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center items-start tracking-tighter'}>
-                    {slot !== 'break' && slot}
+                  <div key={i} className="h-[100px] flex justify-center items-start tracking-tighter">
+                    {slot}
                   </div>
                 ))}
               </div>
@@ -377,7 +377,7 @@ export default function UserPortal() {
                       <span className="text-xl font-bold mt-0.5">{date.getDate()}</span>
                     </div>
                     
-                    <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
+                    <div className="relative" style={{ height: `${(MORNING_END - MORNING_START) * HOUR_HEIGHT}px` }}>
                       {classes
                         .filter(c => new Date(c.start_time).toDateString() === date.toDateString())
                         .map(c => {
@@ -386,12 +386,8 @@ export default function UserPortal() {
                           const hour = startTime.getHours();
                           const mins = startTime.getMinutes();
 
-                          let topPos = 0;
-                          if (hour >= MORNING_START && hour <= MORNING_END) {
-                            topPos = (hour - MORNING_START + mins/60) * HOUR_HEIGHT;
-                          } else if (hour >= EVENING_START && hour <= EVENING_END) {
-                            topPos = (hour - EVENING_START + mins/60) * HOUR_HEIGHT + (7 * HOUR_HEIGHT) + 64;
-                          } else return null;
+                          if (hour < MORNING_START || hour > MORNING_END) return null;
+                          const topPos = (hour - MORNING_START + mins / 60) * HOUR_HEIGHT;
 
                           return (
                             <div

@@ -35,7 +35,7 @@ export default function AdminPage() {
   const [classFormData, setClassFormData] = useState<{
     name: string; date: string; hour: string; minute: string; max_capacity: number; is_recurring: boolean;
   }>({
-    name: CLASS_TEMPLATES[0], date: '', hour: '08', minute: '00', max_capacity: 6, is_recurring: false
+    name: CLASS_TEMPLATES[0], date: '', hour: '08', minute: '00', max_capacity: 3, is_recurring: false
   });
 
   // ─── State: user/trainee form & manual booking ────────────────────────────

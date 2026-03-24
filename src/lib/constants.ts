@@ -86,14 +86,16 @@ export const fetchJewishHolidays = async (years: number[]): Promise<HolidayMap> 
   await Promise.all(
     years.map(async (year) => {
       const res = await fetch(
-        `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&year=${year}&month=x&geo=none&M=on&s=on`
+        `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&year=${year}&month=x&geo=none&M=on&s=on&lg=he`
       );
       if (!res.ok) return;
       const data = await res.json();
       for (const item of data.items ?? []) {
-        if (!item?.date || !item?.title) continue;
+        if (!item?.date) continue;
+        const holidayName = item.hebrew || item.title;
+        if (!holidayName) continue;
         const dateKey = String(item.date).split("T")[0];
-        map[dateKey] = [...(map[dateKey] ?? []), item.title];
+        map[dateKey] = [...(map[dateKey] ?? []), holidayName];
       }
     })
   );

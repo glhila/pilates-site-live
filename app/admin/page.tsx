@@ -12,6 +12,8 @@ import {
   getAuthenticatedSupabase, getWhatsAppUrlForPhone,
 } from "@/src/lib/constants";
 
+const CLASS_DURATION_MINUTES = 60;
+
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
@@ -30,6 +32,13 @@ export default function AdminPage() {
   const [deleteModal, setDeleteModal] = useState<{ show: boolean; classItem: any } | null>(null);
   const [detailsModal, setDetailsModal] = useState<any | null>(null);
   const [welcomeModal, setWelcomeModal] = useState<{ name: string; email: string; phone: string } | null>(null);
+  const [overlapModal, setOverlapModal] = useState<null | {
+    pendingInsert: any[];
+    conflicts: any[];
+    dayLabel: string;
+    suggestions: { hour: string; minute: string; label: string }[];
+    isRecurring: boolean;
+  }>(null);
 
   // ─── State: add-class form ────────────────────────────────────────────────
   const [classFormData, setClassFormData] = useState<{
@@ -62,6 +71,71 @@ export default function AdminPage() {
   useEffect(() => { if (isLoaded && user) loadData(); }, [activeTab, isLoaded, user]);
 
   // ─── Handlers: classes / schedule ─────────────────────────────────────────
+  const toLocalDayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  const getInterval = (startIso: string) => {
+    const start = new Date(startIso);
+    const end = new Date(start);
+    end.setMinutes(end.getMinutes() + CLASS_DURATION_MINUTES);
+    return { start, end };
+  };
+
+  const intervalsOverlap = (a: { start: Date; end: Date }, b: { start: Date; end: Date }) =>
+    a.start < b.end && b.start < a.end;
+
+  const getDayConflicts = (candidateStartIso: string) => {
+    const candidate = getInterval(candidateStartIso);
+    const dayKey = toLocalDayKey(candidate.start);
+    return classes
+      .filter(c => toLocalDayKey(new Date(c.start_time)) === dayKey)
+      .filter(c => intervalsOverlap(candidate, getInterval(c.start_time)));
+  };
+
+  const getFreeSlotsForDay = (dayKey: string) => {
+    const existing = classes
+      .filter(c => toLocalDayKey(new Date(c.start_time)) === dayKey)
+      .map(c => getInterval(c.start_time));
+
+    const candidates: { hour: string; minute: string; label: string }[] = [];
+    const addCandidatesInRange = (startHour: number, endHour: number) => {
+      for (let h = startHour; h <= endHour; h++) {
+        for (const m of [0, 30]) {
+          const hour = String(h).padStart(2, '0');
+          const minute = String(m).padStart(2, '0');
+          const start = new Date(`${dayKey}T${hour}:${minute}:00`);
+          const end = new Date(start);
+          end.setMinutes(end.getMinutes() + CLASS_DURATION_MINUTES);
+
+          // keep interval fully inside the range
+          const rangeStart = new Date(`${dayKey}T${String(startHour).padStart(2, '0')}:00:00`);
+          const rangeEnd = new Date(`${dayKey}T${String(endHour + 1).padStart(2, '0')}:00:00`);
+          if (!(start >= rangeStart && end <= rangeEnd)) continue;
+
+          const candidateInterval = { start, end };
+          const overlaps = existing.some(ex => intervalsOverlap(candidateInterval, ex));
+          if (!overlaps) {
+            candidates.push({ hour, minute, label: `${hour}:${minute}` });
+          }
+        }
+      }
+    };
+
+    // morning: 07:00–14:00 (last start 13:00)
+    addCandidatesInRange(MORNING_START, MORNING_END);
+    // evening: 16:00–23:00 (last start 22:00)
+    addCandidatesInRange(EVENING_START, EVENING_END);
+
+    return candidates;
+  };
+
+  const deleteClassesByIds = async (ids: string[]) => {
+    const supabase = await getAuthenticatedSupabase(getToken);
+    if (!supabase) return { ok: false as const, message: "אין חיבור למסד הנתונים" };
+    const { error } = await supabase.from('classes').delete().in('id', ids);
+    if (error) return { ok: false as const, message: error.message };
+    return { ok: true as const };
+  };
+
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = await getAuthenticatedSupabase(getToken);
@@ -84,6 +158,24 @@ export default function AdminPage() {
             recurring_id: recurring_id
         });
     }
+
+    // Overlap detection (client-side, based on loaded `classes`)
+    const conflicts = classesToInsert.flatMap(ci => getDayConflicts(ci.start_time).map(c => ({ ...c, _conflictFor: ci.start_time })));
+    if (conflicts.length > 0) {
+      const firstCandidateStart = new Date(classesToInsert[0].start_time);
+      const dayKey = toLocalDayKey(firstCandidateStart);
+      const suggestions = getFreeSlotsForDay(dayKey).slice(0, 10);
+      const dayLabel = firstCandidateStart.toLocaleDateString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+      setOverlapModal({
+        pendingInsert: classesToInsert,
+        conflicts,
+        dayLabel,
+        suggestions,
+        isRecurring: !!classFormData.is_recurring,
+      });
+      return;
+    }
+
     const { error } = await supabase.from('classes').insert(classesToInsert);
     if (error) alert(error.message);
     else { alert("השיעור/ים נוספו בהצלחה!"); loadData(); }
@@ -779,6 +871,119 @@ export default function AdminPage() {
                 >
                   דילוג — אשלח מאוחר יותר
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: overlap detected while adding class */}
+        {overlapModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[130] p-4 backdrop-blur-md">
+            <div className="bg-white p-10 rounded-[3.5rem] max-w-2xl w-full shadow-2xl">
+              <div className="flex justify-between items-start gap-6 mb-8">
+                <div>
+                  <h3 className="text-2xl font-bold italic tracking-tight">יש חפיפה במערכת שעות</h3>
+                  <p className="opacity-50 text-sm font-bold tracking-tight mt-2">
+                    נמצאה חפיפה ביום {overlapModal.dayLabel}. אפשר לבחור מה לעשות.
+                  </p>
+                  {overlapModal.isRecurring && (
+                    <p className="mt-2 text-[11px] opacity-50 leading-relaxed">
+                      שימי לב: זהו שיעור קבוע (שנתי). יתכן שיש חפיפות רק בחלק מהתאריכים — הרשימה למטה מציגה את כל החפיפות שנמצאו מול המערכת הקיימת.
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setOverlapModal(null)}
+                  className="text-2xl opacity-20 hover:opacity-100 transition-all"
+                  aria-label="סגירה"
+                >
+                  ⨉
+                </button>
+              </div>
+
+              <div className="grid lg:grid-cols-2 gap-6">
+                <div className="bg-brand-bg p-6 rounded-[2.5rem] border border-brand-stone/10">
+                  <h4 className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest">שיעורים חופפים</h4>
+                  <div className="space-y-3 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                    {overlapModal.conflicts.map((c: any) => (
+                      <div key={`${c.id}-${c._conflictFor}`} className="bg-white p-4 rounded-2xl border border-brand-stone/10 shadow-sm">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-bold text-sm truncate">{c.name}</p>
+                            <p className="text-[11px] opacity-50 font-bold tabular-nums mt-1">
+                              {new Date(c.start_time).toLocaleString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                            <p className="text-[10px] opacity-40 mt-1">
+                              רשומות: {c.bookings?.length || 0}/{c.max_capacity}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-brand-stone/5 p-6 rounded-[2.5rem] border border-brand-stone/10">
+                    <h4 className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest">אפשרויות</h4>
+
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => setOverlapModal(null)}
+                        className="w-full bg-white p-5 rounded-2xl font-bold border border-brand-stone/10 hover:bg-brand-stone/10 transition-all text-sm"
+                      >
+                        לא להוסיף את השיעור החדש (ביטול)
+                      </button>
+
+                      <button
+                        onClick={async () => {
+                          const conflictIds = Array.from(new Set(overlapModal.conflicts.map((c: any) => c.id)));
+                          if (!confirm(`לבטל ${conflictIds.length} שיעורים קיימים וליצור את השיעור החדש?`)) return;
+                          const del = await deleteClassesByIds(conflictIds);
+                          if (!del.ok) { alert(del.message); return; }
+
+                          const supabase = await getAuthenticatedSupabase(getToken);
+                          if (!supabase) return;
+                          const { error } = await supabase.from('classes').insert(overlapModal.pendingInsert);
+                          if (error) alert(error.message);
+                          else alert("השיעור/ים נוספו בהצלחה (לאחר ביטול החופפים)!");
+                          setOverlapModal(null);
+                          loadData();
+                        }}
+                        className="w-full bg-red-50 text-red-700 p-5 rounded-2xl font-bold border border-red-100 hover:bg-red-100 transition-all text-sm"
+                      >
+                        לבטל את השיעור/ים הקיימים החופפים ולהוסיף את החדש
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-brand-bg p-6 rounded-[2.5rem] border border-brand-stone/10">
+                    <h4 className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest">שינוי שעה (מקומות פנויים באותו יום)</h4>
+                    {overlapModal.suggestions.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {overlapModal.suggestions.map(s => (
+                          <button
+                            key={`${s.hour}:${s.minute}`}
+                            type="button"
+                            onClick={() => {
+                              setClassFormData({ ...classFormData, hour: s.hour, minute: s.minute });
+                              setOverlapModal(null);
+                            }}
+                            className="px-4 py-2 rounded-full bg-white border border-brand-stone/10 text-xs font-bold hover:bg-brand-stone/10 transition-all tabular-nums"
+                            title="עדכון השעה בטופס"
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm opacity-40 italic">לא נמצאו חלונות פנויים של שעה ביום הזה (לפי ההגדרות הנוכחיות).</p>
+                    )}
+                    <p className="text-[11px] opacity-40 mt-4 leading-relaxed">
+                      בחירה באחד הזמנים תעדכן את השעה בטופס. לאחר מכן אפשר ללחוץ שוב על "הוספה".
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -9,7 +9,7 @@ import {
   DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END,
   CLASS_TEMPLATES,
   HEALTH_FORM_URL,
-  getAuthenticatedSupabase, getWhatsAppUrlForPhone,
+  getAuthenticatedSupabase, getWhatsAppUrlForPhone, toDateKey, fetchJewishHolidays, type HolidayMap,
 } from "@/src/lib/constants";
 
 const CLASS_DURATION_MINUTES = 60;
@@ -53,6 +53,7 @@ export default function AdminPage() {
     full_name: '', email: '', phone: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: ''
   });
   const [manualBookingUserId, setManualBookingUserId] = useState("");
+  const [jewishHolidaysByDate, setJewishHolidaysByDate] = useState<HolidayMap>({});
 
   // ─── Supabase & data loading ─────────────────────────────────────────────
   const loadData = async () => {
@@ -333,10 +334,19 @@ export default function AdminPage() {
   const weekDates = useMemo(() => {
     const start = new Date(viewDate);
     start.setDate(viewDate.getDate() - viewDate.getDay());
-    return Array.from({ length: 7 }, (_, i) => {
+    return Array.from({ length: 6 }, (_, i) => {
       const d = new Date(start); d.setDate(start.getDate() + i); return d;
     });
   }, [viewDate]);
+
+  useEffect(() => {
+    const years = Array.from(new Set(weekDates.map((d) => d.getFullYear())));
+    let cancelled = false;
+    fetchJewishHolidays(years)
+      .then((map) => { if (!cancelled) setJewishHolidaysByDate(map); })
+      .catch(() => { if (!cancelled) setJewishHolidaysByDate({}); });
+    return () => { cancelled = true; };
+  }, [weekDates]);
 
   // ─── Guard: admin-only access ─────────────────────────────────────────────
   if (isLoaded && !ADMIN_EMAILS.includes(user?.primaryEmailAddress?.emailAddress || '')) {
@@ -440,7 +450,7 @@ export default function AdminPage() {
                   <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10">
                     <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע קודם">→</button>
                     <span className="font-bold text-sm min-w-[200px] text-center tabular-nums">
-                      {weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}
+                      {weekDates[0].toLocaleDateString('he-IL')} - {weekDates[5].toLocaleDateString('he-IL')}
                     </span>
                     <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע הבא">←</button>
                   </div>
@@ -451,12 +461,22 @@ export default function AdminPage() {
                   <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[12px] opacity-50 font-serif italic font-black tabular-nums">
                     {TIME_SLOTS.map((s, i) => <div key={i} className="h-[100px] flex justify-center">{s}</div>)}
                   </div>
-                  <div className="flex-1 grid grid-cols-7 relative">
+                  <div className="flex-1 grid grid-cols-6 relative">
                     {weekDates.map((date, dayIdx) => (
                       <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
                         <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10 bg-white sticky top-0 z-20">
                             <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
                             <span className="text-xl font-bold mt-0.5">{date.getDate()}</span>
+                            {(() => {
+                              const dateKey = toDateKey(date);
+                              const jewish = jewishHolidaysByDate[dateKey] ?? [];
+                              const label = jewish.slice(0, 1).join(" • ");
+                              return label ? (
+                                <span className="mt-0.5 text-[9px] font-semibold text-brand-accent-text/80 truncate max-w-[90%]">
+                                  {label}
+                                </span>
+                              ) : null;
+                            })()}
                         </div>
 
                         <div className="relative" style={{ height: `${(MORNING_END - MORNING_START) * HOUR_HEIGHT}px` }}>
@@ -507,7 +527,7 @@ export default function AdminPage() {
                       <div className="flex items-center gap-4 bg-brand-stone/5 p-3 rounded-3xl border border-brand-stone/10 w-full justify-center">
                         <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()-7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע קודם">→</button>
                         <span className="font-bold text-sm min-w-[160px] text-center tabular-nums">
-                          {weekDates[0].toLocaleDateString('he-IL')} - {weekDates[6].toLocaleDateString('he-IL')}
+                          {weekDates[0].toLocaleDateString('he-IL')} - {weekDates[5].toLocaleDateString('he-IL')}
                         </span>
                         <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע הבא">←</button>
                       </div>

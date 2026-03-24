@@ -29,43 +29,18 @@ export default function ContactPage() {
         </header>
 
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          <div className="relative h-full min-h-[320px] lg:min-h-[480px] rounded-[3rem] overflow-hidden border border-brand-stone/20 shadow-2xl">
-            <div className="absolute inset-0 bg-brand-bg-soft flex flex-col items-center justify-center p-12 text-center">
-              <div className="w-20 h-20 rounded-full border border-brand-stone/30 flex items-center justify-center mb-6">
-                <span className="text-2xl opacity-50">📍</span>
-              </div>
-              <p className="font-serif italic text-brand-primary/60 text-xl mb-4">Finding Balance</p>
-              <p className="text-sm text-brand-primary/70">{STUDIO_ADDRESS}</p>
-            </div>
-          </div>
-
           <div className="feature-card space-y-12">
-            <div className="space-y-6">
-              <div className="relative w-full aspect-[4/3] max-h-[360px] rounded-[2rem] overflow-hidden border border-brand-stone/20 shadow-lg bg-brand-bg-soft">
-                <iframe
-                  title={`מפה: ${STUDIO_ADDRESS}`}
-                  src={GOOGLE_MAPS_EMBED_URL}
-                  className="absolute inset-0 h-full w-full border-0"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  allowFullScreen
-                />
-              </div>
-              <div className="flex justify-center">
-                <a
-                  href={WAZE_NAVIGATION_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs tracking-widest uppercase border border-brand-stone/40 px-5 py-3 rounded-full hover:border-brand-accent-text hover:text-brand-accent-text transition-colors"
-                >
-                  Navigate with Waze
-                </a>
-              </div>
-            </div>
-
             <section>
               <h2 className="text-[13px] font-bold uppercase tracking-[0.3em] text-brand-accent-text mb-6">פרטי התקשרות</h2>
               <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <span className="text-xl">📍</span>
+                  <div>
+                    <p className="font-serif text-lg text-brand-primary">הסטודיו שלנו</p>
+                    <p className="font-light text-brand-primary/70">{STUDIO_ADDRESS}</p>
+                  </div>
+                </div>
+
                 <div className="flex items-start gap-4">
                   <span className="text-xl">📞</span>
                   <div>
@@ -80,7 +55,7 @@ export default function ContactPage() {
                   <span className="text-xl">📧</span>
                   <div>
                     <p className="font-serif text-lg text-brand-primary">כתבי לנו</p>
-                    <a href= {`mailto:${SERVICE_EMAIL}`} className="font-light text-brand-primary/70 hover:text-brand-accent-text transition-colors">
+                    <a href={`mailto:${SERVICE_EMAIL}`} className="font-light text-brand-primary/70 hover:text-brand-accent-text transition-colors">
                       {SERVICE_EMAIL}
                     </a>
                   </div>
@@ -110,6 +85,29 @@ export default function ContactPage() {
                 className="btn-luxury w-full text-center block"
               >
                 שלחי לנו הודעה ב-WhatsApp
+              </a>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="relative w-full min-h-[280px] aspect-[4/3] max-h-[420px] lg:max-h-none lg:min-h-[400px] rounded-[2rem] lg:rounded-[3rem] overflow-hidden border border-brand-stone/20 shadow-2xl bg-brand-bg-soft">
+              <iframe
+                title={`מפה: ${STUDIO_ADDRESS}`}
+                src={GOOGLE_MAPS_EMBED_URL}
+                className="absolute inset-0 h-full w-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            </div>
+            <div className="flex justify-center">
+              <a
+                href={WAZE_NAVIGATION_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs tracking-widest uppercase border border-brand-stone/40 px-5 py-3 rounded-full hover:border-brand-accent-text hover:text-brand-accent-text transition-colors"
+              >
+                Navigate with Waze
               </a>
             </div>
           </div>

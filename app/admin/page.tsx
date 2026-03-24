@@ -478,12 +478,16 @@ export default function AdminPage() {
                             })()}
                         </div>
 
-                        <div className="relative" style={{ height: `${(MORNING_END - MORNING_START) * HOUR_HEIGHT}px` }}>
+                        <div className="relative" style={{ height: `${TIME_SLOTS.length * HOUR_HEIGHT}px` }}>
                           {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
                               const start = new Date(c.start_time);
                               const hour = start.getHours(); const mins = start.getMinutes();
                               if (hour < MORNING_START || hour > MORNING_END) return null;
-                              const top = (hour - MORNING_START + mins / 60) * HOUR_HEIGHT;
+                              const slotTime = `${String(hour).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+                              const slotIndex = TIME_SLOTS.indexOf(slotTime as (typeof TIME_SLOTS)[number]);
+                              const top = slotIndex >= 0
+                                ? slotIndex * HOUR_HEIGHT
+                                : (hour - MORNING_START + mins / 60) * HOUR_HEIGHT;
                               return (
                                 <div
                                   key={c.id}

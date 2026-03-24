@@ -39,7 +39,14 @@ export default function ContactPage() {
                   <span className="text-xl">📍</span>
                   <div>
                     <p className="font-serif text-lg text-brand-primary">הסטודיו שלנו</p>
-                    <p className="font-light text-brand-primary/70">{STUDIO_ADDRESS}</p>
+                    <a
+                      href={GOOGLE_MAPS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-light text-brand-primary/70 hover:text-brand-accent-text transition-colors"
+                    >
+                      {STUDIO_ADDRESS}
+                    </a>
                   </div>
                 </div>
                 
@@ -98,16 +105,15 @@ export default function ContactPage() {
                 <span className="text-2xl opacity-50">📍</span>
               </div>
               <p className="font-serif italic text-brand-primary/60 text-xl mb-4">Finding Balance</p>
-              <p className="text-sm text-brand-primary/70 mb-6">{STUDIO_ADDRESS}</p>
+              <a
+                href={GOOGLE_MAPS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-brand-primary/70 hover:text-brand-accent-text transition-colors mb-6 underline-offset-4 hover:underline"
+              >
+                {STUDIO_ADDRESS}
+              </a>
               <div className="flex flex-col sm:flex-row items-center gap-3">
-                <a
-                  href={GOOGLE_MAPS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs tracking-widest uppercase border border-brand-stone/40 px-5 py-3 rounded-full hover:border-brand-accent-text hover:text-brand-accent-text transition-colors"
-                >
-                  Google Maps
-                </a>
                 <a
                   href={WAZE_NAVIGATION_URL}
                   target="_blank"

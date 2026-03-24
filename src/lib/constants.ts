@@ -18,6 +18,7 @@ export const HOUR_HEIGHT = 100;
 export const MORNING_START = 6;
 export const MORNING_END = 20;
 export type HolidayMap = Record<string, string[]>;
+const ISRAEL_TIMEZONE = "Asia/Jerusalem";
 
 // ─── Booking rules (user portal) ──────────────────────────────────────────
 export const CANCELLATION_WINDOW_HOURS = 24;
@@ -80,13 +81,27 @@ export const isSameWeek = (date1: Date, date2: Date): boolean => {
 export const toDateKey = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
+/** Build YYYY-MM-DD date key in Israel timezone. */
+export const toIsraelDateKey = (d: Date): string => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: ISRAEL_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+  const year = parts.find((p) => p.type === "year")?.value;
+  const month = parts.find((p) => p.type === "month")?.value;
+  const day = parts.find((p) => p.type === "day")?.value;
+  return `${year}-${month}-${day}`;
+};
+
 /** Fetch Jewish holidays by Gregorian year from Hebcal API. */
 export const fetchJewishHolidays = async (years: number[]): Promise<HolidayMap> => {
   const map: HolidayMap = {};
   await Promise.all(
     years.map(async (year) => {
       const res = await fetch(
-        `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&year=${year}&month=x&geo=none&M=on&s=on&lg=he`
+        `https://www.hebcal.com/hebcal?v=1&cfg=json&i=on&maj=on&min=on&mod=on&nx=on&year=${year}&month=x&geo=none&M=on&s=on&lg=he&tzid=${encodeURIComponent(ISRAEL_TIMEZONE)}`
       );
       if (!res.ok) return;
       const data = await res.json();
@@ -94,7 +109,7 @@ export const fetchJewishHolidays = async (years: number[]): Promise<HolidayMap> 
         if (!item?.date) continue;
         const holidayName = item.hebrew || item.title;
         if (!holidayName) continue;
-        const dateKey = String(item.date).split("T")[0];
+        const dateKey = toIsraelDateKey(new Date(item.date));
         map[dateKey] = [...(map[dateKey] ?? []), holidayName];
       }
     })

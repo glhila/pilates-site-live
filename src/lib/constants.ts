@@ -24,6 +24,12 @@ const ISRAEL_TIMEZONE = "Asia/Jerusalem";
 // ─── Booking rules (user portal) ──────────────────────────────────────────
 export const CANCELLATION_WINDOW_HOURS = 24;
 
+/** כרטיסיות במחירון — מספר אימונים בחבילה (מסונכרן עם טופס מתאמנת במנהל). */
+export const PUNCH_CARD_PACKAGE_SIZES = [1, 5, 10, 20] as const;
+
+/** ברירת מחדל לניקובים כשהמתאמנת על כרטיסייה בלבד (membership_type === 0). */
+export const DEFAULT_PUNCH_FOR_PUNCH_CARD_ONLY = 10;
+
 // ─── Admin: class types & external links ──────────────────────────────────
 export const CLASS_TEMPLATES = [
   "מכשירים", "שיקומי- אישי"

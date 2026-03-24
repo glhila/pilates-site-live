@@ -9,8 +9,45 @@ import {
   DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END,
   CLASS_TEMPLATES,
   HEALTH_FORM_URL,
+  DEFAULT_PUNCH_FOR_PUNCH_CARD_ONLY,
+  PUNCH_CARD_PACKAGE_SIZES,
   getAuthenticatedSupabase, getWhatsAppUrlForPhone, toDateKey, fetchJewishHolidays, type HolidayMap,
 } from "@/src/lib/constants";
+
+const PUNCH_PRESET_VALUES = [0, ...PUNCH_CARD_PACKAGE_SIZES] as const;
+
+type UserFormState = {
+  full_name: string;
+  email: string;
+  phone: string;
+  membership_type: number;
+  punch_card_remaining: number;
+  punch_card_expiry: string;
+};
+
+const profileToUserForm = (p: any): UserFormState => ({
+  full_name: p.full_name ?? '',
+  email: p.email ?? '',
+  phone: p.phone ?? '',
+  membership_type: Number(p.membership_type) || 0,
+  punch_card_remaining: Number(p.punch_card_remaining) || 0,
+  punch_card_expiry: p.punch_card_expiry ? String(p.punch_card_expiry).slice(0, 10) : '',
+});
+
+const applyPunchChange = (
+  prev: UserFormState,
+  newPunches: number,
+  editingUserId: string | null
+): UserFormState => {
+  const updates: Partial<UserFormState> = { punch_card_remaining: newPunches };
+  if (!editingUserId && newPunches > 0 && !prev.punch_card_expiry) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 2);
+    updates.punch_card_expiry = d.toISOString().split('T')[0];
+  }
+  if (newPunches === 0) updates.punch_card_expiry = '';
+  return { ...prev, ...updates };
+};
 
 const CLASS_DURATION_MINUTES = 60;
 const [DEFAULT_HOUR, DEFAULT_MINUTE] = TIME_SLOTS[0].split(":");
@@ -65,9 +102,27 @@ export default function AdminPage() {
 
   // ─── State: user/trainee form & manual booking ────────────────────────────
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [userFormData, setUserFormData] = useState({
+  const [userFormData, setUserFormData] = useState<UserFormState>({
     full_name: '', email: '', phone: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: ''
   });
+
+  /** מתאמנת חדשה בלבד: ניקובים ברירת מחדל — 0 במנוי שבועי, חבילת ברירת מחדל בכרטיסייה בלבד (לפי מחירון). */
+  useEffect(() => {
+    if (editingUserId) return;
+    const nextPunch =
+      userFormData.membership_type > 0 ? 0 : DEFAULT_PUNCH_FOR_PUNCH_CARD_ONLY;
+    setUserFormData((prev) => {
+      if (prev.punch_card_remaining === nextPunch) return prev;
+      const updates: Partial<UserFormState> = { punch_card_remaining: nextPunch };
+      if (nextPunch > 0 && !prev.punch_card_expiry) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 2);
+        updates.punch_card_expiry = d.toISOString().split('T')[0];
+      }
+      if (nextPunch === 0) updates.punch_card_expiry = '';
+      return { ...prev, ...updates };
+    });
+  }, [userFormData.membership_type, editingUserId]);
   const [manualBookingUserId, setManualBookingUserId] = useState("");
   const [jewishHolidaysByDate, setJewishHolidaysByDate] = useState<HolidayMap>({});
 
@@ -304,7 +359,7 @@ export default function AdminPage() {
         const savedEmail = userFormData.email.trim().toLowerCase();
         const savedPhone = userFormData.phone;
         setEditingUserId(null); 
-        setUserFormData({full_name:'', email:'', phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); 
+        setUserFormData({ full_name: '', email: '', phone: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: '' }); 
         loadData();
         if (isNew) {
           setWelcomeModal({ name: savedName, email: savedEmail, phone: savedPhone });
@@ -607,28 +662,60 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">מנוי שבועי</label>
-                    <input type="number" className="w-full p-4 bg-brand-bg rounded-2xl" value={userFormData.membership_type} onChange={e => setUserFormData({...userFormData, membership_type: parseInt(e.target.value)})} />
+                    <input
+                      type="number"
+                      min={0}
+                      className="w-full p-4 bg-brand-bg rounded-2xl"
+                      value={userFormData.membership_type}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value, 10);
+                        setUserFormData({ ...userFormData, membership_type: Number.isNaN(v) ? 0 : v });
+                      }}
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">ניקובים</label>
+                    <p className="text-[10px] text-brand-primary/45 leading-snug">
+                      ערכי מחירון: {PUNCH_CARD_PACKAGE_SIZES.join(', ')} — ניתן גם להזין ידנית (למשל יתרה אחרי אימונים).
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {PUNCH_PRESET_VALUES.map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() =>
+                            setUserFormData((prev) => applyPunchChange(prev, n, editingUserId))
+                          }
+                          className={`min-w-[2.5rem] px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                            userFormData.punch_card_remaining === n
+                              ? 'bg-brand-dark text-white border-brand-dark'
+                              : 'bg-white border-brand-stone/15 text-brand-primary/70 hover:border-brand-stone/40'
+                          }`}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
                     <input
                       type="number"
+                      min={0}
                       className="w-full p-4 bg-brand-bg rounded-2xl"
+                      list="admin-punch-presets"
                       value={userFormData.punch_card_remaining}
-                      onChange={e => {
-                        const newPunches = parseInt(e.target.value) || 0;
-                        const updates: any = { punch_card_remaining: newPunches };
-                        // מתאמנת חדשה: קביעת תוקף אוטומטית לחודשיים כשמוסיפים ניקובים בפעם הראשונה
-                        if (!editingUserId && newPunches > 0 && !userFormData.punch_card_expiry) {
-                          const d = new Date();
-                          d.setMonth(d.getMonth() + 2);
-                          updates.punch_card_expiry = d.toISOString().split('T')[0];
-                        }
-                        // ניקוי תוקף אם הניקובים
-                        if (newPunches === 0) updates.punch_card_expiry = '';
-                        setUserFormData({ ...userFormData, ...updates });
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const newPunches = raw === '' ? 0 : parseInt(raw, 10);
+                        if (raw !== '' && Number.isNaN(newPunches)) return;
+                        setUserFormData((prev) =>
+                          applyPunchChange(prev, Number.isNaN(newPunches) ? 0 : newPunches, editingUserId)
+                        );
                       }}
                     />
+                    <datalist id="admin-punch-presets">
+                      {PUNCH_PRESET_VALUES.map((n) => (
+                        <option key={n} value={n} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
 
@@ -672,7 +759,7 @@ export default function AdminPage() {
                 {editingUserId && (
                   <button
                     type="button"
-                    onClick={() => { setEditingUserId(null); setUserFormData({full_name:'', email:'', phone:'', membership_type:2, punch_card_remaining:0, punch_card_expiry:''}); }}
+                    onClick={() => { setEditingUserId(null); setUserFormData({ full_name: '', email: '', phone: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: '' }); }}
                     className="w-full text-xs font-bold opacity-30 mt-4 underline underline-offset-4 tracking-widest"
                   >
                     ביטול עריכה
@@ -750,7 +837,7 @@ export default function AdminPage() {
                                     </td>
                                     <td className="py-5 px-4 align-top">
                                         <div className="flex gap-3 justify-center items-center text-[10px] font-bold tracking-[0.18em] uppercase">
-                                            <button onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} className="text-brand-primary/50 hover:text-brand-primary transition-colors">עריכה ✎</button>
+                                            <button onClick={() => { setEditingUserId(p.id); setUserFormData(profileToUserForm(p)); }} className="text-brand-primary/50 hover:text-brand-primary transition-colors">עריכה ✎</button>
                                             <span className="h-3 w-px bg-brand-stone/30" />
                                             <button onClick={() => handleDeleteProfile(p.id)} className="text-red-300 hover:text-red-600 transition-colors">מחקי 🗑</button>
                                         </div>
@@ -794,7 +881,7 @@ export default function AdminPage() {
                           <div className="mt-6 pt-4 border-t border-brand-stone/5 flex justify-between items-center">
                               <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">{p.membership_type} בשבוע</span>
                               <div className="flex gap-6">
-                                  <button onClick={() => { setEditingUserId(p.id); setUserFormData(p); }} className="text-xs font-bold opacity-60 underline underline-offset-4">עריכה ✎</button>
+                                  <button onClick={() => { setEditingUserId(p.id); setUserFormData(profileToUserForm(p)); }} className="text-xs font-bold opacity-60 underline underline-offset-4">עריכה ✎</button>
                                   <button onClick={() => handleDeleteProfile(p.id)} className="text-xs font-bold text-red-400 underline underline-offset-4">מחיקה 🗑</button>
                               </div>
                           </div>

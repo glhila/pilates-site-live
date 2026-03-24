@@ -1,6 +1,16 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { getWhatsAppLink } from "@/src/lib/constants";
+import { getWhatsAppLink, PUNCH_CARD_PACKAGE_SIZES } from "@/src/lib/constants";
+
+const PUNCH_CARD_PRICING_ROWS: Record<
+  (typeof PUNCH_CARD_PACKAGE_SIZES)[number],
+  { name: string; price: string; detail: string }
+> = {
+  1: { name: "כניסה חד פעמית", price: "₪90", detail: "תקפה לשבוע" },
+  5: { name: "כרטיסיית 5 אימונים", price: "₪400", detail: "תקפה לחודשיים" },
+  10: { name: "כרטיסיית 10 אימונים", price: "₪750", detail: "תקפה לחודשיים" },
+  20: { name: "כרטיסיית 20 אימונים", price: "₪1400", detail: "תקפה ל3 חודשים" },
+};
 
 // ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
@@ -23,12 +33,7 @@ const PRICING_CATEGORIES = [
     {
       title: "כרטיסיות",
       subtitle: "גמישות מקסימלית לאורח החיים שלך",
-      items: [
-        { name: "כניסה חד פעמית", price: "₪90", detail: "תקפה לשבוע" },
-        { name: "כרטיסיית 5 אימונים", price: "₪400", detail: "תקפה לחודשיים" },
-        { name: "כרטיסיית 10 אימונים", price: "₪750", detail: "תקפה לחודשיים" },
-        { name: "כרטיסיית 20 אימונים", price: "₪1400", detail: "תקפה ל3 חודשים" }
-      ],
+      items: PUNCH_CARD_PACKAGE_SIZES.map((n) => PUNCH_CARD_PRICING_ROWS[n]),
     },
   ];
 

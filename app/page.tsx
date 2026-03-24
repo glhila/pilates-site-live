@@ -5,7 +5,7 @@ import { getWhatsAppLink } from "@/src/lib/constants";
 
 // ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: "ראשי | עונג של פילאטיס",
+  title: "ראשי | העונג שבפילאטיס",
   description: "סטודיו בוטיק לפילאטיס מכשירים באווירה אינטימית ויוקרתית.",
 };
 
@@ -105,11 +105,11 @@ export default function Home() {
       <section className="py-24 px-6 bg-brand-bg-soft/30">
         <div className="container mx-auto max-w-4xl">
           <div className="feature-card text-center space-y-8">
-            <h2 className="text-3xl md:text-4xl font-serif text-brand-primary">תנועה עדינה, חיזוק עמוק</h2>
+            <h2 className="text-3xl md:text-4xl font-serif text-brand-primary">גוף ונפש</h2>
             <p className="text-lg font-light leading-relaxed max-w-2xl mx-auto">
               הסטודיו שלנו תוכנן כדי להעניק לך מרחב של שקט בתוך השגרה. 
               כל שיעור הוא הזדמנות לעבוד על הגוף מבלי להעמיס על הנפש, 
-              עם מכשור מתקדם וליווי מקצועי צמוד.
+              עם מכשור מתקדם וליווי מקצועי צמוד בקבוצות קטנות עם יחס אישי.
             </p>
             <div className="pt-4">
               <Link href="/about" className="text-brand-accent-text font-bold text-xs uppercase tracking-widest border-b border-brand-accent/30 pb-2 hover:border-brand-accent transition-all">

@@ -1,6 +1,5 @@
 import { Metadata } from "next";
-import Link from "next/link";
-import { SERVICE_PHONE, SERVICE_EMAIL, getWhatsAppLink } from "@/src/lib/constants";
+import { SERVICE_PHONE, SERVICE_EMAIL, getWhatsAppLink, STUDIO_ADDRESS, GOOGLE_MAPS_URL, WAZE_NAVIGATION_URL } from "@/src/lib/constants";
 
 export const metadata: Metadata = {
   title: "צור קשר | עונג של פילאטיס כפר סבא",
@@ -10,6 +9,7 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   // יצירת לינק לוואטסאפ עם הודעה ייעודית לעמוד צור קשר
   const contactWhatsAppUrl = getWhatsAppLink("היי! הגעתי דרך האתר ואשמח לקבל פרטים נוספים על הסטודיו 🧘‍♀️✨");
+  
 
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg">
@@ -39,7 +39,7 @@ export default function ContactPage() {
                   <span className="text-xl">📍</span>
                   <div>
                     <p className="font-serif text-lg text-brand-primary">הסטודיו שלנו</p>
-                    <p className="font-light text-brand-primary/70">רחוב [שם הרחוב], כפר סבא</p>
+                    <p className="font-light text-brand-primary/70">{STUDIO_ADDRESS}</p>
                   </div>
                 </div>
                 
@@ -70,11 +70,11 @@ export default function ContactPage() {
               <div className="grid grid-cols-2 gap-4 text-sm font-light text-brand-primary/80">
                 <div>
                   <p className="font-bold mb-1">א׳ - ה׳</p>
-                  <p>07:00 - 21:00</p>
+                  <p>09:00 - 17:00</p>
                 </div>
                 <div>
                   <p className="font-bold mb-1">יום ו׳</p>
-                  <p>07:00 - 14:00</p>
+                  <p>09:00 - 13:00</p>
                 </div>
               </div>
             </section>
@@ -98,7 +98,25 @@ export default function ContactPage() {
                 <span className="text-2xl opacity-50">📍</span>
               </div>
               <p className="font-serif italic text-brand-primary/60 text-xl mb-4">Finding Balance</p>
-              <p className="text-xs tracking-widest text-brand-stone uppercase">Map coming soon</p>
+              <p className="text-sm text-brand-primary/70 mb-6">{STUDIO_ADDRESS}</p>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <a
+                  href={GOOGLE_MAPS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs tracking-widest uppercase border border-brand-stone/40 px-5 py-3 rounded-full hover:border-brand-accent-text hover:text-brand-accent-text transition-colors"
+                >
+                  Google Maps
+                </a>
+                <a
+                  href={WAZE_NAVIGATION_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs tracking-widest uppercase border border-brand-stone/40 px-5 py-3 rounded-full hover:border-brand-accent-text hover:text-brand-accent-text transition-colors"
+                >
+                  Navigate with Waze
+                </a>
+              </div>
             </div>
           </div>
 

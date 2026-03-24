@@ -1,30 +1,29 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export const SERVICE_PHONE = "052-6409993";
-export const STUDIO_NAME = "עונג של פילאטיס";
+export const STUDIO_NAME = "העונג שבפילאטיס";
 export const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'oneg3gri@gmail.com'].map(email => email.toLowerCase());
 export const SERVICE_EMAIL = "oneg3gri@gmail.com";
 export const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') ?? [];
+export const STUDIO_ADDRESS = "רחוב איינשטיין 3, כפר סבא";
+export const GOOGLE_MAPS_URL = "https://www.google.com/maps/search/?api=1&query=%D7%A8%D7%97%D7%95%D7%91%20%D7%90%D7%99%D7%99%D7%A0%D7%A9%D7%98%D7%99%D7%99%D7%9F%203%2C%20%D7%9B%D7%A4%D7%A8%20%D7%A1%D7%91%D7%90";
+export const WAZE_NAVIGATION_URL = "https://waze.com/ul?q=%D7%A8%D7%97%D7%95%D7%91%20%D7%90%D7%99%D7%99%D7%A0%D7%A9%D7%98%D7%99%D7%99%D7%9F%203%2C%20%D7%9B%D7%A4%D7%A8%20%D7%A1%D7%91%D7%90&navigate=yes";
 
 // ─── Schedule / calendar layout (shared by admin + user portal) ─────────────
-export const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''] as const;
-export const TIME_SLOTS = [ '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-  'break',
-  '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
+export const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\''] as const;
+export const TIME_SLOTS = [ '06:45', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
+  '14:00','15:00', '16:00', '17:30', '18:30', '19:30', '20:30'
 ] as const;
 export const HOUR_HEIGHT = 100;
-export const MORNING_START = 7;
-export const MORNING_END = 13;
-export const EVENING_START = 16;
-export const EVENING_END = 22;
+export const MORNING_START = 6;
+export const MORNING_END = 20;
 
 // ─── Booking rules (user portal) ──────────────────────────────────────────
-export const CANCELLATION_WINDOW_HOURS = 4;
+export const CANCELLATION_WINDOW_HOURS = 24;
 
 // ─── Admin: class types & external links ──────────────────────────────────
 export const CLASS_TEMPLATES = [
-  "מכשירים - Level 1", "מכשירים - Level 2", "מכשירים - Level 3",
-  "מזרן - Level 1", "מזרן - Level 2", "מזרן - Level 3"
+  "מכשירים", "שיקומי- אישי"
 ] as const;
 export const HEALTH_FORM_URL = process.env.NEXT_PUBLIC_HEALTH_FORM_URL || 'https://docs.google.com/forms/d/e/1FAIpQLSfyhdYaC3Sw4afJU-IXjoEbhgNr62w3yeW5seL31i9md8YPrg/viewform?pli=1';
 

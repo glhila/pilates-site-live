@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import {
   ADMIN_EMAILS,
-  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, EVENING_START, EVENING_END,
+  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END,
   CLASS_TEMPLATES,
   HEALTH_FORM_URL,
   getAuthenticatedSupabase, getWhatsAppUrlForPhone,
@@ -120,10 +120,8 @@ export default function AdminPage() {
       }
     };
 
-    // morning: 07:00–14:00 (last start 13:00)
+    // single continuous schedule range
     addCandidatesInRange(MORNING_START, MORNING_END);
-    // evening: 16:00–23:00 (last start 22:00)
-    addCandidatesInRange(EVENING_START, EVENING_END);
 
     return candidates;
   };
@@ -451,7 +449,7 @@ export default function AdminPage() {
                 {/* Desktop: 7-day grid with time slots */}
                 <div className="hidden lg:flex bg-white rounded-[3.5rem] border border-brand-stone/20 overflow-hidden shadow-sm min-h-[950px]">
                   <div className="w-20 bg-brand-stone/5 border-l border-brand-stone/10 flex flex-col pt-20 text-[12px] opacity-50 font-serif italic font-black tabular-nums">
-                    {TIME_SLOTS.map((s, i) => <div key={i} className={s==='break' ? 'h-16 bg-brand-stone/10' : 'h-[100px] flex justify-center'}>{s!=='break' && s}</div>)}
+                    {TIME_SLOTS.map((s, i) => <div key={i} className="h-[100px] flex justify-center">{s}</div>)}
                   </div>
                   <div className="flex-1 grid grid-cols-7 relative">
                     {weekDates.map((date, dayIdx) => (
@@ -461,11 +459,12 @@ export default function AdminPage() {
                             <span className="text-xl font-bold mt-0.5">{date.getDate()}</span>
                         </div>
 
-                        <div className="relative" style={{ height: 'calc(14 * 100px + 64px)' }}>
+                        <div className="relative" style={{ height: `${(MORNING_END - MORNING_START) * HOUR_HEIGHT}px` }}>
                           {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
                               const start = new Date(c.start_time);
                               const hour = start.getHours(); const mins = start.getMinutes();
-                              let top = hour >= MORNING_START && hour <= MORNING_END ? (hour-MORNING_START + mins/60)*HOUR_HEIGHT : (hour-EVENING_START + mins/60)*HOUR_HEIGHT + (7 * HOUR_HEIGHT) + 64;
+                              if (hour < MORNING_START || hour > MORNING_END) return null;
+                              const top = (hour - MORNING_START + mins / 60) * HOUR_HEIGHT;
                               return (
                                 <div
                                   key={c.id}

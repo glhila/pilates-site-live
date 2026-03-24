@@ -4,6 +4,7 @@ import Link from "next/link";
 import React from "react";
 import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
+import { ADMIN_EMAILS } from "@/src/lib/constants";
 
 const links = [
   { href: "/", label: "בית" },
@@ -16,12 +17,8 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
   const { user } = useUser();
 
-  // 
-  const adminEmail = "hilaglazz13@gmail.com".toLowerCase(); 
   const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  
-  // בדיקה האם המשתמש הוא אדמין
-  const isAdmin = userEmail === adminEmail;
+  const isAdmin = Boolean(userEmail && ADMIN_EMAILS.includes(userEmail));
 
   const actionPath = isAdmin ? "/admin" : "/users";
   const actionLabel = isAdmin ? "ניהול סטודיו" : "קביעת שיעור";

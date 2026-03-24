@@ -112,7 +112,7 @@ export default function AdminPage() {
   // ─── State: user/trainee form & manual booking ────────────────────────────
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userFormData, setUserFormData] = useState<UserFormState>({
-    full_name: '', email: '', phone: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: ''
+    full_name: '', email: '', phone: '', membership_type: 0, punch_card_remaining: 0, punch_card_expiry: ''
   });
 
   /** מתאמנת חדשה בלבד: ניקובים ברירת מחדל — 0 במנוי שבועי, חבילת ברירת מחדל בכרטיסייה בלבד (לפי מחירון). */
@@ -361,7 +361,7 @@ export default function AdminPage() {
         const savedEmail = userFormData.email.trim().toLowerCase();
         const savedPhone = userFormData.phone;
         setEditingUserId(null); 
-        setUserFormData({ full_name: '', email: '', phone: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: '' }); 
+        setUserFormData({ full_name: '', email: '', phone: '', membership_type: 0, punch_card_remaining: 0, punch_card_expiry: '' }); 
         loadData();
         if (isNew) {
           setWelcomeModal({ name: savedName, email: savedEmail, phone: savedPhone });
@@ -762,7 +762,7 @@ export default function AdminPage() {
                 {editingUserId && (
                   <button
                     type="button"
-                    onClick={() => { setEditingUserId(null); setUserFormData({ full_name: '', email: '', phone: '', membership_type: 2, punch_card_remaining: 0, punch_card_expiry: '' }); }}
+                    onClick={() => { setEditingUserId(null); setUserFormData({ full_name: '', email: '', phone: '', membership_type: 0, punch_card_remaining: 0, punch_card_expiry: '' }); }}
                     className="w-full text-xs font-bold opacity-30 mt-4 underline underline-offset-4 tracking-widest"
                   >
                     ביטול עריכה

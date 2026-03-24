@@ -17,6 +17,7 @@ export const TIME_SLOTS = [ '06:45', '08:00', '09:00', '10:00', '11:00', '12:00'
 export const HOUR_HEIGHT = 100;
 export const MORNING_START = 6;
 export const MORNING_END = 20;
+export type HolidayMap = Record<string, string[]>;
 
 // ─── Booking rules (user portal) ──────────────────────────────────────────
 export const CANCELLATION_WINDOW_HOURS = 24;
@@ -73,4 +74,28 @@ export const isSameWeek = (date1: Date, date2: Date): boolean => {
   const week1 = new Date(d1.setDate(diff1)).toDateString();
   const week2 = new Date(d2.setDate(diff2)).toDateString();
   return week1 === week2;
+};
+
+/** Build YYYY-MM-DD date key in local time. */
+export const toDateKey = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/** Fetch Jewish holidays by Gregorian year from Hebcal API. */
+export const fetchJewishHolidays = async (years: number[]): Promise<HolidayMap> => {
+  const map: HolidayMap = {};
+  await Promise.all(
+    years.map(async (year) => {
+      const res = await fetch(
+        `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&year=${year}&month=x&geo=none&M=on&s=on`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      for (const item of data.items ?? []) {
+        if (!item?.date || !item?.title) continue;
+        const dateKey = String(item.date).split("T")[0];
+        map[dateKey] = [...(map[dateKey] ?? []), item.title];
+      }
+    })
+  );
+  return map;
 };

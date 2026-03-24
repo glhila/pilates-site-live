@@ -30,6 +30,14 @@ export const PUNCH_CARD_PACKAGE_SIZES = [1, 5, 10, 20] as const;
 /** ברירת מחדל לניקובים כשהמתאמנת על כרטיסייה בלבד (membership_type === 0). */
 export const DEFAULT_PUNCH_FOR_PUNCH_CARD_ONLY = 10;
 
+/** תוקף כרטיסייה לפי מספר ניקובים (נדרש במסך מנהל). */
+export const PUNCH_CARD_VALIDITY_RULES: Record<number, { weeks?: number; months?: number }> = {
+  1: { weeks: 1 },
+  5: { months: 2 },
+  10: { months: 2 },
+  20: { months: 3 },
+};
+
 // ─── Admin: class types & external links ──────────────────────────────────
 export const CLASS_TEMPLATES = [
   "מכשירים", "שיקומי- אישי"

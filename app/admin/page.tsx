@@ -11,6 +11,7 @@ import {
   HEALTH_FORM_URL,
   DEFAULT_PUNCH_FOR_PUNCH_CARD_ONLY,
   PUNCH_CARD_PACKAGE_SIZES,
+  PUNCH_CARD_VALIDITY_RULES,
   getAuthenticatedSupabase, getWhatsAppUrlForPhone, toDateKey, fetchJewishHolidays, type HolidayMap,
 } from "@/src/lib/constants";
 
@@ -36,16 +37,24 @@ const profileToUserForm = (p: any): UserFormState => ({
 
 const applyPunchChange = (
   prev: UserFormState,
-  newPunches: number,
-  editingUserId: string | null
+  newPunches: number
 ): UserFormState => {
+  const toDateOnly = (d: Date) => d.toISOString().split('T')[0];
   const updates: Partial<UserFormState> = { punch_card_remaining: newPunches };
-  if (!editingUserId && newPunches > 0 && !prev.punch_card_expiry) {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 2);
-    updates.punch_card_expiry = d.toISOString().split('T')[0];
+
+  if (newPunches === 0) {
+    updates.punch_card_expiry = '';
+    return { ...prev, ...updates };
   }
-  if (newPunches === 0) updates.punch_card_expiry = '';
+
+  const validity = PUNCH_CARD_VALIDITY_RULES[newPunches];
+  if (validity) {
+    const d = new Date();
+    if (validity.weeks) d.setDate(d.getDate() + validity.weeks * 7);
+    if (validity.months) d.setMonth(d.getMonth() + validity.months);
+    updates.punch_card_expiry = toDateOnly(d);
+  }
+
   return { ...prev, ...updates };
 };
 
@@ -113,14 +122,7 @@ export default function AdminPage() {
       userFormData.membership_type > 0 ? 0 : DEFAULT_PUNCH_FOR_PUNCH_CARD_ONLY;
     setUserFormData((prev) => {
       if (prev.punch_card_remaining === nextPunch) return prev;
-      const updates: Partial<UserFormState> = { punch_card_remaining: nextPunch };
-      if (nextPunch > 0 && !prev.punch_card_expiry) {
-        const d = new Date();
-        d.setMonth(d.getMonth() + 2);
-        updates.punch_card_expiry = d.toISOString().split('T')[0];
-      }
-      if (nextPunch === 0) updates.punch_card_expiry = '';
-      return { ...prev, ...updates };
+      return applyPunchChange(prev, nextPunch);
     });
   }, [userFormData.membership_type, editingUserId]);
   const [manualBookingUserId, setManualBookingUserId] = useState("");
@@ -678,14 +680,15 @@ export default function AdminPage() {
                     <p className="text-[10px] text-brand-primary/45 leading-snug">
                       ערכי מחירון: {PUNCH_CARD_PACKAGE_SIZES.join(', ')} — ניתן גם להזין ידנית (למשל יתרה אחרי אימונים).
                     </p>
+                    <p className="text-[10px] text-brand-primary/45 leading-snug">
+                      תוקף אוטומטי: 1 לשבוע, 5/10 לחודשיים, 20 ל-3 חודשים, ו-0 ללא תוקף.
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {PUNCH_PRESET_VALUES.map((n) => (
                         <button
                           key={n}
                           type="button"
-                          onClick={() =>
-                            setUserFormData((prev) => applyPunchChange(prev, n, editingUserId))
-                          }
+                          onClick={() => setUserFormData((prev) => applyPunchChange(prev, n))}
                           className={`min-w-[2.5rem] px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
                             userFormData.punch_card_remaining === n
                               ? 'bg-brand-dark text-white border-brand-dark'
@@ -707,7 +710,7 @@ export default function AdminPage() {
                         const newPunches = raw === '' ? 0 : parseInt(raw, 10);
                         if (raw !== '' && Number.isNaN(newPunches)) return;
                         setUserFormData((prev) =>
-                          applyPunchChange(prev, Number.isNaN(newPunches) ? 0 : newPunches, editingUserId)
+                          applyPunchChange(prev, Number.isNaN(newPunches) ? 0 : newPunches)
                         );
                       }}
                     />

@@ -4,13 +4,13 @@ import { getWhatsAppLink } from "@/src/lib/constants";
 
 // ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: "מחירון ומסלולים | עונג של פילאטיס",
+  title: "מחירון ומסלולים | העונג שבפילאטיס",
   description: "מגוון אפשרויות למנויים וכרטיסיות בסטודיו עונג פילאטיס. השקעה בגוף ובנפש באווירה יוקרתית.",
 };
 
 // ─── Data: pricing categories ─────────────────────────────────────────────
 const PRICING_CATEGORIES = [
-    {
+    /**{
       title: "מנויים חודשיים",
       subtitle: "התמדה היא המפתח לשינוי אמיתי",
       items: [
@@ -19,12 +19,15 @@ const PRICING_CATEGORIES = [
         { name: "3 אימונים בשבוע", price: "₪550", detail: "12 אימונים בחודש" },
         { name: "ללא הגבלה", price: "₪650", detail: "על בסיס מקום פנוי" },
       ],
-    },
+   }, **/
     {
       title: "כרטיסיות",
       subtitle: "גמישות מקסימלית לאורח החיים שלך",
       items: [
-        { name: "כרטיסיית 10 אימונים", price: "₪750", detail: "תקפה לחודשיים" }
+        { name: "כניסה חד פעמית", price: "₪90", detail: "תקפה לשבוע" },
+        { name: "כרטיסיית 5 אימונים", price: "₪400", detail: "תקפה לחודשיים" },
+        { name: "כרטיסיית 10 אימונים", price: "₪750", detail: "תקפה לחודשיים" },
+        { name: "כרטיסיית 20 אימונים", price: "₪1400", detail: "תקפה ל3 חודשים" }
       ],
     },
   ];
@@ -112,15 +115,15 @@ export default function PricingPage() {
             <ul className="space-y-6 text-right">
               <li className="flex items-start gap-4 text-base font-light text-brand-primary/90">
                 <span className="text-brand-accent-text text-xl leading-none mt-1">◦</span>
-                <span className="leading-relaxed">המנויים הינם בהוראת קבע ללא תפיסת מסגרת אשראי</span>
+                <span className="leading-relaxed">ניתן לבטל שיעור עד 24 שעות מראש</span>
               </li>
-              <li className="flex items-start gap-4 text-base font-light text-brand-primary/90">
+              {/*<li className="flex items-start gap-4 text-base font-light text-brand-primary/90">
                 <span className="text-brand-accent-text text-xl leading-none mt-1">◦</span>
                 <span className="leading-relaxed">ביטול מנוי בהודעה של 30 יום מראש</span>
-              </li>
+              </li>*/}
               <li className="flex items-start gap-4 text-base font-light text-brand-primary/90">
                 <span className="text-brand-accent-text text-xl leading-none mt-1">◦</span>
-                <span className="leading-relaxed">הכרטיסיות תקפות לשימוש בטווח של חודשיים מיום הרכישה</span>
+                <span className="leading-relaxed">הכרטיסיות תקפות לשימוש מיום הרכישה</span>
               </li>
             </ul>
           </div>

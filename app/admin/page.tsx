@@ -128,6 +128,25 @@ export default function AdminPage() {
     return candidates;
   };
 
+  const getClosestSlots = (
+    slots: { hour: string; minute: string; label: string }[],
+    targetHour: string,
+    targetMinute: string,
+    limit = 12
+  ) => {
+    const targetMinutes = parseInt(targetHour, 10) * 60 + parseInt(targetMinute, 10);
+    return [...slots]
+      .sort((a, b) => {
+        const aMinutes = parseInt(a.hour, 10) * 60 + parseInt(a.minute, 10);
+        const bMinutes = parseInt(b.hour, 10) * 60 + parseInt(b.minute, 10);
+        const aDiff = Math.abs(aMinutes - targetMinutes);
+        const bDiff = Math.abs(bMinutes - targetMinutes);
+        if (aDiff !== bDiff) return aDiff - bDiff;
+        return aMinutes - bMinutes;
+      })
+      .slice(0, limit);
+  };
+
   const deleteClassesByIds = async (ids: string[]) => {
     const supabase = await getAuthenticatedSupabase(getToken);
     if (!supabase) return { ok: false as const, message: "אין חיבור למסד הנתונים" };
@@ -164,7 +183,11 @@ export default function AdminPage() {
     if (conflicts.length > 0) {
       const firstCandidateStart = new Date(classesToInsert[0].start_time);
       const dayKey = toLocalDayKey(firstCandidateStart);
-      const suggestions = getFreeSlotsForDay(dayKey).slice(0, 10);
+      const suggestions = getClosestSlots(
+        getFreeSlotsForDay(dayKey),
+        classFormData.hour,
+        classFormData.minute
+      );
       const dayLabel = firstCandidateStart.toLocaleDateString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
       setOverlapModal({
         pendingInsert: classesToInsert,

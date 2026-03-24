@@ -14,6 +14,14 @@ import {
 
 const CLASS_DURATION_MINUTES = 60;
 const [DEFAULT_HOUR, DEFAULT_MINUTE] = TIME_SLOTS[0].split(":");
+const toLocalDateTimeString = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const h = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  return `${y}-${m}-${d}T${h}:${min}:00`;
+};
 
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
@@ -161,7 +169,7 @@ export default function AdminPage() {
         classesToInsert.push({
             name: classFormData.name,
             class_type: classFormData.name.includes("מזרן") ? "פילאטיס מזרן" : "פילאטיס מכשירים",
-            start_time: currentStart.toISOString(),
+            start_time: toLocalDateTimeString(currentStart),
             max_capacity: classFormData.max_capacity,
             recurring_id: recurring_id
         });

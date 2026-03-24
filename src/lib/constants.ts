@@ -6,8 +6,8 @@ export const ADMIN_EMAILS = ['hilaglazz13@gmail.com', 'oneg3gri@gmail.com'].map(
 export const SERVICE_EMAIL = "oneg3gri@gmail.com";
 export const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') ?? [];
 export const STUDIO_ADDRESS = "רחוב איינשטיין 3, כפר סבא";
-export const GOOGLE_MAPS_URL = "https://www.google.com/maps/search/?api=1&query=%D7%A8%D7%97%D7%95%D7%91%20%D7%90%D7%99%D7%99%D7%A0%D7%A9%D7%98%D7%99%D7%99%D7%9F%203%2C%20%D7%9B%D7%A4%D7%A8%20%D7%A1%D7%91%D7%90";
-export const WAZE_NAVIGATION_URL = "https://waze.com/ul?q=%D7%A8%D7%97%D7%95%D7%91%20%D7%90%D7%99%D7%99%D7%A0%D7%A9%D7%98%D7%99%D7%99%D7%9F%203%2C%20%D7%9B%D7%A4%D7%A8%20%D7%A1%D7%91%D7%90&navigate=yes";
+export const GOOGLE_MAPS_URL = `https://www.google.com/maps?q=${encodeURIComponent(STUDIO_ADDRESS)}`;
+export const WAZE_NAVIGATION_URL = `https://waze.com/ul?q=${encodeURIComponent(STUDIO_ADDRESS)}&navigate=yes`;
 
 // ─── Schedule / calendar layout (shared by admin + user portal) ─────────────
 export const DAYS_HEBREW = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\''] as const;

@@ -13,6 +13,7 @@ import {
 } from "@/src/lib/constants";
 
 const CLASS_DURATION_MINUTES = 60;
+const [DEFAULT_HOUR, DEFAULT_MINUTE] = TIME_SLOTS[0].split(":");
 
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
@@ -44,7 +45,7 @@ export default function AdminPage() {
   const [classFormData, setClassFormData] = useState<{
     name: string; date: string; hour: string; minute: string; max_capacity: number; is_recurring: boolean;
   }>({
-    name: CLASS_TEMPLATES[0], date: '', hour: '08', minute: '00', max_capacity: 3, is_recurring: false
+    name: CLASS_TEMPLATES[0], date: '', hour: DEFAULT_HOUR, minute: DEFAULT_MINUTE, max_capacity: 3, is_recurring: false
   });
 
   // ─── State: user/trainee form & manual booking ────────────────────────────
@@ -97,34 +98,23 @@ export default function AdminPage() {
       .filter(c => toLocalDayKey(new Date(c.start_time)) === dayKey)
       .map(c => getInterval(c.start_time));
 
-    const candidates: { hour: string; minute: string; label: string }[] = [];
-    const addCandidatesInRange = (startHour: number, endHour: number) => {
-      for (let h = startHour; h <= endHour; h++) {
-        for (const m of [0, 30]) {
-          const hour = String(h).padStart(2, '0');
-          const minute = String(m).padStart(2, '0');
-          const start = new Date(`${dayKey}T${hour}:${minute}:00`);
-          const end = new Date(start);
-          end.setMinutes(end.getMinutes() + CLASS_DURATION_MINUTES);
+    return TIME_SLOTS
+      .map((slot) => {
+        const [hour, minute] = slot.split(":");
+        return { hour, minute, label: slot };
+      })
+      .filter(({ hour, minute }) => {
+        const start = new Date(`${dayKey}T${hour}:${minute}:00`);
+        const end = new Date(start);
+        end.setMinutes(end.getMinutes() + CLASS_DURATION_MINUTES);
 
-          // keep interval fully inside the range
-          const rangeStart = new Date(`${dayKey}T${String(startHour).padStart(2, '0')}:00:00`);
-          const rangeEnd = new Date(`${dayKey}T${String(endHour + 1).padStart(2, '0')}:00:00`);
-          if (!(start >= rangeStart && end <= rangeEnd)) continue;
+        const rangeStart = new Date(`${dayKey}T${String(MORNING_START).padStart(2, '0')}:00:00`);
+        const rangeEnd = new Date(`${dayKey}T${String(MORNING_END + 1).padStart(2, '0')}:00:00`);
+        if (!(start >= rangeStart && end <= rangeEnd)) return false;
 
-          const candidateInterval = { start, end };
-          const overlaps = existing.some(ex => intervalsOverlap(candidateInterval, ex));
-          if (!overlaps) {
-            candidates.push({ hour, minute, label: `${hour}:${minute}` });
-          }
-        }
-      }
-    };
-
-    // single continuous schedule range
-    addCandidatesInRange(MORNING_START, MORNING_END);
-
-    return candidates;
+        const candidateInterval = { start, end };
+        return !existing.some(ex => intervalsOverlap(candidateInterval, ex));
+      });
   };
 
   const getClosestSlots = (
@@ -417,19 +407,20 @@ export default function AdminPage() {
                   <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">תאריך</label>
                   <input type="date" required className="w-full p-4 bg-brand-bg rounded-2xl outline-none border border-brand-stone/10" value={classFormData.date} onChange={e => setClassFormData({...classFormData, date: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">שעה</label>
-                      <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.hour} onChange={e => setClassFormData({...classFormData, hour: e.target.value})}>
-                          {Array.from({length: 16}, (_, i) => (i + 7).toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">דקות</label>
-                      <select className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold" value={classFormData.minute} onChange={e => setClassFormData({...classFormData, minute: e.target.value})}>
-                          <option value="00">00</option><option value="30">30</option>
-                      </select>
-                    </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">שעה</label>
+                  <select
+                    className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold"
+                    value={`${classFormData.hour}:${classFormData.minute}`}
+                    onChange={e => {
+                      const [hour, minute] = e.target.value.split(':');
+                      setClassFormData({ ...classFormData, hour, minute });
+                    }}
+                  >
+                    {TIME_SLOTS.map((slot) => (
+                      <option key={slot} value={slot}>{slot}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                     <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">קיבולת מקסימלית</label>

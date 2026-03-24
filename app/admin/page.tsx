@@ -677,12 +677,6 @@ export default function AdminPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">ניקובים</label>
-                    <p className="text-[10px] text-brand-primary/45 leading-snug">
-                      ערכי מחירון: {PUNCH_CARD_PACKAGE_SIZES.join(', ')} — ניתן גם להזין ידנית (למשל יתרה אחרי אימונים).
-                    </p>
-                    <p className="text-[10px] text-brand-primary/45 leading-snug">
-                      תוקף אוטומטי: 1 לשבוע, 5/10 לחודשיים, 20 ל-3 חודשים, ו-0 ללא תוקף.
-                    </p>
                     <div className="flex flex-wrap gap-2">
                       {PUNCH_PRESET_VALUES.map((n) => (
                         <button
@@ -732,24 +726,30 @@ export default function AdminPage() {
                       value={userFormData.punch_card_expiry || ''}
                       onChange={e => setUserFormData({ ...userFormData, punch_card_expiry: e.target.value })}
                     />
-                    {/* קיצורי דרך לתאריך */}
+                    {/* קיצורי דרך לתאריך — שבוע / חודשיים / 3 חודשים (כמו במחירון) */}
                     <div className="flex gap-2 pt-1">
-                      {[
-                        { label: 'חודש', months: 1 },
-                        { label: 'חודשיים', months: 2 },
-                        { label: '3 חודשים', months: 3 },
-                      ].map(({ label, months }) => (
+                      {(
+                        [
+                          { label: 'שבוע', weeks: 1 as const },
+                          { label: 'חודשיים', months: 2 as const },
+                          { label: '3 חודשים', months: 3 as const },
+                        ] as const
+                      ).map((item) => (
                         <button
-                          key={months}
+                          key={item.label}
                           type="button"
                           onClick={() => {
                             const d = new Date();
-                            d.setMonth(d.getMonth() + months);
-                            setUserFormData({ ...userFormData, punch_card_expiry: d.toISOString().split('T')[0] });
+                            if ('weeks' in item) d.setDate(d.getDate() + item.weeks * 7);
+                            else d.setMonth(d.getMonth() + item.months);
+                            setUserFormData((prev) => ({
+                              ...prev,
+                              punch_card_expiry: d.toISOString().split('T')[0],
+                            }));
                           }}
                           className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl bg-brand-bg hover:bg-brand-stone/10 transition-all opacity-50 hover:opacity-100"
                         >
-                          {label}
+                          {item.label}
                         </button>
                       ))}
                     </div>

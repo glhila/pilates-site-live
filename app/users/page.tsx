@@ -6,7 +6,7 @@ import { useUser, useAuth } from "@clerk/nextjs";
 import { useEffect, useState, useMemo } from "react";
 import {
   DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, CANCELLATION_WINDOW_HOURS,
-  getAuthenticatedSupabase,
+  getAuthenticatedSupabase, toDateKey, fetchJewishHolidays, type HolidayMap,
   formatDate, formatTime, isSameWeek,
 } from "@/src/lib/constants";
 
@@ -32,6 +32,7 @@ export default function UserPortal() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('schedule');
   const [bookingsFilter, setBookingsFilter] = useState<BookingsFilter>('upcoming');
   const [modal, setModal] = useState<ModalConfig | null>(null);
+  const [jewishHolidaysByDate, setJewishHolidaysByDate] = useState<HolidayMap>({});
 
   // ─── Helpers: modal ─────────────────────────────────────────────────────
   const showModal = (title: string, body: string, emoji?: string) => {
@@ -215,12 +216,21 @@ export default function UserPortal() {
   const weekDates = useMemo(() => {
     const start = new Date(viewDate);
     start.setDate(viewDate.getDate() - viewDate.getDay());
-    return Array.from({ length: 7 }, (_, i) => {
+    return Array.from({ length: 6 }, (_, i) => {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       return d;
     });
   }, [viewDate]);
+
+  useEffect(() => {
+    const years = Array.from(new Set(weekDates.map((d) => d.getFullYear())));
+    let cancelled = false;
+    fetchJewishHolidays(years)
+      .then((map) => { if (!cancelled) setJewishHolidaysByDate(map); })
+      .catch(() => { if (!cancelled) setJewishHolidaysByDate({}); });
+    return () => { cancelled = true; };
+  }, [weekDates]);
 
   // חישוב הזמנות מסוננות לטאב ההזמנות שלי
   const filteredBookings = useMemo(() => {
@@ -340,7 +350,7 @@ export default function UserPortal() {
               </button>
               <span className="font-bold text-sm min-w-[150px] text-center tabular-nums">
                 {weekDates[0].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })} -{' '}
-                {weekDates[6].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })}
+                {weekDates[5].toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })}
               </span>
               <button
                 onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate() + 7); setViewDate(d); }}
@@ -369,12 +379,22 @@ export default function UserPortal() {
               </div>
 
               {/* Day Columns */}
-              <div className="flex-1 grid grid-cols-7 relative">
+              <div className="flex-1 grid grid-cols-6 relative">
                 {weekDates.map((date, dayIdx) => (
                   <div key={dayIdx} className={`relative border-l border-brand-stone/5 last:border-l-0 ${date.toDateString() === new Date().toDateString() ? 'bg-brand-dark/[0.02]' : ''}`}>
                     <div className="h-20 flex flex-col items-center justify-center border-b border-brand-stone/10 bg-white sticky top-0 z-20">
                       <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">{DAYS_HEBREW[dayIdx]}</span>
                       <span className="text-xl font-bold mt-0.5">{date.getDate()}</span>
+                      {(() => {
+                        const dateKey = toDateKey(date);
+                        const jewish = jewishHolidaysByDate[dateKey] ?? [];
+                        const label = jewish.slice(0, 1).join(" • ");
+                        return label ? (
+                          <span className="mt-0.5 text-[9px] font-semibold text-brand-accent-text/80 truncate max-w-[90%]">
+                            {label}
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                     
                     <div className="relative" style={{ height: `${(MORNING_END - MORNING_START) * HOUR_HEIGHT}px` }}>

@@ -28,7 +28,7 @@ export default function Footer() {
         </div>
 
         <div className="space-y-1 text-[0.78rem] leading-relaxed">
-          <p>רחוב [שם הרחוב], כפר סבא</p>
+          <p>רחוב איינשטיין 3, כפר סבא</p>
           <p>טלפון: 052-640-9993</p>
         </div>
 

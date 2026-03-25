@@ -1,49 +1,43 @@
 import { Metadata } from "next";
-import { getWhatsAppLink } from "@/src/lib/constants";
+import { getWhatsAppLink, TIME_SLOTS, MORNING_START, MORNING_END } from "@/src/lib/constants";
 import { WhatsAppIcon } from "@/src/components/icons";
 
 // ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: "מערכת שעות ושיעורים | עונג של פילאטיס",
+  title: "מערכת שעות ושיעורים | העונג שבפילאטיס",
   description: "מערכת שבועית ומגוון שיעורי פילאטיס מכשירים: רפורמר, קדילאק, שיעורי שיקום ופילאטיס לנשים בהריון.",
 };
 
-// ─── Data: weekly schedule (static) ────────────────────────────────────────
-const WEEKDAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי"];
-const SCHEDULE = [
-  { day: "ראשון", slots: [{ time: "09:00", name: "רפורמר" }, { time: "10:30", name: "קדילאק" }, { time: "18:00", name: "רפורמר" }] },
-  { day: "שני", slots: [{ time: "07:30", name: "רפורמר" }, { time: "19:00", name: "שיקומי" }] },
-  { day: "שלישי", slots: [{ time: "09:00", name: "רפורמר" }, { time: "10:30", name: "הריון" }, { time: "18:00", name: "קדילאק" }] },
-  { day: "רביעי", slots: [{ time: "08:00", name: "רפורמר" }, { time: "19:00", name: "רפורמר" }] },
-  { day: "חמישי", slots: [{ time: "09:00", name: "קדילאק" }, { time: "18:00", name: "רפורמר" }] },
-  { day: "שישי", slots: [{ time: "08:00", name: "רפורמר" }, { time: "09:30", name: "שיקומי" }] },
+// ─── Data ─────────────────────────────────────────────────────────────────
+// כל השעות חייבות להיות מתוך TIME_SLOTS ב-constants
+const WEEKDAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי"] as const;
+
+const SCHEDULE: { day: typeof WEEKDAYS[number]; slots: Record<string, string> }[] = [
+  { day: "ראשון",  slots: { "09:00": "רפורמר",  "11:00": "קדילאק",  "17:30": "רפורמר" } },
+  { day: "שני",    slots: { "08:00": "רפורמר",  "19:30": "שיקומי"  } },
+  { day: "שלישי", slots: { "09:00": "רפורמר",  "11:00": "רפורמר",   "18:30": "קדילאק" } },
+  { day: "רביעי", slots: { "08:00": "רפורמר",  "20:30": "רפורמר"  } },
+  { day: "חמישי", slots: { "09:00": "קדילאק",  "17:30": "רפורמר"  } },
+  { day: "שישי",  slots: { "08:00": "רפורמר",  "09:00": "שיקומי"  } },
 ];
 
-// ─── Helper: build schedule lookup for table ───────────────────────────────
-function buildScheduleTable() {
-  const byDay: Record<string, Record<string, string>> = {};
-  const timeSet = new Set<string>();
-  for (const row of SCHEDULE) {
-    byDay[row.day] = {};
-    for (const slot of row.slots) {
-      byDay[row.day][slot.time] = slot.name;
-      timeSet.add(slot.time);
-    }
-  }
-  const times = Array.from(timeSet).sort();
-  return { byDay, times };
-}
-
-// ─── Data: lesson types (for cards) ───────────────────────────────────────
 const LESSONS = [
-  { title: "פילאטיס רפורמר", desc: "המכשיר הפופולרי ביותר. עבודה על גמישות, שיווי משקל וכוח.", id: "reformer" },
-  { title: "שיעורי קדילאק (Tower)", desc: "עבודה עם מכשיר המעניק יציבות, תמיכה, עוזר בשיפור טווחי תנועה וחיזוק ה- power house.", id: "cadillac" },
-  { title: "פילאטיס שיקומי", desc: "שיעור פרטי המתמקד בצרכיו האישיים של המתאמן. יכול להתאים לפציעות נוירולוגיות, אורטופדיות, שיקום רצפת אגן וקטיעות איברים.", id: "rehab" },
+  { id: "reformer", title: "פילאטיס רפורמר",       desc: "המכשיר הפופולרי ביותר. עבודה על גמישות, שיווי משקל וכוח." },
+  { id: "cadillac", title: "שיעורי קדילאק (Tower)", desc: "עבודה עם מכשיר המעניק יציבות, תמיכה, עוזר בשיפור טווחי תנועה וחיזוק ה-power house." },
+  { id: "rehab",    title: "פילאטיס שיקומי",        desc: "שיעור פרטי המתמקד בצרכיו האישיים של המתאמן. יכול להתאים לפציעות נוירולוגיות, אורטופדיות, שיקום רצפת אגן וקטיעות איברים." },
 ];
+
+// ─── שעות הטבלה – מגיעות ישירות מ-TIME_SLOTS, מסוננות לפי MORNING_START/END ──
+const DISPLAY_TIMES = TIME_SLOTS.filter((t) => {
+  const hour = parseInt(t.split(":")[0], 10);
+  return hour >= MORNING_START && hour <= MORNING_END;
+});
+
+const scheduleByDay = Object.fromEntries(
+  SCHEDULE.map(({ day, slots }) => [day, slots])
+);
 
 export default function ClassesPage() {
-  const { byDay, times } = buildScheduleTable();
-
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg">
       <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
@@ -61,7 +55,7 @@ export default function ClassesPage() {
           </p>
         </header>
 
-        {/* ─── Schedule table (by day × time) ─────────────────────────────── */}
+        {/* ─── Schedule table ───────────────────────────────────────────────── */}
         <section className="mb-32">
           <div className="relative overflow-hidden rounded-[2.5rem] border border-brand-stone/30 bg-white/30 backdrop-blur-sm shadow-[0_20px_50px_rgba(62,69,55,0.05)]">
             <div className="overflow-x-auto">
@@ -77,27 +71,29 @@ export default function ClassesPage() {
                   </tr>
                 </thead>
                 <tbody className="font-sans">
-                  {times.map((time) => (
-                    <tr key={time} className="border-b border-brand-stone/10 last:border-b-0 hover:bg-white/40 transition-colors">
-                      <td className="py-5 px-6 font-serif italic text-brand-primary/80">{time}</td>
-                      {WEEKDAYS.map((day) => {
-                        const name = byDay[day]?.[time];
-                        return (
-                          <td key={day} className="py-5 px-4">
-                            {name ? (
-                              <div className="group relative">
-                                <span className="inline-block rounded-full border border-brand-accent/20 bg-brand-accent/5 px-4 py-1 text-[11px] font-semibold text-brand-accent-text transition-all group-hover:border-brand-accent group-hover:bg-brand-accent/10">
+                  {DISPLAY_TIMES.map((time) => {
+                    const hasAny = WEEKDAYS.some((day) => scheduleByDay[day]?.[time]);
+                    if (!hasAny) return null;
+                    return (
+                      <tr key={time} className="border-b border-brand-stone/10 last:border-b-0 hover:bg-white/40 transition-colors">
+                        <td className="py-5 px-6 font-serif italic text-brand-primary/80">{time}</td>
+                        {WEEKDAYS.map((day) => {
+                          const name = scheduleByDay[day]?.[time];
+                          return (
+                            <td key={day} className="py-5 px-4">
+                              {name ? (
+                                <span className="inline-block rounded-full border border-brand-accent/20 bg-brand-accent/5 px-4 py-1 text-[11px] font-semibold text-brand-accent-text hover:border-brand-accent hover:bg-brand-accent/10 transition-all">
                                   {name}
                                 </span>
-                              </div>
-                            ) : (
-                              <span className="text-brand-stone/40">—</span>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
+                              ) : (
+                                <span className="text-brand-stone/40">—</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

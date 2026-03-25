@@ -568,7 +568,7 @@ export default function UserPortal() {
                       {/* ── הוסף ליומן ── */}
                       {!isPast && booking.status === 'active' && (
                         <button
-                          onClick={() => downloadIcs(cls.name, cls.start_time)}
+                          onClick={() => openInGoogleCalendar(cls.name, cls.start_time)}
                           className="mt-1 w-full rounded-2xl border border-brand-stone/20 bg-white py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary/50 hover:text-brand-primary hover:border-brand-stone/40 transition-all"
                         >
                           + הוסף ליומן
@@ -660,6 +660,21 @@ function downloadIcs(name: string, startTime: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function openInGoogleCalendar(name: string, startTime: string, durationMinutes = 50) {
+  const [datePart, timePart] = startTime.split('T');
+  const [year, month, day] = datePart.split('-');
+  const [hour, minute] = (timePart ?? '00:00').split(':');
+
+  const totalMinutes = parseInt(hour, 10) * 60 + parseInt(minute, 10) + durationMinutes;
+  const endHour = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+  const endMinute = String(totalMinutes % 60).padStart(2, '0');
+
+  const dates = `${year}${month}${day}T${hour}${minute}00/${year}${month}${day}T${endHour}${endMinute}00`;
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(name + ' – עונג של פילאטיס')}&dates=${dates}&location=${encodeURIComponent('רחוב איינשטיין 3, כפר סבא')}`;
+
+  window.open(url, '_blank');
+}
+
 // ─── Sub-component: class card (schedule cell / mobile row) ─────────────────
 function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
   const isBooked = !!booking;
@@ -723,7 +738,7 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
             ביטול רישום ✕
           </button>
           <button
-            onClick={() => downloadIcs(c.name, c.start_time)}
+            onClick={() => openInGoogleCalendar(c.name, c.start_time)}
             className="w-full rounded-2xl border border-brand-stone/20 bg-white/90 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary/40 hover:text-brand-primary transition-all"
           >
             הוסף ליומן +

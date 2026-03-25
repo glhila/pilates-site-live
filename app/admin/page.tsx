@@ -61,20 +61,11 @@ const applyPunchChange = (
 
 const CLASS_DURATION_MINUTES = 60;
 const [DEFAULT_HOUR, DEFAULT_MINUTE] = TIME_SLOTS[0].split(":");
-const toUtcDateTimeString = (date: Date): string => {
-  // יוצר ISO string ב-UTC (עם Z בסוף)
-  // חשוב: הפונקציה הזו מניחה ש-`date` הוא כבר אובייקט `Date` שמייצג את השעה המקומית שהמשתמש בחר.
-  // כאשר נקרא לפונקציה הזו, נצטרך לוודא שה-`Date` אובייקט שהעברנו אכן נוצר מתוך התאריך והשעה המקומיים.
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
-  // בונה string שנראה כמו ISO אבל *ללא Z*, ואז Date.parse יפרש אותו כמקומי,
-  // ואז toISOString ימיר אותו ל-UTC (שזה מה שרוצים לשמור בדאטהבייס).
-  const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}:00`;
-  return new Date(localDateTime).toISOString();
+const toLocalDateTimeString = (date: Date): string => {
+  // הפונקציה הזו לוקחת אובייקט Date (אשר נוצר כבר מתוך תאריך ושעה מקומיים)
+  // וממירה אותו ל-ISO string ש-Supabase יפרש כ-UTC.
+  // זהו הפורמט שצריך להיות מיוצג ב-DB.
+  return date.toISOString();
 };
 const getSlotKeyFromStartTime = (startTime: string): string | null => {
   // נניח ש-startTime הוא בפורמט ISO עם Z (UTC) מה-DB
@@ -234,8 +225,8 @@ export default function AdminPage() {
     const supabase = await getAuthenticatedSupabase(getToken);
     if (!supabase) return;
 
-    const fullDateStr = `${classFormData.date}T${classFormData.hour}:${classFormData.minute}:00`;
-    const startDate = new Date(fullDateStr);
+     // חשוב להשתמש בפורמט 'YYYY-MM-DDTHH:MM:SS' כדי ש-new Date יפרש אותו כמקומי.
+     const startDate = new Date(`${classFormData.date}T${classFormData.hour}:${classFormData.minute}:00`);
     // בדיקה שהשעה לא חורגת מהמקסימום המותר (21:00 כהתחלה)
     if (startDate.getHours() > LATEST_CLASS_START_HOUR || (startDate.getHours() === LATEST_CLASS_START_HOUR && startDate.getMinutes() > 0)) {
       alert(`לא ניתן להוסיף שיעור שמתחיל אחרי השעה ${String(LATEST_CLASS_START_HOUR).padStart(2, '0')}:00, כיוון שהוא יסתיים אחרי השעה 22:00.`);
@@ -251,7 +242,7 @@ export default function AdminPage() {
         classesToInsert.push({
             name: classFormData.name,
             class_type: classFormData.name.includes("מזרן") ? "פילאטיס מזרן" : "פילאטיס מכשירים",
-            start_time: toUtcDateTimeString(currentStart),
+            start_time: toLocalDateTimeString(currentStart),
             max_capacity: classFormData.max_capacity,
             recurring_id: recurring_id
         });

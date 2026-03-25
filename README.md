@@ -71,7 +71,8 @@ pilates-studio/
 │
 ├── src/
 │   └── components/
-│       └── Footer.tsx           # Global footer (contact info, back-to-top)
+│       ├── Footer.tsx           # Global footer (contact info, back-to-top)
+│       └── icons.tsx            #    
 │
 ├── Navbar.tsx                   # Main navigation bar (top of every page)
 ├── middleware.ts                # Route protection and auth logic (Clerk)

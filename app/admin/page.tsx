@@ -171,25 +171,26 @@ export default function AdminPage() {
       .filter(c => toLocalDayKey(new Date(c.start_time)) === dayKey)
       .map(c => getInterval(c.start_time));
 
-    return TIME_SLOTS
-      .map((slot) => {
-        const [hour, minute] = slot.split(":");
-        return { hour, minute, label: slot };
-      })
-      .filter(({ hour, minute }) => {
-        const start = new Date(`${dayKey}T${hour}:${minute}:00`);
-        const end = new Date(start);
-        end.setMinutes(end.getMinutes() + CLASS_DURATION_MINUTES);
+      const freeSlots: { hour: string; minute: string; label: string }[] = [];
+      for (let h = MORNING_START; h <= LATEST_CLASS_START_HOUR; h++) {
+        for (let m = 0; m < 60; m += 5) { // קפיצות של 5 דקות
+          const start = new Date(`${dayKey}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`);
+          const end = new Date(start);
+          end.setMinutes(end.getMinutes() + CLASS_DURATION_MINUTES);
 
-        // שינוי כאן: הגדלת טווח השעות המותר לשיעורים
-        const rangeStart = new Date(`${dayKey}T${String(MORNING_START).padStart(2, '0')}:00:00`);
-        // השיעור יכול להסתיים ב-22:00, כלומר להתחיל לכל המאוחר ב-21:00
-        const rangeEnd = new Date(`${dayKey}T${String(LATEST_CLASS_START_HOUR + 1).padStart(2, '0')}:00:00`);
-        if (!(start >= rangeStart && end <= rangeEnd)) return false;
+          // טווח שעות מקסימלי לשיעורים: מתחיל ב-MORNING_START ומסתיים ב-22:00
+          const rangeStart = new Date(`${dayKey}T${String(MORNING_START).padStart(2, '0')}:00:00`);
+          const rangeEnd = new Date(`${dayKey}T22:00:00`); // קצה עליון קשיח ל-22:00
 
-        const candidateInterval = { start, end };
-        return !existing.some(ex => intervalsOverlap(candidateInterval, ex));
-      });
+          if (start >= rangeStart && end <= rangeEnd) { // שיעור חייב להתחיל בטווח ולהסתיים בטווח
+            const candidateInterval = { start, end };
+            if (!existing.some(ex => intervalsOverlap(candidateInterval, ex))) {
+              freeSlots.push({ hour: String(h).padStart(2, '0'), minute: String(m).padStart(2, '0'), label: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` });
+            }
+          }
+        }
+      }
+      return freeSlots;
   };
 
   const getClosestSlots = (

@@ -649,13 +649,10 @@ function buildIcsContent(name: string, startTime: string, durationMinutes = 50):
 
 function downloadIcs(name: string, startTime: string) {
   const content = buildIcsContent(name, startTime);
-
-  // data: URI – הטלפון פותח ישירות באפליקציית היומן במקום רק להוריד
   const dataUri = `data:text/calendar;charset=utf-8,${encodeURIComponent(content)}`;
-  const a = document.createElement('a');
-  a.href = dataUri;
-  a.download = `${name}.ics`;
-  a.click();
+
+  // פתיחה ישירה – iOS/Android מזהים text/calendar ופותחים ביומן
+  window.open(dataUri, '_blank');
 }
 
 // ─── Sub-component: class card (schedule cell / mobile row) ─────────────────

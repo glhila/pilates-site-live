@@ -67,7 +67,7 @@ export const normalizePhoneForWhatsApp = (phone: string): string =>
 
 /** WhatsApp URL for a given phone and optional pre-filled message. */
 export const getWhatsAppUrlForPhone = (phone: string, message: string): string =>
-  `https://wa.me/${normalizePhoneForWhatsApp(phone)}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
+  `https://wa.me/${normalizePhoneForWhatsApp(phone)}${message ? `?text=${encodeURI(message)}` : ''}`;
 
 /** Studio contact WhatsApp link (uses SERVICE_PHONE). */
 export const getWhatsAppLink = (message: string): string =>

@@ -434,7 +434,7 @@ export default function AdminPage() {
               ניהול <span className="luxury-italic text-brand-accent-text">הסטודיו</span>
             </h1>
             <p className="max-w-md text-sm font-light text-brand-primary/70 italic mx-auto lg:mx-0">
-              איזון בין דיוק תפעולי לשקט בראש – כל מה שהסטודיו צריך במקום אחד.
+              איזון בין דיוק תפעולי לשקט בראש - כל מה שהסטודיו צריך במקום אחד.
             </p>
           </div>
 
@@ -518,6 +518,20 @@ export default function AdminPage() {
                     </span>
                     <button onClick={() => { const d = new Date(viewDate); d.setDate(d.getDate()+7); setViewDate(d); }} className="w-10 h-10 flex items-center justify-center hover:bg-white rounded-2xl transition-all font-bold" aria-label="שבוע הבא">←</button>
                   </div>
+                    {/* ── כפתור סנכרון יומן – חדש ── */}
+                    <button
+                      onClick={() => {
+                        const feedUrl = `${window.location.origin}/api/calendar`;
+                        window.open(
+                          `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feedUrl)}`,
+                          '_blank'
+                        );
+                      }}
+                      className="flex items-center gap-2 px-4 py-3 rounded-3xl border border-brand-stone/30 bg-brand-stone/5 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary/60 hover:text-brand-primary hover:bg-white transition-all"
+                      title="סנכרן את מערכת השעות ל-Google Calendar"
+                    >
+                      📅 סנכרן יומן
+                    </button>
                 </div>
 
                 {/* Desktop: 7-day grid with time slots */}

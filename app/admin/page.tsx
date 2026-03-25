@@ -501,18 +501,42 @@ export default function AdminPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">שעה</label>
-                  <select
-                    className="w-full p-4 bg-brand-bg rounded-2xl outline-none font-bold"
+                  <input
+                    type="text" // שינינו ל-text כדי לאפשר הקלדה חופשית
+                    required
+                    className="w-full p-4 bg-brand-bg rounded-2xl outline-none border border-brand-stone/10 font-bold"
+                    list="time-slots-presets" // קישור ל-datalist
                     value={`${classFormData.hour}:${classFormData.minute}`}
                     onChange={e => {
-                      const [hour, minute] = e.target.value.split(':');
-                      setClassFormData({ ...classFormData, hour, minute });
+                      const value = e.target.value;
+                      const [hour, minute] = value.split(':');
+                      // ודא שהקלט הוא בפורמט HH:MM ושהוא תקין
+                      if (hour && minute && !isNaN(parseInt(hour)) && !isNaN(parseInt(minute))) {
+                        setClassFormData({ ...classFormData, hour, minute });
+                      } else {
+                        // אם הפורמט לא תקין, אולי נרצה להשאיר את המצב הקודם או להגדיר דיפולט
+                        // לטובת הדוגמה, נעדכן רק את הערך בפורמט גולמי
+                        // הערה: תצטרך לוודא שהלוגיקה ב-handleCreateClass עדיין תטפל בזה נכון.
+                        // לדוגמה, אם המשתמש מקליד 13, נרצה שזה יהיה 13:00.
+                        // הנה גישה פשוטה יותר ל-onChange שתאפשר גמישות:
+                        const [h, m] = value.split(':');
+                        setClassFormData({
+                          ...classFormData,
+                          hour: h || '00', // דיפולט אם חלק חסר
+                          minute: m || '00'
+                        });
+                      }
                     }}
-                  >
-                    {TIME_SLOTS.map((slot) => (
-                      <option key={slot} value={slot}>{slot}</option>
+                    placeholder="HH:MM"
+                    pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]" // ולידציה בסיסית
+                    title="פורמט השעה: HH:MM (לדוגמה: 09:30)"
+                  />
+                  {/* Datalist לרשימת השעות הקבועות */}
+                  <datalist id="time-slots-presets">
+                    {allTimeSlots.map((slot) => (
+                      <option key={slot} value={slot} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
                 <div className="space-y-2">
                     <label className="text-[10px] font-black opacity-30 uppercase block mr-1 tracking-widest">קיבולת מקסימלית</label>

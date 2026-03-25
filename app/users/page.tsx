@@ -649,10 +649,15 @@ function buildIcsContent(name: string, startTime: string, durationMinutes = 50):
 
 function downloadIcs(name: string, startTime: string) {
   const content = buildIcsContent(name, startTime);
-  const dataUri = `data:text/calendar;charset=utf-8,${encodeURIComponent(content)}`;
+  const blob = new Blob([content], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
 
-  // פתיחה ישירה – iOS/Android מזהים text/calendar ופותחים ביומן
-  window.open(dataUri, '_blank');
+  // window.open במקום <a download> – מאפשר לדפדפן/מערכת ההפעלה
+  // לזהות את ה-MIME type ולפתוח באפליקציית היומן
+  window.open(url, '_blank');
+
+  // ניקוי אחרי שנייה
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // ─── Sub-component: class card (schedule cell / mobile row) ─────────────────

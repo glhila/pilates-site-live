@@ -640,7 +640,7 @@ function buildIcsContent(name: string, startTime: string, durationMinutes = 50):
     `UID:${crypto.randomUUID()}`,
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,
-    `SUMMARY:${name} - עונג של פילאטיס`,
+    `SUMMARY:פילאטיס ${name} - עונג של פילאטיס`,
     'LOCATION:רחוב איינשטיין 3 כפר סבא',
     'END:VEVENT',
     'END:VCALENDAR',
@@ -670,7 +670,7 @@ function openInGoogleCalendar(name: string, startTime: string, durationMinutes =
   const endMinute = String(totalMinutes % 60).padStart(2, '0');
 
   const dates = `${year}${month}${day}T${hour}${minute}00/${year}${month}${day}T${endHour}${endMinute}00`;
-  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(name + ' – עונג של פילאטיס')}&dates=${dates}&location=${encodeURIComponent('רחוב איינשטיין 3, כפר סבא')}`;
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`פילאטיס ${name} - עונג של פילאטיס`)}&dates=${dates}&location=${encodeURIComponent('רחוב איינשטיין 3, כפר סבא')}`;
 
   window.open(url, '_blank');
 }

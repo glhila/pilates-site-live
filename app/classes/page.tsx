@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { WhatsAppIcon } from "@/src/components/icons";
 
 // ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
@@ -129,7 +130,7 @@ export default function ClassesPage() {
                   href="/contact"
                   className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary border-b border-brand-stone/50 pb-2 hover:border-brand-accent transition-all inline-flex items-center gap-2"
                 >
-                  למידע והרשמה 
+                  למידע והרשמה <WhatsAppIcon className="w-4 h-4 shrink-0" />
                   <span className="text-lg leading-none">←</span>
                 </Link>
               </article>

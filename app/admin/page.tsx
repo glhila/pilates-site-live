@@ -14,6 +14,7 @@ import {
   PUNCH_CARD_VALIDITY_RULES,
   getAuthenticatedSupabase, getWhatsAppUrlForPhone, toDateKey, fetchJewishHolidays, type HolidayMap,
 } from "@/src/lib/constants";
+import { WhatsAppIcon } from "@/src/components/icons";
 
 const PUNCH_PRESET_VALUES = [0, ...PUNCH_CARD_PACKAGE_SIZES] as const;
 
@@ -812,7 +813,7 @@ export default function AdminPage() {
                                                     rel="noreferrer"
                                                     className="w-7 h-7 flex items-center justify-center rounded-full border border-green-100 bg-green-50 text-green-600 hover:bg-green-100 shadow-sm"
                                                 >
-                                                    <span className="text-sm">💬</span>
+                                                    <span><WhatsAppIcon className="w-4 h-4 shrink-0" /></span>
                                                 </a>
                                             </div>
                                         ) : (
@@ -864,7 +865,7 @@ export default function AdminPage() {
                                       <div className="flex items-center gap-2 mt-3">
                                           <span className="text-xs font-bold tabular-nums opacity-60">{p.phone}</span>
                                           <a href={getWhatsAppUrlForPhone(p.phone, '')} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-100 active:scale-95 transition-all">
-                                              <span>WhatsApp</span><span className="text-xs">💬</span>
+                                              <span>WhatsApp</span><span><WhatsAppIcon className="w-4 h-4 shrink-0" /></span>
                                           </a>
                                       </div>
                                   )}
@@ -928,7 +929,7 @@ export default function AdminPage() {
                                               title="שליחת תזכורת בוואטסאפ"
                                               className="text-green-500 hover:text-green-700 font-bold text-[10px] transition-all uppercase"
                                           >
-                                              תזכורת 💬
+                                              תזכורת <WhatsAppIcon className="w-4 h-4 shrink-0" />
                                           </a>
                                       )}
                                       <button onClick={() => handleRemoveAttendee(b.id)} className="text-red-300 hover:text-red-500 font-bold text-[10px] transition-all uppercase">הסרה 🗑</button>
@@ -1000,7 +1001,7 @@ export default function AdminPage() {
                     rel="noreferrer"
                     className="w-full p-6 rounded-3xl font-bold bg-green-50 text-green-700 hover:bg-green-100 transition-all text-sm tracking-tight flex items-center justify-center gap-3"
                   >
-                    💬 שליחה בוואטסאפ
+                    <WhatsAppIcon className="w-4 h-4 shrink-0" /> שליחה בוואטסאפ
                   </a>
                 )}
 

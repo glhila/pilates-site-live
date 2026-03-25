@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getWhatsAppLink } from "@/src/lib/constants";
+import { WhatsAppIcon } from "@/src/components/icons";
 
 // ─── Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
@@ -67,7 +68,7 @@ export default function Home() {
                 rel="noreferrer" 
                 className="btn-luxury text-center"
               >
-                קביעת שיעור היכרות
+                קביעת שיעור היכרות <WhatsAppIcon className="w-4 h-4 shrink-0" />
               </a>
               <Link
                 href="/classes"

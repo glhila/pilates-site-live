@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { getWhatsAppLink, PUNCH_CARD_PACKAGE_SIZES } from "@/src/lib/constants";
+import { WhatsAppIcon } from "@/src/components/icons";
 
 const PUNCH_CARD_PRICING_ROWS: Record<
   (typeof PUNCH_CARD_PACKAGE_SIZES)[number],
@@ -97,7 +98,7 @@ export default function PricingPage() {
                           className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-100 active:scale-95 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                         >
                           <span>הצטרפות</span>
-                          <span className="text-xs">💬</span>
+                          <span><WhatsAppIcon className="w-4 h-4 shrink-0" /></span>
                         </a>
 
                         {/* מחיר */}

@@ -1,20 +1,19 @@
 import { Metadata } from "next";
 import { SERVICE_PHONE, SERVICE_EMAIL, getWhatsAppLink, STUDIO_ADDRESS, GOOGLE_MAPS_EMBED_URL, WAZE_NAVIGATION_URL } from "@/src/lib/constants";
+import { WhatsAppIcon, WazeIcon } from "@/src/components/icons";
 
 export const metadata: Metadata = {
-  title: "צור קשר | עונג של פילאטיס כפר סבא",
+  title: "צור קשר | העונג שבפילאטיס",
   description: "צרו איתנו קשר לתיאום שיעור ניסיון בסטודיו עונג של פילאטיס בכפר סבא. כתובת, טלפון ושעות פעילות.",
 };
 
 export default function ContactPage() {
-  // יצירת לינק לוואטסאפ עם הודעה ייעודית לעמוד צור קשר
   const contactWhatsAppUrl = getWhatsAppLink("היי! הגעתי דרך האתר ואשמח לקבל פרטים נוספים על הסטודיו 🧘‍♀️✨");
-  
 
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg">
       <div className="container mx-auto px-6 py-20 max-w-6xl">
-        
+
         {/* Header Section */}
         <header className="mb-20 text-center">
           <span className="mb-4 block text-[10px] font-bold tracking-[0.4em] uppercase text-brand-accent-text">
@@ -78,12 +77,13 @@ export default function ContactPage() {
             </section>
 
             <div className="pt-6">
-              <a 
-                href={contactWhatsAppUrl} 
-                target="_blank" 
+              <a
+                href={contactWhatsAppUrl}
+                target="_blank"
                 rel="noopener noreferrer"
-                className="btn-luxury w-full text-center block"
+                className="btn-luxury w-full flex items-center justify-center gap-3"
               >
+                <WhatsAppIcon className="w-4 h-4 shrink-0" />
                 שלחי לנו הודעה ב-WhatsApp
               </a>
             </div>
@@ -105,13 +105,13 @@ export default function ContactPage() {
                 href={WAZE_NAVIGATION_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs tracking-widest uppercase border border-brand-stone/40 px-5 py-3 rounded-full hover:border-brand-accent-text hover:text-brand-accent-text transition-colors"
+                className="text-xs tracking-widest uppercase border border-brand-stone/40 px-5 py-3 rounded-full inline-flex items-center gap-2 hover:border-brand-accent-text hover:text-brand-accent-text transition-colors"
               >
+                <WazeIcon className="w-4 h-4 shrink-0" />
                 Navigate with Waze
               </a>
             </div>
           </div>
-
         </div>
 
         {/* Footer Note */}

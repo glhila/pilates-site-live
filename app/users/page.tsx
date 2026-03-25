@@ -618,24 +618,19 @@ export default function UserPortal() {
 }
 
 // ─── Helper: generate .ics calendar file ────────────────────────────────────
-function buildIcsContent(name: string, startTime: string, durationMinutes = 60): string {
-  // חילוץ השעה ישירות מהמחרוזת ללא המרת timezone
+function buildIcsContent(name: string, startTime: string, durationMinutes = 50): string {
+  // חילוץ ישיר מהמחרוזת – ללא new Date() כדי למנוע בעיית timezone
   const [datePart, timePart] = startTime.split('T');
   const [year, month, day] = datePart.split('-');
   const [hour, minute] = (timePart ?? '00:00').split(':');
 
-  const pad = (n: string) => n.padStart(2, '0');
-  const dtStart = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
+  const dtStart = `${year}${month}${day}T${hour}${minute}00`;
 
-  // חישוב שעת סיום
-  const endDate = new Date(startTime);
-  endDate.setMinutes(endDate.getMinutes() + durationMinutes);
-  const ey = endDate.getFullYear();
-  const em = String(endDate.getMonth() + 1).padStart(2, '0');
-  const ed = String(endDate.getDate()).padStart(2, '0');
-  const eh = String(endDate.getHours()).padStart(2, '0');
-  const emin = String(endDate.getMinutes()).padStart(2, '0');
-  const dtEnd = `${ey}${em}${ed}T${eh}${emin}00`;
+  // חישוב שעת סיום – גם כאן ישירות על המספרים, ללא Date
+  const totalMinutes = parseInt(hour, 10) * 60 + parseInt(minute, 10) + durationMinutes;
+  const endHour = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+  const endMinute = String(totalMinutes % 60).padStart(2, '0');
+  const dtEnd = `${year}${month}${day}T${endHour}${endMinute}00`;
 
   return [
     'BEGIN:VCALENDAR',
@@ -645,7 +640,7 @@ function buildIcsContent(name: string, startTime: string, durationMinutes = 60):
     `UID:${crypto.randomUUID()}`,
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,
-    `SUMMARY:${name} – עונג של פילאטיס`,
+    `SUMMARY:${name} - עונג של פילאטיס`,
     'LOCATION:רחוב איינשטיין 3 כפר סבא',
     'END:VEVENT',
     'END:VCALENDAR',
@@ -654,13 +649,13 @@ function buildIcsContent(name: string, startTime: string, durationMinutes = 60):
 
 function downloadIcs(name: string, startTime: string) {
   const content = buildIcsContent(name, startTime);
-  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+
+  // data: URI – הטלפון פותח ישירות באפליקציית היומן במקום רק להוריד
+  const dataUri = `data:text/calendar;charset=utf-8,${encodeURIComponent(content)}`;
   const a = document.createElement('a');
-  a.href = url;
+  a.href = dataUri;
   a.download = `${name}.ics`;
   a.click();
-  URL.revokeObjectURL(url);
 }
 
 // ─── Sub-component: class card (schedule cell / mobile row) ─────────────────
@@ -729,7 +724,7 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
             onClick={() => downloadIcs(c.name, c.start_time)}
             className="w-full rounded-2xl border border-brand-stone/20 bg-white/90 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary/40 hover:text-brand-primary transition-all"
           >
-            + יומן
+            הוסף ליומן +
           </button>
         </div>
         ) : (

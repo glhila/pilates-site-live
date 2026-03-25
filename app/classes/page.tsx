@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { getWhatsAppLink, TIME_SLOTS, MORNING_START, MORNING_END } from "@/src/lib/constants";
+import { getWhatsAppLink, TIME_SLOTS, MORNING_START, LATEST_CLASS_START_HOUR } from "@/src/lib/constants";
 import { WhatsAppIcon } from "@/src/components/icons";
 
 // ─── Metadata ─────────────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ const LESSONS = [
 // ─── שעות הטבלה – מגיעות ישירות מ-TIME_SLOTS, מסוננות לפי MORNING_START/END ──
 const DISPLAY_TIMES = TIME_SLOTS.filter((t) => {
   const hour = parseInt(t.split(":")[0], 10);
-  return hour >= MORNING_START && hour <= MORNING_END;
+  return hour >= MORNING_START && hour <= LATEST_CLASS_START_HOUR;
 });
 
 const scheduleByDay = Object.fromEntries(

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useUser, useAuth } from "@clerk/nextjs";
 import { useEffect, useState, useMemo } from "react";
 import {
-  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END, CANCELLATION_WINDOW_HOURS,
+  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, LATEST_CLASS_START_HOUR, CANCELLATION_WINDOW_HOURS,
   getAuthenticatedSupabase, toDateKey, fetchJewishHolidays, type HolidayMap,
   formatDate, formatTime, isSameWeek,
 } from "@/src/lib/constants";

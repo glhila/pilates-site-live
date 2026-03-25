@@ -17,7 +17,7 @@ export const TIME_SLOTS = [ '06:45', '08:00', '09:00', '10:00', '11:00', '12:00'
 ] as const;
 export const HOUR_HEIGHT = 100;
 export const MORNING_START = 6;
-export const MORNING_END = 20;
+export const LATEST_CLASS_START_HOUR = 21;
 export type HolidayMap = Record<string, string[]>;
 const ISRAEL_TIMEZONE = "Asia/Jerusalem";
 

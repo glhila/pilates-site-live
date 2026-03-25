@@ -565,6 +565,15 @@ export default function UserPortal() {
                           ביטול רישום ✕
                         </button>
                       )}
+                      {/* ── הוסף ליומן ── */}
+                      {!isPast && booking.status === 'active' && (
+                        <button
+                          onClick={() => downloadIcs(cls.name, cls.start_time)}
+                          className="mt-1 w-full rounded-2xl border border-brand-stone/20 bg-white py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary/50 hover:text-brand-primary hover:border-brand-stone/40 transition-all"
+                        >
+                          + הוסף ליומן
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -606,6 +615,52 @@ export default function UserPortal() {
       )}
     </main>
   );
+}
+
+// ─── Helper: generate .ics calendar file ────────────────────────────────────
+function buildIcsContent(name: string, startTime: string, durationMinutes = 60): string {
+  // חילוץ השעה ישירות מהמחרוזת ללא המרת timezone
+  const [datePart, timePart] = startTime.split('T');
+  const [year, month, day] = datePart.split('-');
+  const [hour, minute] = (timePart ?? '00:00').split(':');
+
+  const pad = (n: string) => n.padStart(2, '0');
+  const dtStart = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
+
+  // חישוב שעת סיום
+  const endDate = new Date(startTime);
+  endDate.setMinutes(endDate.getMinutes() + durationMinutes);
+  const ey = endDate.getFullYear();
+  const em = String(endDate.getMonth() + 1).padStart(2, '0');
+  const ed = String(endDate.getDate()).padStart(2, '0');
+  const eh = String(endDate.getHours()).padStart(2, '0');
+  const emin = String(endDate.getMinutes()).padStart(2, '0');
+  const dtEnd = `${ey}${em}${ed}T${eh}${emin}00`;
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Oneg Pilates//HE',
+    'BEGIN:VEVENT',
+    `UID:${crypto.randomUUID()}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${name} – עונג של פילאטיס`,
+    'LOCATION:רחוב איינשטיין 3 כפר סבא',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+}
+
+function downloadIcs(name: string, startTime: string) {
+  const content = buildIcsContent(name, startTime);
+  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${name}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── Sub-component: class card (schedule cell / mobile row) ─────────────────
@@ -663,12 +718,20 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
 
       <div className="px-3 pb-2 sm:px-4 sm:pb-3">
         {isBooked ? (
+        <div className="flex flex-col gap-1.5">
           <button
             onClick={onCancel}
             className="w-full rounded-2xl border border-brand-accent/30 bg-white/90 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent-text hover:bg-brand-accent/5 transition-all"
           >
             ביטול רישום ✕
           </button>
+          <button
+            onClick={() => downloadIcs(c.name, c.start_time)}
+            className="w-full rounded-2xl border border-brand-stone/20 bg-white/90 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary/40 hover:text-brand-primary transition-all"
+          >
+            + יומן
+          </button>
+        </div>
         ) : (
           <button
             disabled={isFull}

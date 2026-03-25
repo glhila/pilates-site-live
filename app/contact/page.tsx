@@ -108,7 +108,7 @@ export default function ContactPage() {
                 className="text-xs tracking-widest uppercase border border-brand-stone/40 px-5 py-3 rounded-full inline-flex items-center gap-2 hover:border-brand-accent-text hover:text-brand-accent-text transition-colors"
               >
                 <WazeIcon className="w-4 h-4 shrink-0" />
-                Navigate with Waze
+                נווטו עם Waze
               </a>
             </div>
           </div>

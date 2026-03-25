@@ -6,21 +6,21 @@ import { getWhatsAppLink } from "@/src/lib/constants";
 export const metadata: Metadata = {
   title: "אודות הסטודיו | העונג שבפילאטיס",
   description:
-    "הכירו את עונג – מדריכת פילאטיס מכשירים מוסמכת בכפר סבא. שיעורים מקצועיים, אווירה תומכת ותוצאות אמיתיות.",
+    "הכירו את עונג - מדריכת פילאטיס מכשירים מוסמכת בכפר סבא. שיעורים מקצועיים, אווירה תומכת ותוצאות אמיתיות.",
 };
 
 // ─── Data: credentials ────────────────────────────────────────────────────
 const CREDENTIALS = [
   {
-    title: "פילאטיס מכשירים – גישה תומכת שיקום",
+    title: "פילאטיס מכשירים - גישה תומכת שיקום",
     detail: "Rehabilitation · Certified",
   },
   {
-    title: "פילאטיס מכשירים – גישה פונקציונלית",
+    title: "פילאטיס מכשירים - גישה פונקציונלית",
     detail: "Functional · Certified",
   },
   {
-    title: "פילאטיס מכשירים – גישה קלאסית",
+    title: "פילאטיס מכשירים - גישה קלאסית",
     detail: "Classical · Certified",
   },
   {
@@ -47,7 +47,7 @@ const VALUES = [
   {
     word: "Presence",
     hebrew: "נוכחות",
-    desc: "השיעור הוא מרחב לעצמך – ללא הסחות, רק חיבור אמיתי לגוף ולנשימה.",
+    desc: "השיעור הוא מרחב לעצמך - ללא הסחות, רק חיבור אמיתי לגוף ולנשימה.",
   },
   {
     word: "Progress",
@@ -89,7 +89,7 @@ export default function AboutPage() {
                   שמי עונג, מדריכת פילאטיס מתוך אהבה גדולה לתנועה ובריאות הנפש.
                 </p>
                 <p>
-                  לאחר שינוי משמעותי שעברתי בחיי, בחרתי ללכת בעקבות הלב –
+                  לאחר שינוי משמעותי שעברתי בחיי, בחרתי ללכת בעקבות הלב -
                   והחלטתי להפוך את האהבה שלי לפילאטיס למקצוע לכל החיים.
                 </p>
                 <p>
@@ -107,7 +107,7 @@ export default function AboutPage() {
               <div className="space-y-8">
                 <blockquote className="border-r-2 border-brand-accent/40 pr-6">
                   <p className="font-serif italic text-xl text-brand-primary leading-relaxed">
-                    "תנועה היא לא עונש לגוף – היא מתנה שאנחנו נותנים לעצמנו כל יום."
+                    "תנועה היא לא עונש לגוף - היא מתנה שאנחנו נותנים לעצמנו כל יום."
                   </p>
                 </blockquote>
 
@@ -197,7 +197,7 @@ export default function AboutPage() {
           </h2>
           {/* ── 💡 תוספת מומלצת: שיעור ניסיון ── */}
           <p className="font-light text-brand-primary/70 max-w-md mx-auto leading-relaxed">
-            שיעור ניסיון ראשון בסטודיו – בואו לחוות את ההבדל בעצמכם, ללא התחייבות.
+            שיעור ניסיון ראשון בסטודיו - בואו לחוות את ההבדל בעצמכם, ללא התחייבות.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-6 pt-4">
             <a

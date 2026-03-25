@@ -1,4 +1,5 @@
 "use client";
+import { InstagramIcon } from "@/src/components/icons";
 
 export default function Footer() {
   const handleBackToTop = () => {
@@ -20,10 +21,7 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-xs font-medium text-brand-accent hover:text-brand-primary transition-colors"
           >
-            Instagram
-            <span aria-hidden="true" className="text-[0.8rem]">
-              ↗
-            </span>
+            Instagram <InstagramIcon className="w-4 h-4 shrink-0" />
           </a>
         </div>
 

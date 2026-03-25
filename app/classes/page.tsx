@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import Link from "next/link";
+import { getWhatsAppLink } from "@/src/lib/constants";
 import { WhatsAppIcon } from "@/src/components/icons";
 
 // ─── Metadata ─────────────────────────────────────────────────────────────
@@ -36,8 +36,8 @@ function buildScheduleTable() {
 
 // ─── Data: lesson types (for cards) ───────────────────────────────────────
 const LESSONS = [
-  { title: "פילאטיס רפורמר", desc: "המכשיר הפופולרי ביותר. עבודה על גמישות, שיווי משקל וכוח .", id: "reformer" },
-  { title: "שיעורי קדילאק (Tower)", desc: "-עבודה עם מכשיר המעניק יציבות, תמיכה, עוזר בשיפור טווחי תנועה וחיזוק הpower house .", id: "cadillac" },
+  { title: "פילאטיס רפורמר", desc: "המכשיר הפופולרי ביותר. עבודה על גמישות, שיווי משקל וכוח.", id: "reformer" },
+  { title: "שיעורי קדילאק (Tower)", desc: "עבודה עם מכשיר המעניק יציבות, תמיכה, עוזר בשיפור טווחי תנועה וחיזוק ה- power house.", id: "cadillac" },
   { title: "פילאטיס שיקומי", desc: "שיעור פרטי המתמקד בצרכיו האישיים של המתאמן. יכול להתאים לפציעות נוירולוגיות, אורטופדיות, שיקום רצפת אגן וקטיעות איברים.", id: "rehab" },
 ];
 
@@ -107,7 +107,7 @@ export default function ClassesPage() {
           </p>
         </section>
 
-        {/* ─── Lesson types (cards + link to contact) ───────────────────────── */}
+        {/* ─── Lesson types ─────────────────────────────────────────────────── */}
         <section id="lesson-types">
           <div className="mb-16 text-center">
             <h2 className="text-4xl font-serif text-brand-primary mb-4">סוגי השיעורים</h2>
@@ -115,26 +115,30 @@ export default function ClassesPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-10">
-            {LESSONS.map((lesson) => (
-              <article
-                key={lesson.id}
-                className="feature-card group"
-              >
-                <h3 className="text-2xl font-serif text-brand-primary mb-4 group-hover:text-brand-accent-text transition-colors">
-                  {lesson.title}
-                </h3>
-                <p className="text-brand-primary/70 font-light leading-relaxed mb-8">
-                  {lesson.desc}
-                </p>
-                <Link
-                  href="/contact"
-                  className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary border-b border-brand-stone/50 pb-2 hover:border-brand-accent transition-all inline-flex items-center gap-2"
-                >
-                  למידע והרשמה <WhatsAppIcon className="w-4 h-4 shrink-0" />
-                  <span className="text-lg leading-none">←</span>
-                </Link>
-              </article>
-            ))}
+            {LESSONS.map((lesson) => {
+              const waLink = getWhatsAppLink(
+                `היי! אני מתעניינת בשיעור "${lesson.title}" שראיתי באתר, אשמח לפרטים נוספים ✨`
+              );
+              return (
+                <article key={lesson.id} className="feature-card group">
+                  <h3 className="text-2xl font-serif text-brand-primary mb-4 group-hover:text-brand-accent-text transition-colors">
+                    {lesson.title}
+                  </h3>
+                  <p className="text-brand-primary/70 font-light leading-relaxed mb-8">
+                    {lesson.desc}
+                  </p>
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary border-b border-brand-stone/50 pb-2 hover:border-brand-accent hover:text-brand-accent-text transition-all inline-flex items-center gap-2"
+                  >
+                    למידע והרשמה
+                    <WhatsAppIcon className="w-4 h-4 shrink-0" />
+                  </a>
+                </article>
+              );
+            })}
           </div>
         </section>
 

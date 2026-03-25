@@ -61,20 +61,26 @@ const applyPunchChange = (
 
 const CLASS_DURATION_MINUTES = 60;
 const [DEFAULT_HOUR, DEFAULT_MINUTE] = TIME_SLOTS[0].split(":");
-const toLocalDateTimeString = (date: Date): string => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  const h = String(date.getHours()).padStart(2, "0");
-  const min = String(date.getMinutes()).padStart(2, "0");
-  return `${y}-${m}-${d}T${h}:${min}:00`;
+const toUtcDateTimeString = (date: Date): string => {
+  // יוצר ISO string ב-UTC (עם Z בסוף)
+  // חשוב: הפונקציה הזו מניחה ש-`date` הוא כבר אובייקט `Date` שמייצג את השעה המקומית שהמשתמש בחר.
+  // כאשר נקרא לפונקציה הזו, נצטרך לוודא שה-`Date` אובייקט שהעברנו אכן נוצר מתוך התאריך והשעה המקומיים.
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  // בונה string שנראה כמו ISO אבל *ללא Z*, ואז Date.parse יפרש אותו כמקומי,
+  // ואז toISOString ימיר אותו ל-UTC (שזה מה שרוצים לשמור בדאטהבייס).
+  const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}:00`;
+  return new Date(localDateTime).toISOString();
 };
 const getSlotKeyFromStartTime = (startTime: string): string | null => {
-  const fromIso = String(startTime).match(/T(\d{2}:\d{2})/);
-  if (fromIso?.[1]) return fromIso[1];
-  const d = new Date(startTime);
-  if (Number.isNaN(d.getTime())) return null;
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  // נניח ש-startTime הוא בפורמט ISO עם Z (UTC) מה-DB
+  const dateObj = new Date(startTime); // יוצר אובייקט Date מקומי מה-UTC string
+  if (Number.isNaN(dateObj.getTime())) return null;
+  return `${String(dateObj.getHours()).padStart(2, "0")}:${String(dateObj.getMinutes()).padStart(2, "0")}`;
 };
 
 export default function AdminPage() {
@@ -149,7 +155,7 @@ export default function AdminPage() {
   const toLocalDayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
   const getInterval = (startIso: string) => {
-    const start = new Date(startIso);
+    const start = new Date(startIso); // זה יוצר אובייקט Date מקומי
     const end = new Date(start);
     end.setMinutes(end.getMinutes() + CLASS_DURATION_MINUTES);
     return { start, end };
@@ -174,7 +180,10 @@ export default function AdminPage() {
       const freeSlots: { hour: string; minute: string; label: string }[] = [];
       for (let h = MORNING_START; h <= LATEST_CLASS_START_HOUR; h++) {
         for (let m = 0; m < 60; m += 5) { // קפיצות של 5 דקות
-          const start = new Date(`${dayKey}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`);
+          // יצירת אובייקט Date מקומי ליום הספציפי והשעה המקומית
+          const start = new Date(
+            `${dayKey}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`
+          );
           const end = new Date(start);
           end.setMinutes(end.getMinutes() + CLASS_DURATION_MINUTES);
 
@@ -242,7 +251,7 @@ export default function AdminPage() {
         classesToInsert.push({
             name: classFormData.name,
             class_type: classFormData.name.includes("מזרן") ? "פילאטיס מזרן" : "פילאטיס מכשירים",
-            start_time: toLocalDateTimeString(currentStart),
+            start_time: toUtcDateTimeString(currentStart),
             max_capacity: classFormData.max_capacity,
             recurring_id: recurring_id
         });

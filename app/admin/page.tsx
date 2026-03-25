@@ -904,7 +904,7 @@ export default function AdminPage() {
                 <div className="flex justify-between items-start mb-10">
                     <div>
                       <h3 className="text-2xl font-bold italic tracking-tight">{detailsModal.name}</h3>
-                      <p className="opacity-40 text-sm font-bold uppercase tracking-widest">{new Date(detailsModal.start_time).toLocaleString('he-IL', {weekday: 'long', hour:'2-digit', minute:'2-digit'})}</p>
+                      <p className="opacity-40 text-sm font-bold uppercase tracking-widest">{new Date(detailsModal.start_time).toLocaleDateString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit' })}{' · '}{getSlotKeyFromStartTime(detailsModal.start_time) ?? ''}</p>
                     </div>
                     <button onClick={() => setDetailsModal(null)} className="text-2xl opacity-20 hover:opacity-100 transition-all">⨉</button>
                 </div>
@@ -915,7 +915,7 @@ export default function AdminPage() {
                             const phone = b.profiles?.phone;
                             const name = b.profiles?.full_name;
                             const classDate = new Date(detailsModal.start_time).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric' });
-                            const classTime = new Date(detailsModal.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                            const classTime = getSlotKeyFromStartTime(detailsModal.start_time) ?? '';
                             const waUrl = phone ? getWhatsAppUrlForPhone(phone, `היי ${name} 🌸\n\nתזכורת לאימון שלך:\n📅 ${classDate} בשעה ${classTime}\n🧘‍♀️ ${detailsModal.name}\n\nאם בסופו של דבר לא תוכלי להגיע — נשמח אם תבטלי את הרישום באתר כדי לפנות את המקום למתאמנת אחרת 🙏\n\nנתראה! 💪`) : null;
                             return (
                               <div key={b.id} className="bg-brand-bg p-4 rounded-2xl flex justify-between items-center text-sm shadow-sm transition-transform hover:scale-[1.01]">

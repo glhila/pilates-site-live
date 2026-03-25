@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import {
   ADMIN_EMAILS,
-  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, MORNING_END,
+  DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, LATEST_CLASS_START_HOUR,
   CLASS_TEMPLATES,
   HEALTH_FORM_URL,
   DEFAULT_PUNCH_FOR_PUNCH_CARD_ONLY,
@@ -181,8 +181,10 @@ export default function AdminPage() {
         const end = new Date(start);
         end.setMinutes(end.getMinutes() + CLASS_DURATION_MINUTES);
 
+        // שינוי כאן: הגדלת טווח השעות המותר לשיעורים
         const rangeStart = new Date(`${dayKey}T${String(MORNING_START).padStart(2, '0')}:00:00`);
-        const rangeEnd = new Date(`${dayKey}T${String(MORNING_END + 1).padStart(2, '0')}:00:00`);
+        // השיעור יכול להסתיים ב-22:00, כלומר להתחיל לכל המאוחר ב-21:00
+        const rangeEnd = new Date(`${dayKey}T${String(LATEST_CLASS_START_HOUR + 1).padStart(2, '0')}:00:00`);
         if (!(start >= rangeStart && end <= rangeEnd)) return false;
 
         const candidateInterval = { start, end };
@@ -224,6 +226,11 @@ export default function AdminPage() {
 
     const fullDateStr = `${classFormData.date}T${classFormData.hour}:${classFormData.minute}:00`;
     const startDate = new Date(fullDateStr);
+    // בדיקה שהשעה לא חורגת מהמקסימום המותר (21:00 כהתחלה)
+    if (startDate.getHours() > LATEST_CLASS_START_HOUR || (startDate.getHours() === LATEST_CLASS_START_HOUR && startDate.getMinutes() > 0)) {
+      alert(`לא ניתן להוסיף שיעור שמתחיל אחרי השעה ${String(LATEST_CLASS_START_HOUR).padStart(2, '0')}:00, כיוון שהוא יסתיים אחרי השעה 22:00.`);
+      return;
+    }
     const classesToInsert = [];
     const iterations = classFormData.is_recurring ? 52 : 1;
     const recurring_id = classFormData.is_recurring ? crypto.randomUUID() : null;
@@ -415,6 +422,17 @@ export default function AdminPage() {
   if (isLoaded && !ADMIN_EMAILS.includes(user?.primaryEmailAddress?.emailAddress || '')) {
     return <div className="min-h-screen bg-brand-bg flex items-center justify-center font-bold text-red-500">אין לך הרשאת גישה לדף זה.</div>;
   }
+
+  // יצירת רשימת השעות האפשריות עם קפיצות של 5 דקות
+  const allTimeSlots = useMemo(() => {
+    const slots = [];
+    for (let h = MORNING_START; h <= LATEST_CLASS_START_HOUR; h++) {
+    for (let m = 0; m < 60; m += 5) { // קפיצות של 5 דקות
+      slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+    }
+    }
+    return slots;
+    }, []);
 
   return (
     <main

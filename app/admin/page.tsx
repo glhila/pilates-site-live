@@ -520,13 +520,13 @@ export default function AdminPage() {
                   </div>
                     {/* ── כפתור סנכרון יומן – חדש ── */}
                     <button
-                      onClick={() => {
-                        const feedUrl = `${window.location.origin}/api/calendar`;
-                        window.open(
-                          `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feedUrl)}`,
-                          '_blank'
-                        );
-                      }}
+                     onClick={() => {
+                      const feedUrl = `${window.location.origin}/api/calendar`;
+                      window.open(
+                        `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feedUrl)}`,
+                        '_blank'
+                      );
+                    }}
                       className="flex items-center gap-2 px-4 py-3 rounded-3xl border border-brand-stone/30 bg-brand-stone/5 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-primary/60 hover:text-brand-primary hover:bg-white transition-all"
                       title="סנכרן את מערכת השעות ל-Google Calendar"
                     >

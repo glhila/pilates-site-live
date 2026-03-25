@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { normalizePhoneForWhatsApp } from "@/src/lib/constants";
 
 // ─── המרת שעה ישראלית ל-UTC עם Z ─────────────────────────────────────────
 function toUtcDtString(datePart: string, timePart: string, durationMinutes = 0): string {
@@ -70,11 +71,10 @@ export async function GET() {
         const name  = b.profiles?.full_name;
         const phone = b.profiles?.phone;
         if (!name) return null;
-        const normalized = phone
-          ? phone.replace(/\D/g, '').replace(/^0/, '972')
-          : null;
-        const waUrl = normalized ? `https://wa.me/${normalized}` : null;
-        return waUrl ? `${name} – ${waUrl}` : name;
+        const waUrl = phone
+        ? `https://wa.me/${normalizePhoneForWhatsApp(phone)}`
+        : null;
+        return waUrl ? `${name} לחצי לשליחת וואטסאפ: ${waUrl}` : name;
       })
       .filter(Boolean);
 

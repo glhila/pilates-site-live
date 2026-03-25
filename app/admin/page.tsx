@@ -521,7 +521,8 @@ export default function AdminPage() {
                     {/* ── כפתור סנכרון יומן – חדש ── */}
                     <button
                      onClick={() => {
-                      const feedUrl = `${window.location.origin}/api/calendar`;
+                      // החלפת https:// ב-webcal:// – הפרוטוקול שGoogle Calendar מזהה
+                      const feedUrl = `${window.location.origin}/api/calendar`.replace('https://', 'webcal://');
                       window.open(
                         `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feedUrl)}`,
                         '_blank'

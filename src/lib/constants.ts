@@ -96,6 +96,25 @@ export const isSameWeek = (date1: Date, date2: Date): boolean => {
 export const toDateKey = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
+/**
+ * Convert a Date to a local datetime string (YYYY-MM-DDTHH:MM:SS) with NO timezone offset.
+ * Use this when saving start_time to Supabase — avoids UTC shift (e.g. 09:00 saved as 07:00Z).
+ */
+export const toLocalDateTimeString = (d: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+};
+
+/**
+ * Extract HH:MM from a start_time string using local time.
+ * Used to match against TIME_SLOTS and position cards on the schedule grid.
+ */
+export const getSlotKeyFromStartTime = (startTime: string): string | null => {
+  const d = new Date(startTime);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
+
 /** Build YYYY-MM-DD date key in Israel timezone. */
 export const toIsraelDateKey = (d: Date): string => {
   const parts = new Intl.DateTimeFormat("en-CA", {

@@ -97,22 +97,34 @@ export const toDateKey = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 /**
- * Convert a Date to a local datetime string (YYYY-MM-DDTHH:MM:SS) with NO timezone offset.
- * Use this when saving start_time to Supabase — avoids UTC shift (e.g. 09:00 saved as 07:00Z).
+ * Convert a Date to a datetime string for Supabase (timestamptz).
+ * The DB stores times as Israel-clock-value with +00 offset (e.g. 09:00 Israel stored as "2024-01-15T09:00:00+00:00").
+ * So we write the local wall-clock time with an explicit +00 offset to match that convention.
  */
 export const toLocalDateTimeString = (d: Date): string => {
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00+00:00`;
 };
 
 /**
- * Extract HH:MM from a start_time string using local time.
- * Used to match against TIME_SLOTS and position cards on the schedule grid.
+ * Extract HH:MM directly from the start_time string — bypassing Date parsing entirely.
+ * The DB stores times as "YYYY-MM-DDTHH:MM:SS+00" where HH:MM is already the Israel wall-clock time.
+ * Using new Date() would shift the value by the local UTC offset and corrupt it.
  */
 export const getSlotKeyFromStartTime = (startTime: string): string | null => {
-  const d = new Date(startTime);
-  if (Number.isNaN(d.getTime())) return null;
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const match = String(startTime).match(/T(\d{2}):(\d{2})/);
+  if (!match) return null;
+  return `${match[1]}:${match[2]}`;
+};
+
+/**
+ * Extract YYYY-MM-DD directly from a start_time string — bypassing Date parsing.
+ * Same convention: the date part in the string is already the Israel calendar date.
+ * Use this instead of new Date(startTime).toDateString() for day-column filtering.
+ */
+export const dateKeyFromStartTime = (startTime: string): string | null => {
+  const match = String(startTime).match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : null;
 };
 
 /** Build YYYY-MM-DD date key in Israel timezone. */

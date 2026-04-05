@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from "react";
 import {
   DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, LATEST_CLASS_START_HOUR, CANCELLATION_WINDOW_HOURS,
   getAuthenticatedSupabase, toDateKey, fetchJewishHolidays, type HolidayMap,
-  formatDate, formatTime, isSameWeek,
+  formatDate, formatTime, isSameWeek, getSlotKeyFromStartTime,
 } from "@/src/lib/constants";
 
 // ─── Types ───────────────────────────────────────────────────────────────
@@ -15,13 +15,7 @@ type ActiveTab = 'schedule' | 'bookings';
 type BookingsFilter = 'all' | 'upcoming' | 'past';
 type ModalAction = { label: string; onClick: () => void; style?: 'primary' | 'danger' | 'ghost' };
 type ModalConfig = { title: string; body: string; emoji?: string; actions: ModalAction[] };
-const getSlotKeyFromStartTime = (startTime: string): string | null => {
-  const fromIso = String(startTime).match(/T(\d{2}:\d{2})/);
-  if (fromIso?.[1]) return fromIso[1];
-  const d = new Date(startTime);
-  if (Number.isNaN(d.getTime())) return null;
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-};
+
 
 export default function UserPortal() {
   const { user, isLoaded } = useUser();

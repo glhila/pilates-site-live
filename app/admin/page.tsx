@@ -12,7 +12,7 @@ import {
   DEFAULT_PUNCH_FOR_PUNCH_CARD_ONLY,
   PUNCH_CARD_PACKAGE_SIZES,
   PUNCH_CARD_VALIDITY_RULES,
-  getAuthenticatedSupabase, getWhatsAppUrlForPhone, toDateKey, fetchJewishHolidays, type HolidayMap,
+  getAuthenticatedSupabase, getWhatsAppUrlForPhone, toDateKey, fetchJewishHolidays,toLocalDateTimeString, getSlotKeyFromStartTime, type HolidayMap,
 } from "@/src/lib/constants";
 import { WhatsAppIcon } from "@/src/components/icons";
 
@@ -61,16 +61,6 @@ const applyPunchChange = (
 
 const CLASS_DURATION_MINUTES = 60;
 const [DEFAULT_HOUR, DEFAULT_MINUTE] = TIME_SLOTS[0].split(":");
-const toLocalDateTimeString = (date: Date): string => {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
-};
-
-const getSlotKeyFromStartTime = (startTime: string): string | null => {
-  const d = new Date(startTime);
-  if (Number.isNaN(d.getTime())) return null;
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-};
 
 export default function AdminPage() {
   const { user, isLoaded } = useUser();

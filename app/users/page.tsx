@@ -8,6 +8,7 @@ import {
   DAYS_HEBREW, TIME_SLOTS, HOUR_HEIGHT, MORNING_START, LATEST_CLASS_START_HOUR, CANCELLATION_WINDOW_HOURS,
   getAuthenticatedSupabase, toDateKey, fetchJewishHolidays, type HolidayMap,
   formatDate, formatTime, isSameWeek, getSlotKeyFromStartTime,
+  dateKeyFromStartTime,
 } from "@/src/lib/constants";
 
 // ─── Types ───────────────────────────────────────────────────────────────
@@ -400,7 +401,7 @@ export default function UserPortal() {
                     
                     <div className="relative" style={{ height: `${TIME_SLOTS.length * HOUR_HEIGHT}px` }}>
                       {classes
-                        .filter(c => new Date(c.start_time).toDateString() === date.toDateString())
+                        .filter(c => dateKeyFromStartTime(c.start_time) === toDateKey(date))
                         .map(c => {
                           const booking = userBookings.find(b => b.class_id === c.id);
                           const slotTime = getSlotKeyFromStartTime(c.start_time);
@@ -452,9 +453,9 @@ export default function UserPortal() {
 
               <div className="space-y-5 pb-24">
                 <h3 className="font-bold text-xl px-2">שיעורים ליום {selectedDateMobile.toLocaleDateString('he-IL', {weekday: 'long'})}</h3>
-                {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).length > 0 ? (
+                {classes.filter(c => dateKeyFromStartTime(c.start_time) === toDateKey(selectedDateMobile)).length > 0 ? (
                   classes
-                    .filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString())
+                    .filter(c => dateKeyFromStartTime(c.start_time) === toDateKey(selectedDateMobile))
                     .map(c => {
                         const booking = userBookings.find(b => b.class_id === c.id);
                         return <ClassCard key={c.id} c={c} booking={booking} onBook={() => handleBooking(c)} onCancel={() => handleCancel(booking.id, c.start_time, booking.payment_source)} />;
@@ -674,10 +675,7 @@ function ClassCard({ c, booking, onBook, onCancel, compact = false }: any) {
   const isBooked = !!booking;
   const count = c.bookings ? c.bookings.length : 0;
   const isFull = count >= c.max_capacity;
-  const time = new Date(c.start_time).toLocaleTimeString('he-IL', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const time = getSlotKeyFromStartTime(c.start_time);
 
   return (
     <div

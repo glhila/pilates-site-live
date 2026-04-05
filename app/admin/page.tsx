@@ -12,7 +12,7 @@ import {
   DEFAULT_PUNCH_FOR_PUNCH_CARD_ONLY,
   PUNCH_CARD_PACKAGE_SIZES,
   PUNCH_CARD_VALIDITY_RULES,
-  getAuthenticatedSupabase, getWhatsAppUrlForPhone, toDateKey, fetchJewishHolidays,toLocalDateTimeString, getSlotKeyFromStartTime, type HolidayMap,
+  getAuthenticatedSupabase, getWhatsAppUrlForPhone, toDateKey, fetchJewishHolidays,toLocalDateTimeString, getSlotKeyFromStartTime,dateKeyFromStartTime, type HolidayMap,
 } from "@/src/lib/constants";
 import { WhatsAppIcon } from "@/src/components/icons";
 
@@ -590,7 +590,7 @@ export default function AdminPage() {
                         </div>
 
                         <div className="relative" style={{ height: `${TIME_SLOTS.length * HOUR_HEIGHT}px` }}>
-                          {classes.filter(c => new Date(c.start_time).toDateString() === date.toDateString()).map(c => {
+                          {classes.filter(c => dateKeyFromStartTime(c.start_time) === toDateKey(date)).map(c => {
                               const slotTime = getSlotKeyFromStartTime(c.start_time);
                               if (!slotTime) return null;
                               const slotIndex = TIME_SLOTS.indexOf(slotTime as (typeof TIME_SLOTS)[number]);
@@ -653,12 +653,12 @@ export default function AdminPage() {
                         ))}
                     </div>
                     <div className="space-y-4 px-1">
-                      {classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).length > 0 ? (
-                          classes.filter(c => new Date(c.start_time).toDateString() === selectedDateMobile.toDateString()).map(c => (
+                      {classes.filter(c => dateKeyFromStartTime(c.start_time) === toDateKey(selectedDateMobile)).length > 0 ? (
+                        classes.filter(c => dateKeyFromStartTime(c.start_time) === toDateKey(selectedDateMobile)).map(c => (
                               <div key={c.id} onClick={() => setDetailsModal(c)} className="bg-white p-6 rounded-[2.5rem] border border-brand-stone/10 flex justify-between items-center shadow-sm w-full transition-all active:scale-[0.98]">
                                   <div className="flex-1">
                                       <span className="text-[10px] font-black bg-brand-bg px-3 py-1 rounded-full uppercase tracking-widest text-brand-dark/60">
-                                          {new Date(c.start_time).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}
+                                          {getSlotKeyFromStartTime(c.start_time)}
                                       </span>
                                       <div className="mt-4 flex flex-col leading-tight">
                                           <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">{c.class_type}</span>
@@ -1097,7 +1097,7 @@ export default function AdminPage() {
                           <div className="min-w-0">
                             <p className="font-bold text-sm truncate">{c.name}</p>
                             <p className="text-[11px] opacity-50 font-bold tabular-nums mt-1">
-                              {new Date(c.start_time).toLocaleString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            {`${new Date(c.start_time).toLocaleDateString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit' })} · ${getSlotKeyFromStartTime(c.start_time)}`}
                             </p>
                             <p className="text-[10px] opacity-40 mt-1">
                               רשומות: {c.bookings?.length || 0}/{c.max_capacity}

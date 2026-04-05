@@ -962,7 +962,7 @@ export default function AdminPage() {
                             const name = b.profiles?.full_name;
                             const classDate = new Date(detailsModal.start_time).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric' });
                             const classTime = getSlotKeyFromStartTime(detailsModal.start_time) ?? '';
-                            const waUrl = phone ? getWhatsAppUrlForPhone(phone, `היי ${name} 🌸\n\nתזכורת לאימון שלך:\n📅 ${classDate} בשעה ${classTime}\n🧘‍♀️ ${detailsModal.name}\n\nאם בסופו של דבר לא תוכלי להגיע — נשמח אם תבטלי את הרישום באתר כדי לפנות את המקום למתאמנת אחרת 🙏\n\nנתראה! 💪`) : null;
+                            const waUrl = phone ? getWhatsAppUrlForPhone(phone, `היי ${name} 🌸\n\nתזכורת לאימון שלך:\n📅 ${classDate} בשעה ${classTime}\n🧘‍♀️ ${detailsModal.name}\n\nאם בסופו של דבר לא תוכל/י להגיע — נשמח אם תבטל/י את הרישום באתר כדי לפנות את המקום למתאמנת אחרת 🙏\n\nנתראה! 💪`) : null;
                             return (
                               <div key={b.id} className="bg-brand-bg p-4 rounded-2xl flex justify-between items-center text-sm shadow-sm transition-transform hover:scale-[1.01]">
                                   <span className="font-bold">{name}</span>
@@ -990,7 +990,7 @@ export default function AdminPage() {
                     <h4 className="text-[10px] font-black opacity-40 mb-5 uppercase tracking-widest">רישום ידני (עקיפת מכסה)</h4>
                     <div className="flex gap-2">
                         <select className="flex-1 p-4 bg-white rounded-2xl text-sm font-bold border outline-none shadow-sm" value={manualBookingUserId} onChange={e => setManualBookingUserId(e.target.value)}>
-                            <option value="">בחרי מתאמנת...</option>{profiles.filter(p => p.role !== 'admin').filter(p => !detailsModal.bookings?.some((b: any) => b.profiles?.id === p.id)).map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+                            <option value="">בחרי מתאמנ/ת...</option>{profiles.filter(p => p.role !== 'admin').filter(p => !detailsModal.bookings?.some((b: any) => b.profiles?.id === p.id)).map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                         </select>
                         <button onClick={handleManualBooking} disabled={!manualBookingUserId} className="bg-brand-dark text-white px-8 rounded-2xl font-bold text-xs disabled:opacity-20 transition-all shadow-md active:scale-95">רישום</button>
                     </div>
@@ -1022,7 +1022,7 @@ export default function AdminPage() {
               <div className="text-center mb-8">
                 <div className="text-5xl mb-4">🌸</div>
                 <h3 className="text-2xl font-bold italic tracking-tight">
-                  {welcomeModal.name} נוספה בהצלחה!
+                  {welcomeModal.name} נוספ/ה בהצלחה!
                 </h3>
                 <p className="text-sm opacity-50 mt-3 font-medium leading-relaxed">
                   לשלוח לה את טופס הצהרת הבריאות<br/>לפני האימון הראשון?

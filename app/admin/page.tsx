@@ -1125,12 +1125,13 @@ export default function AdminPage() {
                         onClick={async () => {
                           const conflictIds = Array.from(new Set(overlapModal.conflicts.map((c: any) => c.id)));
                           if (!confirm(`לבטל ${conflictIds.length} שיעורים קיימים וליצור את השיעור החדש?`)) return;
-                          const del = await deleteClassesByIds(conflictIds);
-                          if (!del.ok) { alert(del.message); return; }
 
                           const supabase = await getAuthenticatedSupabase(getToken);
                           if (!supabase) return;
-                          const { error } = await supabase.from('classes').insert(overlapModal.pendingInsert);
+                          const { error } = await supabase.rpc('replace_classes', {
+                            p_delete_ids: conflictIds,
+                            p_insert_rows: overlapModal.pendingInsert
+                          });
                           if (error) alert(error.message);
                           else alert("השיעור/ים נוספו בהצלחה (לאחר ביטול החופפים)!");
                           setOverlapModal(null);

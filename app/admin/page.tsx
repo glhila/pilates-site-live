@@ -40,7 +40,7 @@ const applyPunchChange = (
   prev: UserFormState,
   newPunches: number
 ): UserFormState => {
-  const toDateOnly = (d: Date) => d.toISOString().split('T')[0];
+  const toDateOnly = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const updates: Partial<UserFormState> = { punch_card_remaining: newPunches };
 
   if (newPunches === 0) {
@@ -62,23 +62,14 @@ const applyPunchChange = (
 const CLASS_DURATION_MINUTES = 60;
 const [DEFAULT_HOUR, DEFAULT_MINUTE] = TIME_SLOTS[0].split(":");
 const toLocalDateTimeString = (date: Date): string => {
-  // הפונקציה הזו לוקחת אובייקט Date, אשר נוצר כבר מתוך תאריך ושעה מקומיים,
-  // וממירה אותו ל-ISO string (פורמט UTC).
-  // לדוגמה, אם date מייצג 10:00 בבוקר בת"א, זה יהפוך למשהו כמו "2023-10-27T07:00:00.000Z"
-  // Supabase יפרש את ה-Z כ-UTC ויאחסן אותו נכון.
-  return date.toISOString();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
 };
-const getSlotKeyFromStartTime = (startTime: string): string | null => {
-  // נניח ש-startTime הוא בפורמט ISO (UTC) מה-DB.
-  // יצירת אובייקט Date מ-ISO string עם Z (UTC) יגרום לו להתנהג
-  // כאילו הוא באזור הזמן המקומי של המשתמש כשנשלוף שעה ודקות.
-  const dateObj = new Date(startTime);
-  if (Number.isNaN(dateObj.getTime())) return null;
 
-  // נשתמש ב-toLocaleString עם הגדרות ברורות, כדי למנוע בעיות דפדפן/מערכת הפעלה
-  // ולשלוף שעה ודקות מקומיות.
-  const time = dateObj.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false });
-  return time;
+const getSlotKeyFromStartTime = (startTime: string): string | null => {
+  const d = new Date(startTime);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
 export default function AdminPage() {

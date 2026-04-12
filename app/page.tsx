@@ -68,7 +68,7 @@ export default function Home() {
                 rel="noreferrer" 
                 className="btn-luxury text-center"
               >
-                קביעת שיעור היכרות  <WhatsAppIcon className="w-4 h-4 shrink-0" />
+                קביעת שיעור היכרות  <WhatsAppIcon className="w-4 h-4 shrink-0" /> 
               </a>
               <Link
                 href="/classes"

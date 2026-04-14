@@ -35,7 +35,7 @@ export default function Home() {
                 </div>
                 {
                 <Image 
-                  src="/icon.jpg" 
+                  src="/icon.png" 
                   alt="סטודיו עונג פילאטיס" 
                   fill 
                   className="object-cover"

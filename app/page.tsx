@@ -33,14 +33,14 @@ export default function Home() {
                     Balance & Grace
                   </span>
                 </div>
-                {/* דוגמה להטמעת תמונה אמיתית:
+                {
                 <Image 
-                  src="/studio-hero.jpg" 
+                  src="/icon.jpg" 
                   alt="סטודיו עונג פילאטיס" 
                   fill 
                   className="object-cover"
                 /> 
-                */}
+                }
               </div>
             </div>
           </div>
